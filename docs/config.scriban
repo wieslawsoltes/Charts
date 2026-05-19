@@ -1,0 +1,19 @@
+# ProCharts Lunet Configuration
+site = {}
+site.title = "ProCharts"
+site.tagline = "Premium Native Charting Engine for Avalonia UI"
+site.description = "A state-of-the-art, high-performance vector charting library featuring glassmorphic designs and custom vector drawing pipelines."
+site.author = "ProCharts Development Team"
+site.url = "https://github.com/wieslawsoltes/ProCharts"
+
+# Lunet features
+site.github = "https://github.com/wieslawsoltes/ProCharts"
+site.license = "MIT"
+
+# Navigation
+site.nav = [
+    { title: "Home", url: "/" },
+    { title: "Architecture", url: "/architecture/" },
+    { title: "API Reference", url: "/api/" },
+    { title: "Gallery", url: "/gallery/" }
+]
