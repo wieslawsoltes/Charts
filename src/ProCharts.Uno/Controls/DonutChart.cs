@@ -11,7 +11,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class DonutChart : PieChart
+    public partial class DonutChart : PieChart
     {
         public static readonly DependencyProperty CenterTextProperty =
             DependencyProperty.Register(nameof(CenterText), typeof(string), typeof(DonutChart), new PropertyMetadata(default(string?), OnPropertyChanged));

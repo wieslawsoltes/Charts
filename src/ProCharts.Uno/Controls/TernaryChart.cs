@@ -11,7 +11,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class TernaryChart : ChartBase
+    public partial class TernaryChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(TernaryChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));

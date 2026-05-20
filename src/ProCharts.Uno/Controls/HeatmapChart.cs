@@ -10,7 +10,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class HeatmapChart : ChartBase
+    public partial class HeatmapChart : ChartBase
     {
         public class HeatmapCell
         {

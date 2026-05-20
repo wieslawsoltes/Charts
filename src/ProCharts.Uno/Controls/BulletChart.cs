@@ -8,7 +8,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class BulletChart : ChartBase
+    public partial class BulletChart : ChartBase
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(double), typeof(BulletChart), new PropertyMetadata(0.0, OnPropertyChanged));

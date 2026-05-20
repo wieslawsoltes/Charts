@@ -12,7 +12,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class WaterfallChart : ChartBase
+    public partial class WaterfallChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(WaterfallChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));

@@ -10,7 +10,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class SunburstChart : ChartBase
+    public partial class SunburstChart : ChartBase
     {
         public class SunburstNode
         {

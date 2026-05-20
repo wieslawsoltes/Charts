@@ -8,7 +8,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class CircularGauge : ChartBase
+    public partial class CircularGauge : ChartBase
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(double), typeof(CircularGauge), new PropertyMetadata(0.0, OnPropertyChanged));

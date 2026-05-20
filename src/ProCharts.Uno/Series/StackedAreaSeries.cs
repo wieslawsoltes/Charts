@@ -47,15 +47,15 @@ namespace ProCharts.Uno.Series
 
             if (areaFill == null && areaStroke != null)
             {
-                var color = areaStroke.Color;
+                var color = areaStroke.GetColor();
                 areaFill = new LinearGradientSKPaint
                 {
                     StartPoint = new RelativePoint(0.5, 0, RelativeUnit.Relative),
                     EndPoint = new RelativePoint(0.5, 1, RelativeUnit.Relative),
                     GradientStops = new GradientStops
                     {
-                        new GradientStop(new SKColor((byte)(color.Red), (byte)(color.Green), (byte)(color.Blue), (byte)((byte)(color.Alpha * 0.45))), 0.0),
-                        new GradientStop(new SKColor((byte)(color.Red), (byte)(color.Green), (byte)(color.Blue), (byte)((byte)(color.Alpha * 0.05))), 1.0)
+                        new GradientStop(new SKColor(color.R, color.G, color.B, (byte)(color.A * 0.45)), 0.0),
+                        new GradientStop(new SKColor(color.R, color.G, color.B, (byte)(color.A * 0.05)), 1.0)
                     }
                 };
             }

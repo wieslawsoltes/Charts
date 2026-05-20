@@ -12,7 +12,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class TornadoChart : ChartBase
+    public partial class TornadoChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(TornadoChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));

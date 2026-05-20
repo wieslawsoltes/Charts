@@ -9,7 +9,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class LiquidFillGauge : ChartBase
+    public partial class LiquidFillGauge : ChartBase
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(double), typeof(LiquidFillGauge), new PropertyMetadata(0.0, OnPropertyChanged)); // 0.0 to 100.0

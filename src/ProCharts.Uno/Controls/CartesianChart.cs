@@ -304,7 +304,7 @@ namespace ProCharts.Uno.Controls
                     var screenPt = transform.ToScreen(pt.X, pt.Y);
                     var pulseSKPaint = new Pen(seriesSKPaint, 1.5);
                     SKColor brushSKColor = SKColors.Purple;
-                    if (seriesSKPaint != null) brushSKColor = seriesSKPaint.Color;
+                    if (seriesSKPaint != null) brushSKColor = seriesSKPaint.GetColor();
                     var pulseFill = new SolidSKColorSKPaint(new SKColor((byte)(brushSKColor.Red), (byte)(brushSKColor.Green), (byte)(brushSKColor.Blue), (byte)(40)));
                     
                     context.DrawEllipse(seriesSKPaint, null, screenPt, 4.0, 4.0);
@@ -549,7 +549,7 @@ namespace ProCharts.Uno.Controls
 
                     // Draw vertical text rotated by -90 degrees
                     double xTranslate = YAxis.Position == AxisPosition.Right ? Bounds.Width - 16 : 16;
-                    using (context.PushTransform(Matrix.CreateRotation(-Math.PI / 2.0) * Matrix.CreateTranslation(xTranslate, EffectivePlotArea.Center.Y + ftTitle.Width / 2.0)))
+                    using (context.PushTransform(ProCharts.Uno.Maths.Matrix.CreateRotation(-Math.PI / 2.0) * ProCharts.Uno.Maths.Matrix.CreateTranslation(xTranslate, EffectivePlotArea.Center.Y + ftTitle.Width / 2.0)))
                     {
                         context.DrawText(ftTitle, new Point(0, 0));
                     }

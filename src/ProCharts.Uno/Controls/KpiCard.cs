@@ -11,7 +11,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class KpiCard : ChartBase
+    public partial class KpiCard : ChartBase
     {
         public static readonly DependencyProperty ValueStringProperty =
             DependencyProperty.Register(nameof(ValueString), typeof(string), typeof(KpiCard), new PropertyMetadata(default(string?), OnPropertyChanged));

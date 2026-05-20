@@ -11,7 +11,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class WaffleChart : ChartBase
+    public partial class WaffleChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(WaffleChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));

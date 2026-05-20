@@ -9,7 +9,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class LinearGauge : ChartBase
+    public partial class LinearGauge : ChartBase
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(double), typeof(LinearGauge), new PropertyMetadata(0.0, OnPropertyChanged));

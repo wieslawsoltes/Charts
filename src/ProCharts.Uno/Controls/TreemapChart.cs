@@ -10,7 +10,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class TreemapChart : ChartBase
+    public partial class TreemapChart : ChartBase
     {
         public class TreemapItem
         {

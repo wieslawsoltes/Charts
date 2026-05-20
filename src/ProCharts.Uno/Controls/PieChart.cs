@@ -12,7 +12,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class PieChart : ChartBase
+    public partial class PieChart : ChartBase
     {
         // --- DEPENDENCY PROPERTIES ---
 

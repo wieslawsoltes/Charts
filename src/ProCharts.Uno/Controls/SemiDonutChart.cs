@@ -10,7 +10,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class SemiDonutChart : PieChart
+    public partial class SemiDonutChart : PieChart
     {
         public static readonly DependencyProperty CenterTextProperty =
             DependencyProperty.Register(nameof(CenterText), typeof(string), typeof(SemiDonutChart), new PropertyMetadata(default(string?), OnPropertyChanged));

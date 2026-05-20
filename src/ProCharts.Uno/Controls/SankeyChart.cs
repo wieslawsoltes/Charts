@@ -10,7 +10,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class SankeyChart : ChartBase
+    public partial class SankeyChart : ChartBase
     {
         public class SankeyNode
         {

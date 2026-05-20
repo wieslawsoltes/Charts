@@ -12,7 +12,7 @@ using ProCharts.Uno.Maths;
 
 namespace ProCharts.Uno.Controls
 {
-    public class WordCloudChart : ChartBase
+    public partial class WordCloudChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(WordCloudChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));

@@ -10,7 +10,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class AlluvialChart : ChartBase
+    public partial class AlluvialChart : ChartBase
     {
         public class AlluvialNode
         {

@@ -8,7 +8,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class ProgressDonut : ChartBase
+    public partial class ProgressDonut : ChartBase
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(double), typeof(ProgressDonut), new PropertyMetadata(0.0, OnPropertyChanged));

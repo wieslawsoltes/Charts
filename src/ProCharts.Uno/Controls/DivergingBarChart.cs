@@ -11,7 +11,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class DivergingBarChart : ChartBase
+    public partial class DivergingBarChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(DivergingBarChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));
