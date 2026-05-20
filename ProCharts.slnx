@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/ProCharts.Gallery/ProCharts.Gallery.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ProCharts/ProCharts.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ProCharts.Tests/ProCharts.Tests.csproj" />
+  </Folder>
+</Solution>

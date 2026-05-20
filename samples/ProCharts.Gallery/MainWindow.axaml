@@ -1,0 +1,580 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:pc="clr-namespace:ProCharts.Controls;assembly=ProCharts"
+        xmlns:ps="clr-namespace:ProCharts.Series;assembly=ProCharts"
+        xmlns:pm="clr-namespace:ProCharts.Maths;assembly=ProCharts"
+        xmlns:pu="clr-namespace:ProCharts.Components;assembly=ProCharts"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+        x:Class="ProCharts.Gallery.MainWindow"
+        Title="ProCharts Interactive Gallery"
+        RequestedThemeVariant="Dark"
+        Background="#0F172A"
+        WindowStartupLocation="CenterScreen"
+        Width="1280" Height="800"
+        MinWidth="1024" MinHeight="600"
+        FontFamily="Inter, Roboto, Segoe UI, sans-serif">
+
+    <Window.Styles>
+        <!-- Custom button styling -->
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#4F46E5" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#6366F1" />
+            <Setter Property="TextBlock.Foreground" Value="White" />
+        </Style>
+        
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#334155" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button.secondary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#475569" />
+            <Setter Property="TextBlock.Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="Slider">
+            <Setter Property="Margin" Value="0,2,0,10" />
+        </Style>
+        
+        <Style Selector="CheckBox">
+            <Setter Property="Margin" Value="0,4,0,8" />
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Margin" Value="0,2,0,12" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#94A3B8" />
+            <Setter Property="Margin" Value="0,6,0,2" />
+        </Style>
+
+        <Style Selector="TextBlock.header">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Margin" Value="0,12,0,8" />
+        </Style>
+    </Window.Styles>
+
+    <Grid ColumnDefinitions="260, *">
+        <!-- LEFT SIDEBAR -->
+        <Border Grid.Column="0" Background="#1E293B" BorderBrush="#334155" BorderThickness="0,0,1,0" Padding="16,24">
+            <Grid RowDefinitions="Auto, *, Auto">
+                <!-- Branding Header -->
+                <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,24">
+                    <TextBlock Text="PROCHARTS" FontSize="22" FontWeight="Black" Foreground="White" LetterSpacing="2">
+                        <TextBlock.Foreground>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                <GradientStop Offset="0" Color="#6366F1" />
+                                <GradientStop Offset="1" Color="#06B6D4" />
+                            </LinearGradientBrush>
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                    <TextBlock Text="NATIVE AVALONIA ENGINE" FontSize="9" FontWeight="Bold" Foreground="#64748B" LetterSpacing="1" />
+                </StackPanel>
+
+                <!-- Navigation List -->
+                <ListBox Grid.Row="1" x:Name="CategoryList" Background="Transparent" BorderThickness="0" SelectionChanged="OnCategoryChanged">
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="CornerRadius" Value="8"/>
+                            <Setter Property="Padding" Value="12,12"/>
+                            <Setter Property="Margin" Value="0,4"/>
+                            <Setter Property="Foreground" Value="#94A3B8"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Style>
+                        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="#334155"/>
+                            <Setter Property="TextBlock.Foreground" Value="White"/>
+                        </Style>
+                        <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="#4F46E5"/>
+                            <Setter Property="TextBlock.Foreground" Value="White"/>
+                        </Style>
+                    </ListBox.Styles>
+                    
+                    <ListBoxItem Content="Linear &amp; Spline" Tag="Line" />
+                    <ListBoxItem Content="Area Gradients" Tag="Area" />
+                    <ListBoxItem Content="Column &amp; Bar" Tag="Bar" />
+                    <ListBoxItem Content="Pie &amp; Donut" Tag="Pie" />
+                    <ListBoxItem Content="Real-time Performance" Tag="RealTime" />
+                    <ListBoxItem Content="Financial Plots" Tag="Financial" />
+                    <ListBoxItem Content="Status Gauges" Tag="Gauges" />
+                    <ListBoxItem Content="Hierarchy &amp; Flows" Tag="Hierarchy" />
+                    <ListBoxItem Content="Statistical Plotting" Tag="Statistical" />
+                    <ListBoxItem Content="Analytics Dashboards" Tag="Analytics" />
+                    <ListBoxItem Content="Advanced Analytics" Tag="AdvancedAnalytics" />
+                </ListBox>
+
+                <!-- Info Box -->
+                <Border Grid.Row="2" Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Padding="12">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Platform Info" FontSize="11" FontWeight="Bold" Foreground="#4F46E5" />
+                        <TextBlock Text="OS: macOS arm64" FontSize="10" Foreground="#64748B" />
+                        <TextBlock Text="Runtime: .NET 10.0 Native" FontSize="10" Foreground="#64748B" />
+                        <TextBlock Text="Drawing: Direct 2D Context" FontSize="10" Foreground="#64748B" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- MAIN WORKSPACE -->
+        <Grid Grid.Column="1" RowDefinitions="Auto, *">
+            <!-- TOP BAR -->
+            <Border Grid.Row="0" Background="#1E293B" BorderBrush="#334155" BorderThickness="0,0,0,1" Padding="24,16">
+                <Grid ColumnDefinitions="*, Auto">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock x:Name="ActiveCategoryTitle" Text="Linear &amp; Spline Charts" FontSize="20" FontWeight="Bold" Foreground="White" />
+                        <TextBlock x:Name="ActiveCategorySubtitle" Text="Displays continuous coordinates using high-performance vector rendering, markers, and splines." FontSize="12" Foreground="#64748B" />
+                    </StackPanel>
+                    
+                    <!-- Global actions / theme visual -->
+                    <Border Grid.Column="1" Background="#334155" CornerRadius="20" Padding="12,6" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Ellipse Width="10" Height="10" Fill="#10B981" />
+                            <TextBlock Text="Active Theme: Dark" FontSize="11" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- CONTENT BODY -->
+            <Grid Grid.Row="1" ColumnDefinitions="*, 340">
+                <!-- CHART RENDER PANEL -->
+                <Border Grid.Column="0" Background="#0B0F19" Padding="24">
+                    <Grid>
+                        <!-- 1. LINE CHART VIEW -->
+                        <Grid x:Name="LineView" IsVisible="True">
+                            <pc:CartesianChart x:Name="LineChart" Title="Revenue &amp; Cost Analysis" IsAnimationEnabled="True" PlotAreaBackground="#00FFFFFF">
+                                <pc:CartesianChart.XAxis>
+                                    <pu:Axis Title="Months" Position="Bottom" />
+                                </pc:CartesianChart.XAxis>
+                                <pc:CartesianChart.YAxis>
+                                    <pu:Axis Title="Amount (USD)" Position="Left" />
+                                </pc:CartesianChart.YAxis>
+                            </pc:CartesianChart>
+                        </Grid>
+
+                        <!-- 2. AREA CHART VIEW -->
+                        <Grid x:Name="AreaView" IsVisible="False">
+                            <pc:CartesianChart x:Name="AreaChart" Title="System Resource Monitoring" IsAnimationEnabled="True">
+                                <pc:CartesianChart.XAxis>
+                                    <pu:Axis Title="Time Interval" Position="Bottom" />
+                                </pc:CartesianChart.XAxis>
+                                <pc:CartesianChart.YAxis>
+                                    <pu:Axis Title="Resource Usage (%)" Position="Left" Minimum="0" Maximum="100" />
+                                </pc:CartesianChart.YAxis>
+                            </pc:CartesianChart>
+                        </Grid>
+
+                        <!-- 3. BAR CHART VIEW -->
+                        <Grid x:Name="BarView" IsVisible="False">
+                            <pc:CartesianChart x:Name="BarChart" Title="Product Regional Performance" IsAnimationEnabled="True">
+                                <pc:CartesianChart.XAxis>
+                                    <pu:Axis Title="Product Categories" Position="Bottom" />
+                                </pc:CartesianChart.XAxis>
+                                <pc:CartesianChart.YAxis>
+                                    <pu:Axis Title="Sales Volume" Position="Left" />
+                                </pc:CartesianChart.YAxis>
+                            </pc:CartesianChart>
+                            <pc:WaterfallChart x:Name="WaterfallChartCtrl" Title="Corporate Cash Flow Waterfall" IsVisible="False" />
+                            <pc:DivergingBarChart x:Name="DivergingBarChartCtrl" Title="Customer Sentiment Diverging Bounds" IsVisible="False" />
+                            <pc:TornadoChart x:Name="TornadoChartCtrl" Title="Risk Factor Sensitivity Tornado" IsVisible="False" />
+                        </Grid>
+
+                        <!-- 4. PIE CHART VIEW -->
+                        <Grid x:Name="PieView" IsVisible="False">
+                            <pc:PieChart x:Name="PieChartCtrl" Title="Market Share Breakdown" IsAnimationEnabled="True" HollowRadius="0.0" />
+                            <pc:DonutChart x:Name="DonutChartCtrl" Title="Infrastructure Node Breakdown" CenterText="9,420" CenterSubText="TOTAL STREAMS" IsVisible="False" />
+                            <pc:SemiDonutChart x:Name="SemiDonutChartCtrl" Title="Active Workload Threshold" CenterText="72%" IsVisible="False" />
+                        </Grid>
+
+                        <!-- 5. REAL-TIME VIEW -->
+                        <Grid x:Name="RealTimeView" IsVisible="False">
+                            <pc:CartesianChart x:Name="RealTimeChart" Title="High Frequency Telemetry Streams" IsAnimationEnabled="False">
+                                <pc:CartesianChart.XAxis>
+                                    <pu:Axis Title="Data Feed" Position="Bottom" />
+                                </pc:CartesianChart.XAxis>
+                                <pc:CartesianChart.YAxis>
+                                    <pu:Axis Title="Amplitude" Position="Left" Minimum="-100" Maximum="200" />
+                                </pc:CartesianChart.YAxis>
+                            </pc:CartesianChart>
+                        </Grid>
+
+                        <!-- 6. FINANCIAL VIEW -->
+                        <Grid x:Name="FinancialView" IsVisible="False">
+                            <pc:CartesianChart x:Name="FinancialChart" Title="Interactive Financial Market Feed" IsAnimationEnabled="True">
+                                <pc:CartesianChart.XAxis>
+                                    <pu:Axis Title="Trading Days" Position="Bottom" />
+                                </pc:CartesianChart.XAxis>
+                                <pc:CartesianChart.YAxis>
+                                    <pu:Axis Title="Stock Price (USD)" Position="Left" />
+                                </pc:CartesianChart.YAxis>
+                            </pc:CartesianChart>
+                        </Grid>
+
+                        <!-- 7. GAUGES VIEW -->
+                        <Grid x:Name="GaugesView" IsVisible="False" RowDefinitions="*, *" ColumnDefinitions="*, *, *">
+                            <Border Grid.Row="0" Grid.Column="0" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:CircularGauge x:Name="CircGauge" Title="CPU Core Temp" Minimum="0" Maximum="100" Unit="°C" Value="62.5" GaugeThickness="18" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="1" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:LiquidFillGauge x:Name="LiqGauge" Title="Coolant Storage" Value="74.0" WaveAmplitude="8.0" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="2" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:ProgressDonut x:Name="ProgDonut" Title="Task Queue Load" Minimum="0" Maximum="100" Value="74.0" CenterText="74.0%" CenterSubText="COMPLETED" RingThickness="16" />
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#1E293B" CornerRadius="12" Margin="6" Padding="16" BorderBrush="#334155" BorderThickness="1">
+                                <pc:LinearGauge x:Name="LinGauge" Title="Turbine Load Pressure" Minimum="0" Maximum="200" Unit="PSI" Value="142.0" GaugeThickness="16" />
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="2" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:GradientRingChart x:Name="GradRingChart" Title="System Streams Telemetry" RingThickness="10" RingSpacing="5" Maximum="100" />
+                            </Border>
+                        </Grid>
+
+                        <!-- 8. HIERARCHY VIEW -->
+                        <Grid x:Name="HierarchyView" IsVisible="False" RowDefinitions="*, *" ColumnDefinitions="*, *">
+                            <Border Grid.Row="0" Grid.Column="0" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:SankeyChart x:Name="SankeyFlow" Title="Energy Production Flows (Sankey)" />
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="1" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:TreemapChart x:Name="TreemapFlow" Title="Disk Directory (Treemap)" />
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="0" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:AlluvialChart x:Name="AlluvialFlow" Title="Customer Stages Flow (Alluvial)" NodeWidth="20" NodeGap="15" />
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="1" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:SunburstChart x:Name="SunburstFlow" Title="Company Org Hierarchy (Sunburst)" InnerHollowRadiusPercent="0.3" />
+                            </Border>
+                        </Grid>
+
+                        <!-- 9. STATISTICAL VIEW -->
+                        <Grid x:Name="StatisticalView" IsVisible="False">
+                            <pc:CartesianChart x:Name="StatisticalChart" Title="Advanced Statistical Distribution Analysis" IsAnimationEnabled="True">
+                                <pc:CartesianChart.XAxis>
+                                    <pu:Axis Title="Dataset" Position="Bottom" />
+                                </pc:CartesianChart.XAxis>
+                                <pc:CartesianChart.YAxis>
+                                    <pu:Axis Title="Density / Value" Position="Left" />
+                                </pc:CartesianChart.YAxis>
+                            </pc:CartesianChart>
+                        </Grid>
+
+                        <!-- 10. ANALYTICS VIEW -->
+                        <Grid x:Name="AnalyticsView" IsVisible="False" RowDefinitions="140, *, *">
+                            <Grid Grid.Row="0" ColumnDefinitions="*, *, *">
+                                <pc:KpiCard Grid.Column="0" x:Name="KpiCard1" Title="Total Sales Revenue" ValueString="$84,290" TrendValue="12.4" TrendUnit="%" Margin="4" />
+                                <pc:KpiCard Grid.Column="1" x:Name="KpiCard2" Title="System Load Rate" ValueString="84.3%" TrendValue="4.2" TrendUnit="%" Margin="4" />
+                                <pc:KpiCard Grid.Column="2" x:Name="KpiCard3" Title="Error Bounce Rate" ValueString="1.84%" TrendValue="-8.7" TrendUnit="%" Margin="4" />
+                            </Grid>
+                            <Border Grid.Row="1" Background="#1E293B" CornerRadius="12" Margin="4,8" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:HeatmapChart x:Name="AnalyticsHeatmap" Title="Weekly API Response Heatmap Matrix" />
+                            </Border>
+                            <Border Grid.Row="2" Background="#1E293B" CornerRadius="12" Margin="4,8" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:BulletChart x:Name="AnalyticsBullet" Title="Quarterly Revenue Growth Target (Millions)" Minimum="0" Maximum="150" Value="112.5" Target="120.0" BadRange="50.0" SatisfactoryRange="95.0" />
+                            </Border>
+                        </Grid>
+
+                        <!-- 11. ADVANCED ANALYTICS VIEW -->
+                        <Grid x:Name="AdvancedAnalyticsView" IsVisible="False" RowDefinitions="*, *">
+                            <Grid Grid.Row="0" ColumnDefinitions="*, *">
+                                <Border Grid.Column="0" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                    <pc:FunnelChart x:Name="FunnelCtrl" Title="Sales Pipeline Stage Funnel" ValuePath="Amount" TitlePath="Stage" />
+                                </Border>
+                                <Border Grid.Column="1" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                    <pc:WaffleChart x:Name="WaffleCtrl" Title="Resource Partitions (Waffle Grid)" ValuePath="Amount" TitlePath="Stage" CellSpacing="4" CellCornerRadius="3" />
+                                </Border>
+                            </Grid>
+                            <Grid Grid.Row="1" ColumnDefinitions="*, *">
+                                <Border Grid.Column="0" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                    <pc:WordCloudChart x:Name="WordCloudCtrl" Title="Telemetry Keywords Spiral (Word Cloud)" TextPath="Text" WeightPath="Weight" MinFontSize="12" MaxFontSize="32" />
+                                </Border>
+                                <Border Grid.Column="1" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                    <pc:TernaryChart x:Name="TernaryCtrl" Title="Chemical Phase Diagram (Ternary)" APath="ComponentA" BPath="ComponentB" CPath="ComponentC" />
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- CONFIGURATION PANEL -->
+                <Border Grid.Column="1" Background="#151D30" BorderBrush="#334155" BorderThickness="1,0,0,0" Padding="18">
+                    <ScrollViewer>
+                        <StackPanel Spacing="6">
+                            <!-- GENERAL/GLOBAL OPTIONS -->
+                            <TextBlock Text="CHART OPTIONS" Classes="header" />
+                            
+                            <TextBlock Text="Color Palette" Classes="label" />
+                            <ComboBox x:Name="PaletteComboBox" SelectionChanged="OnPaletteChanged">
+                                <ComboBoxItem Content="Modern Indigo" Tag="Modern" IsSelected="True" />
+                                <ComboBoxItem Content="Mint Emerald" Tag="Emerald" />
+                                <ComboBoxItem Content="Slate Dark" Tag="SlateDark" />
+                                <ComboBoxItem Content="Warm Pastel (Retro)" Tag="Retro" />
+                                <ComboBoxItem Content="Cyberpunk Neon" Tag="Cyberpunk" />
+                            </ComboBox>
+
+                            <TextBlock Text="Entry Animation Easing" Classes="label" />
+                            <ComboBox x:Name="EasingComboBox" SelectionChanged="OnEasingChanged">
+                                <ComboBoxItem Content="Linear" Tag="Linear" />
+                                <ComboBoxItem Content="Quadratic In" Tag="QuadraticEaseIn" />
+                                <ComboBoxItem Content="Quadratic Out" Tag="QuadraticEaseOut" />
+                                <ComboBoxItem Content="Cubic Out" Tag="CubicEaseOut" IsSelected="True" />
+                                <ComboBoxItem Content="Cubic InOut" Tag="CubicEaseInOut" />
+                                <ComboBoxItem Content="Elastic Out" Tag="ElasticEaseOut" />
+                                <ComboBoxItem Content="Bounce Out" Tag="BounceEaseOut" />
+                            </ComboBox>
+
+                            <TextBlock Text="Animation Duration" Classes="label" />
+                            <Grid ColumnDefinitions="*, Auto">
+                                <Slider Grid.Column="0" x:Name="AnimationDurationSlider" Minimum="100" Maximum="3000" Value="1000" ValueChanged="OnAnimationDurationChanged" />
+                                <TextBlock Grid.Column="1" Text="{Binding #AnimationDurationSlider.Value, StringFormat={}{0:0}ms}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                            </Grid>
+
+                            <CheckBox x:Name="EnableAnimationCheckBox" Content="Enable Entry Animations" IsChecked="True" IsCheckedChanged="OnAnimationChecked" />
+
+                            <Separator BorderBrush="#2A374E" Margin="0,10" />
+
+                            <!-- DYNAMIC CONTROLS FOR ACTIVE VIEW -->
+                            <!-- LINE CONTROLS -->
+                            <StackPanel x:Name="LineControls" Spacing="4">
+                                <TextBlock Text="LINE SERIES PROPERTIES" Classes="header" />
+                                <TextBlock Text="Series Type" Classes="label" />
+                                <ComboBox x:Name="LineSeriesTypeComboBox" SelectionChanged="OnLineSeriesTypeChanged">
+                                    <ComboBoxItem Content="Standard Line" Tag="Line" IsSelected="True" />
+                                    <ComboBoxItem Content="Step Segment Line" Tag="StepLine" />
+                                    <ComboBoxItem Content="XY Scatter Plot" Tag="Scatter" />
+                                    <ComboBoxItem Content="Bubble Chart (3D)" Tag="Bubble" />
+                                </ComboBox>
+                                <CheckBox x:Name="LineSmoothCheckBox" Content="Smooth Splines (Bézier)" IsChecked="False" IsCheckedChanged="OnLineSmoothChanged" />
+                                <CheckBox x:Name="LineShowMarkersCheckBox" Content="Show Data Markers" IsChecked="True" IsCheckedChanged="OnLineShowMarkersChanged" />
+
+                                <TextBlock Text="Marker Size" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="LineMarkerSizeSlider" Minimum="2" Maximum="20" Value="8" ValueChanged="OnLineMarkerSizeChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #LineMarkerSizeSlider.Value, StringFormat={}{0:0}px}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <TextBlock Text="Stroke Thickness" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="LineThicknessSlider" Minimum="1" Maximum="8" Value="3" ValueChanged="OnLineThicknessChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #LineThicknessSlider.Value, StringFormat={}{0:0}px}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <TextBlock Text="Empty Point Mode (NaN Handling)" Classes="label" />
+                                <ComboBox x:Name="LineEmptyModeComboBox" SelectionChanged="OnLineEmptyModeChanged">
+                                    <ComboBoxItem Content="Zero Fallback" Tag="Zero" IsSelected="True" />
+                                    <ComboBoxItem Content="Render Gap" Tag="Gap" />
+                                    <ComboBoxItem Content="Average Interpolate" Tag="Average" />
+                                    <ComboBoxItem Content="Linear Interpolate" Tag="Interpolate" />
+                                </ComboBox>
+                            </StackPanel>
+
+                            <!-- AREA CONTROLS -->
+                            <StackPanel x:Name="AreaControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="AREA SERIES PROPERTIES" Classes="header" />
+                                <TextBlock Text="Area Mode" Classes="label" />
+                                <ComboBox x:Name="AreaModeComboBox" SelectionChanged="OnAreaModeChanged">
+                                    <ComboBoxItem Content="Standard Area" Tag="Area" IsSelected="True" />
+                                    <ComboBoxItem Content="Stacked Area" Tag="StackedArea" />
+                                </ComboBox>
+                                <CheckBox x:Name="AreaSmoothCheckBox" Content="Smooth Area Borders" IsChecked="True" IsCheckedChanged="OnAreaSmoothChanged" />
+                                <CheckBox x:Name="AreaShowMarkersCheckBox" Content="Show Data Markers" IsChecked="True" IsCheckedChanged="OnAreaShowMarkersChanged" />
+
+                                <TextBlock Text="Stroke Thickness" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="AreaThicknessSlider" Minimum="1" Maximum="6" Value="2" ValueChanged="OnAreaThicknessChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #AreaThicknessSlider.Value, StringFormat={}{0:0}px}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- BAR CONTROLS -->
+                            <StackPanel x:Name="BarControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="COLUMN &amp; BAR PROPERTIES" Classes="header" />
+                                <TextBlock Text="Bar Mode" Classes="label" />
+                                <ComboBox x:Name="BarModeComboBox" SelectionChanged="OnBarModeChanged">
+                                    <ComboBoxItem Content="Clustered Columns" Tag="Bar" IsSelected="True" />
+                                    <ComboBoxItem Content="Stacked Columns" Tag="StackedBar" />
+                                    <ComboBoxItem Content="Diverging Sentiment" Tag="Diverging" />
+                                    <ComboBoxItem Content="Risk Factor Tornado" Tag="Tornado" />
+                                    <ComboBoxItem Content="Cash Flow Waterfall" Tag="Waterfall" />
+                                </ComboBox>
+                                <CheckBox x:Name="BarHorizontalCheckBox" Content="Horizontal Bars" IsChecked="False" IsCheckedChanged="OnBarHorizontalChanged" />
+                                
+                                <TextBlock Text="Corner Radius" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="BarRadiusSlider" Minimum="0" Maximum="24" Value="6" ValueChanged="OnBarRadiusChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #BarRadiusSlider.Value, StringFormat={}{0:0}px}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- PIE CONTROLS -->
+                            <StackPanel x:Name="PieControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="PIE &amp; DONUT PROPERTIES" Classes="header" />
+                                <TextBlock Text="Pie Mode" Classes="label" />
+                                <ComboBox x:Name="PieModeComboBox" SelectionChanged="OnPieModeChanged">
+                                    <ComboBoxItem Content="Standard Pie" Tag="Pie" IsSelected="True" />
+                                    <ComboBoxItem Content="Donut Chart" Tag="Donut" />
+                                    <ComboBoxItem Content="Semi-Donut Gauge" Tag="SemiDonut" />
+                                </ComboBox>
+                                
+                                <TextBlock Text="Hollow Center (Donut Mode)" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="PieHollowSlider" Minimum="0.0" Maximum="0.9" Value="0.5" ValueChanged="OnPieHollowChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #PieHollowSlider.Value, StringFormat={}{0:0%}}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <TextBlock Text="Explode Distance on Hover" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="PieExplodeSlider" Minimum="0" Maximum="40" Value="12" ValueChanged="OnPieExplodeChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #PieExplodeSlider.Value, StringFormat={}{0:0}px}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- REAL-TIME CONTROLS -->
+                            <StackPanel x:Name="RealTimeControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="STREAM CONTROL" Classes="header" />
+                                <Button x:Name="PlayPauseButton" Content="Start Real-time Telemetry" Classes="primary" Click="OnToggleRealTime" Margin="0,4,0,8" />
+                                
+                                <TextBlock Text="Interval (Milliseconds)" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="RtIntervalSlider" Minimum="10" Maximum="500" Value="50" ValueChanged="OnRtIntervalChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #RtIntervalSlider.Value, StringFormat={}{0:0}ms}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <TextBlock Text="Point Density" Classes="label" />
+                                <ComboBox x:Name="RtDensityComboBox" SelectionChanged="OnRtDensityChanged">
+                                    <ComboBoxItem Content="Standard Feed (50 pts)" Tag="50" IsSelected="True" />
+                                    <ComboBoxItem Content="High Stream (500 pts)" Tag="500" />
+                                    <ComboBoxItem Content="Complex Stress (2000 pts)" Tag="2000" />
+                                </ComboBox>
+                            </StackPanel>
+
+                            <!-- FINANCIAL CONTROLS -->
+                            <StackPanel x:Name="FinancialControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="FINANCIAL PROPERTIES" Classes="header" />
+                                <TextBlock Text="Series Plot Mode" Classes="label" />
+                                <ComboBox x:Name="FinancialModeComboBox" SelectionChanged="OnFinancialModeChanged">
+                                    <ComboBoxItem Content="Candlesticks" Tag="Candlestick" IsSelected="True" />
+                                    <ComboBoxItem Content="OHLC Ticks" Tag="Ohlc" />
+                                    <ComboBoxItem Content="Hilo Range" Tag="Hilo" />
+                                </ComboBox>
+                                
+                                <TextBlock Text="Candle/Tick Width" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="FinancialWidthSlider" Minimum="0.1" Maximum="1.0" Value="0.7" ValueChanged="OnFinancialWidthChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #FinancialWidthSlider.Value, StringFormat={}{0:0.0}}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- GAUGES CONTROLS -->
+                            <StackPanel x:Name="GaugesControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="GAUGE PROPERTIES" Classes="header" />
+                                <TextBlock Text="Interactive Gauge Value" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="GaugeValueSlider" Minimum="0" Maximum="100" Value="75" ValueChanged="OnGaugeValueChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #GaugeValueSlider.Value, StringFormat={}{0:0}%}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <TextBlock Text="Wave Oscillation Amplitude" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="GaugeAmplitudeSlider" Minimum="2" Maximum="20" Value="8" ValueChanged="OnGaugeAmplitudeChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #GaugeAmplitudeSlider.Value, StringFormat={}{0:0}px}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <TextBlock Text="Ring/Track Thickness" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="GaugeThicknessSlider" Minimum="8" Maximum="32" Value="18" ValueChanged="OnGaugeThicknessChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #GaugeThicknessSlider.Value, StringFormat={}{0:0}px}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- HIERARCHY CONTROLS -->
+                            <StackPanel x:Name="HierarchyControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="HIERARCHY PROPERTIES" Classes="header" />
+                                <Button Content="Scramble Hierarchy Weights" Classes="primary" Click="OnScrambleHierarchy" Margin="0,4,0,8" />
+                            </StackPanel>
+
+                            <!-- STATISTICAL CONTROLS -->
+                            <StackPanel x:Name="StatisticalControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="STATISTICAL PROPERTIES" Classes="header" />
+                                <TextBlock Text="Distribution Plot Mode" Classes="label" />
+                                <ComboBox x:Name="StatisticalModeComboBox" SelectionChanged="OnStatisticalModeChanged">
+                                    <ComboBoxItem Content="Box Whisker Plot" Tag="BoxPlot" IsSelected="True" />
+                                    <ComboBoxItem Content="Beeswarm Dot Swarm" Tag="Beeswarm" />
+                                    <ComboBoxItem Content="Frequency Histogram" Tag="Histogram" />
+                                    <ComboBoxItem Content="Violin Density Plot" Tag="Violin" />
+                                </ComboBox>
+                                
+                                <Button Content="Resample Distribution" Classes="secondary" Click="OnResampleStatistical" Margin="0,4,0,8" />
+                            </StackPanel>
+
+                            <!-- ANALYTICS CONTROLS -->
+                            <StackPanel x:Name="AnalyticsControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="ANALYTICS PROPERTIES" Classes="header" />
+                                <TextBlock Text="Interactive KPI Load Gauge" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="AnalyticsKpiSlider" Minimum="0" Maximum="100" Value="84" ValueChanged="OnAnalyticsKpiChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #AnalyticsKpiSlider.Value, StringFormat={}{0:0}%}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <TextBlock Text="Actual Performance Value" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="AnalyticsBulletSlider" Minimum="0" Maximum="150" Value="112" ValueChanged="OnAnalyticsBulletChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #AnalyticsBulletSlider.Value, StringFormat={}{0:0}}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <Button Content="Simulate Live Business Feed" Classes="primary" Click="OnSimulateAnalytics" Margin="0,4,0,8" />
+                            </StackPanel>
+
+                            <!-- ADVANCED ANALYTICS CONTROLS -->
+                            <StackPanel x:Name="AdvancedAnalyticsControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="ADVANCED PROPERTIES" Classes="header" />
+                                <Button Content="Simulate Pipeline Flows" Classes="primary" Click="OnSimulateAdvancedAnalytics" Margin="0,4,0,8" />
+                            </StackPanel>
+
+                            <Separator BorderBrush="#2A374E" Margin="0,10" />
+
+                            <!-- INTERACTION ACTIONS -->
+                            <TextBlock Text="ACTIONS" Classes="header" />
+                            <Button Content="Animate Entry" Classes="primary" Click="OnTriggerAnimation" Margin="0,2" />
+                            <Button Content="Inject Live Random Noise" Classes="secondary" Click="OnInjectNoise" Margin="0,2" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+
+</Window>
