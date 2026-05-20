@@ -38,6 +38,7 @@ namespace ProCharts.Uno.Maths
     {
         public string Text { get; }
         public SKPaint Paint { get; }
+        public SKFont Font { get; }
         public double Width { get; }
         public double Height { get; }
 
@@ -55,9 +56,11 @@ namespace ProCharts.Uno.Maths
             Paint = new SKPaint
             {
                 Color = paint?.Color ?? SKColors.Black,
-                TextSize = (float)fontSize,
                 IsAntialias = true
             };
+
+            Font = new SKFont();
+            Font.Size = (float)fontSize;
             
             if (typeface != null)
             {
@@ -67,15 +70,14 @@ namespace ProCharts.Uno.Maths
                 else if (typeface.FontWeight == FontWeight.Medium) weight = SKFontStyleWeight.Medium;
                 else if (typeface.FontWeight == FontWeight.Light) weight = SKFontStyleWeight.Light;
 
-                Paint.Typeface = SKTypeface.FromFamilyName(typeface.FontFamily, 
+                Font.Typeface = SKTypeface.FromFamilyName(typeface.FontFamily, 
                     weight,
                     SKFontStyleWidth.Normal,
                     typeface.FontStyle == FontStyle.Italic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright);
             }
 
             // Measure bounds
-            SKRect textBounds = default;
-            Paint.MeasureText(Text, ref textBounds);
+            Font.MeasureText(Text, out SKRect textBounds, Paint);
             Width = textBounds.Width;
             Height = Math.Max(fontSize, textBounds.Height); // Use fontSize as fallback for height
         }

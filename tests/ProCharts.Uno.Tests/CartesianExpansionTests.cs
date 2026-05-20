@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Windows.Foundation;
 using ProCharts.Uno.Controls;
-using Windows.Foundation;
 using ProCharts.Uno.Series;
 using Xunit;
 

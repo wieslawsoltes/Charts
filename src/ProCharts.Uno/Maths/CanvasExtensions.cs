@@ -251,7 +251,7 @@ namespace ProCharts.Uno.Maths
 
     public static class CanvasExtensions
     {
-        private static void PreparePaint(SKPaint paint, SKRect bounds)
+        private static void PreparePaint(SKPaint? paint, SKRect bounds)
         {
             if (paint is LinearGradientSKPaint lgp)
             {
@@ -259,7 +259,7 @@ namespace ProCharts.Uno.Maths
             }
         }
 
-        public static void DrawLine(this SKCanvas canvas, SKPaint paint, Point p1, Point p2)
+        public static void DrawLine(this SKCanvas canvas, SKPaint? paint, Point p1, Point p2)
         {
             if (paint == null) return;
             var bounds = new SKRect((float)Math.Min(p1.X, p2.X), (float)Math.Min(p1.Y, p2.Y), (float)Math.Max(p1.X, p2.X), (float)Math.Max(p1.Y, p2.Y));
@@ -267,17 +267,17 @@ namespace ProCharts.Uno.Maths
             canvas.DrawLine((float)p1.X, (float)p1.Y, (float)p2.X, (float)p2.Y, paint);
         }
 
-        public static void DrawText(this SKCanvas canvas, FormattedText ft, Point origin)
+        public static void DrawText(this SKCanvas canvas, FormattedText? ft, Point origin)
         {
             if (ft == null || string.IsNullOrEmpty(ft.Text)) return;
             if (ft.Paint != null)
             {
                 PreparePaint(ft.Paint, new SKRect((float)origin.X, (float)origin.Y, (float)(origin.X + ft.Width), (float)(origin.Y + ft.Height)));
             }
-            canvas.DrawText(ft.Text, (float)origin.X, (float)(origin.Y + ft.Height), ft.Paint);
+            canvas.DrawText(ft.Text, (float)origin.X, (float)(origin.Y + ft.Height), ft.Font, ft.Paint);
         }
 
-        public static void DrawRectangle(this SKCanvas canvas, SKPaint fill, SKPaint stroke, Rect rect)
+        public static void DrawRectangle(this SKCanvas canvas, SKPaint? fill, SKPaint? stroke, Rect rect)
         {
             SKRect r = rect;
             if (fill != null)
@@ -295,7 +295,7 @@ namespace ProCharts.Uno.Maths
             }
         }
 
-        public static void DrawRectangle(this SKCanvas canvas, SKPaint fill, SKPaint stroke, RoundedRect roundedRect)
+        public static void DrawRectangle(this SKCanvas canvas, SKPaint? fill, SKPaint? stroke, RoundedRect roundedRect)
         {
             var rr = new SKRoundRect();
             var rect = new SKRect((float)roundedRect.Rect.Left, (float)roundedRect.Rect.Top, (float)roundedRect.Rect.Right, (float)roundedRect.Rect.Bottom);
@@ -325,7 +325,7 @@ namespace ProCharts.Uno.Maths
             }
         }
 
-        public static void DrawEllipse(this SKCanvas canvas, SKPaint fill, SKPaint stroke, Point center, double rx, double ry)
+        public static void DrawEllipse(this SKCanvas canvas, SKPaint? fill, SKPaint? stroke, Point center, double rx, double ry)
         {
             var rect = new SKRect((float)(center.X - rx), (float)(center.Y - ry), (float)(center.X + rx), (float)(center.Y + ry));
             if (fill != null)
@@ -346,14 +346,14 @@ namespace ProCharts.Uno.Maths
             }
         }
 
-        public static void DrawGeometry(this SKCanvas canvas, SKPaint fill, SKPaint stroke, Geometry geometry)
+        public static void DrawGeometry(this SKCanvas canvas, SKPaint? fill, SKPaint? stroke, Geometry? geometry)
         {
             if (geometry == null) return;
             var path = geometry.ToSKPath();
             canvas.DrawGeometry(fill, stroke, path);
         }
 
-        public static void DrawGeometry(this SKCanvas canvas, SKPaint fill, SKPaint stroke, SKPath path)
+        public static void DrawGeometry(this SKCanvas canvas, SKPaint? fill, SKPaint? stroke, SKPath? path)
         {
             if (path == null) return;
             var bounds = path.Bounds;
@@ -378,7 +378,7 @@ namespace ProCharts.Uno.Maths
         public static IDisposable PushTransform(this SKCanvas canvas, SKMatrix matrix)
         {
             canvas.Save();
-            canvas.Concat(ref matrix);
+            canvas.Concat(matrix);
             return new CanvasSavePopper(canvas);
         }
 

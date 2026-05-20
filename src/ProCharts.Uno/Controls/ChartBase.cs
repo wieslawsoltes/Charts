@@ -314,9 +314,7 @@ namespace ProCharts.Uno.Controls
                 foreground);
 
             double tx = (bounds.Width - formattedText.Width) / 2.0; // Centered
-            double ty = 12 + formattedText.Height;
-
-            context.DrawText(formattedText.Text, (float)tx, (float)ty, formattedText.Paint);
+            context.DrawText(formattedText, new Point(tx, 12));
         }
 
         protected abstract void RenderChart(SKCanvas context);
