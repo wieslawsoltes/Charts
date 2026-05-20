@@ -97,7 +97,7 @@ namespace ProCharts.Uno.Series
                 double animatedY = screenBaselineY + (screenPt.Y - screenBaselineY) * progress;
                 var animatedPt = new Point(screenPt.X, animatedY);
 
-                context.Canvas.DrawCircle((float)animatedPt.X, (float)animatedPt.Y, (float)halfSize, bubbleSKPaint ?? bubbleFill);
+                context.Canvas.DrawEllipse(bubbleFill, bubbleSKPaint, animatedPt, halfSize, halfSize);
             }
         }
     }

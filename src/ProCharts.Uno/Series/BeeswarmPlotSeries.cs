@@ -79,7 +79,7 @@ namespace ProCharts.Uno.Series
                     placedPoints.Add(swarmPt);
 
                     // Draw the swarm point circle
-                    context.Canvas.DrawCircle((float)swarmPt.X, (float)swarmPt.Y, (float)r, circleSKPaint ?? activeSKPaint);
+                    context.Canvas.DrawEllipse(activeSKPaint, circleSKPaint, swarmPt, r, r);
                 }
             }
         }

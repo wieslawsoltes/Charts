@@ -73,12 +73,12 @@ namespace ProCharts.Uno.Series
                 switch (Shape)
                 {
                     case ScatterShape.Circle:
-                        context.Canvas.DrawCircle((float)animatedPt.X, (float)animatedPt.Y, (float)halfAnim, pointSKPaint ?? itemFill);
+                        context.Canvas.DrawEllipse(itemFill, pointSKPaint, animatedPt, halfAnim, halfAnim);
                         break;
 
                     case ScatterShape.Square:
                         var rect = new Rect(animatedPt.X - halfAnim, animatedPt.Y - halfAnim, animSize, animSize);
-                        context.Canvas.DrawRect((float)rect.X, (float)rect.Y, (float)rect.Width, (float)rect.Height, pointSKPaint ?? itemFill);
+                        context.Canvas.DrawRectangle(itemFill, pointSKPaint, rect);
                         break;
 
                     case ScatterShape.Diamond:
@@ -91,7 +91,7 @@ namespace ProCharts.Uno.Series
                             geometry.LineTo(new Point(animatedPt.X - halfAnim, animatedPt.Y));
                             geometry.Close(true);
                         }
-                        context.Canvas.DrawPath(geometry, pointSKPaint ?? itemFill);
+                        context.Canvas.DrawGeometry(itemFill, pointSKPaint, geometry);
                         break;
 
                     case ScatterShape.Cross:

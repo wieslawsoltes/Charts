@@ -301,7 +301,7 @@ namespace ProCharts.Uno.Controls
                 var bg = PlotAreaBackground;
                 if (bg != null)
                 {
-                    canvas.DrawRect((float)EffectivePlotArea.X, (float)EffectivePlotArea.Y, (float)EffectivePlotArea.Width, (float)EffectivePlotArea.Height, bg);
+                    canvas.DrawRectangle(bg, null, EffectivePlotArea);
                 }
 
                 // 4. Custom derived rendering (Gridlines, Axes, Series)
@@ -349,7 +349,7 @@ namespace ProCharts.Uno.Controls
 
         protected SKPaint SystemSKPaint => LabelForeground ?? new SKPaint 
         { 
-            Color = ActualTheme == ElementTheme.Dark ? SKColors.White : SKColors.Black,
+            Color = ActualTheme == ElementTheme.Light ? SKColors.Black : SKColors.White,
             IsAntialias = true
         };
     }

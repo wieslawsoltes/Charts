@@ -70,19 +70,25 @@
             <Grid RowDefinitions="Auto, *, Auto">
                 <!-- Branding Header -->
                 <StackPanel Grid.Row="0" Margin="0,0,0,24">
-                    <TextBlock Text="PROCHARTS" FontSize="22" FontWeight="Black">
-                        <TextBlock.Foreground>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                <GradientStop Offset="0" Color="#6366F1" />
-                                <GradientStop Offset="1" Color="#06B6D4" />
-                            </LinearGradientBrush>
-                        </TextBlock.Foreground>
-                    </TextBlock>
+                    <TextBlock Text="PROCHARTS" FontSize="22" FontWeight="Black" Foreground="#38BDF8" CharacterSpacing="200" />
                     <TextBlock Text="NATIVE UNO SKIA ENGINE" FontSize="9" FontWeight="Bold" Foreground="#64748B" Margin="0,4,0,0" />
                 </StackPanel>
 
                 <!-- Navigation List -->
                 <ListBox Grid.Row="1" x:Name="CategoryList" Background="Transparent" BorderThickness="0" SelectionChanged="OnCategoryChanged">
+                    <ListBox.Resources>
+                        <SolidColorBrush x:Key="ListBoxItemBackgroundSelected" Color="#4F46E5" />
+                        <SolidColorBrush x:Key="ListBoxItemBackgroundSelectedPointerOver" Color="#6366F1" />
+                        <SolidColorBrush x:Key="ListBoxItemBackgroundSelectedPressed" Color="#4338CA" />
+                        <SolidColorBrush x:Key="ListBoxItemForegroundSelected" Color="White" />
+                        <SolidColorBrush x:Key="ListBoxItemForegroundSelectedPointerOver" Color="White" />
+                        <SolidColorBrush x:Key="ListBoxItemForegroundSelectedPressed" Color="White" />
+                        
+                        <SolidColorBrush x:Key="ListBoxItemBackgroundPointerOver" Color="#334155" />
+                        <SolidColorBrush x:Key="ListBoxItemForegroundPointerOver" Color="White" />
+                        <SolidColorBrush x:Key="ListBoxItemBackgroundPressed" Color="#1E293B" />
+                        <SolidColorBrush x:Key="ListBoxItemForegroundPressed" Color="White" />
+                    </ListBox.Resources>
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="CornerRadius" Value="8"/>

@@ -223,7 +223,7 @@ namespace ProCharts.Uno.Series
                 double h = Math.Max(1.0, bottomY - topY);
 
                 var boxRect = new Rect(ptMedian.X - boxWidth / 2.0, topY, boxWidth, h);
-                context.Canvas.DrawRect((float)boxRect.X, (float)boxRect.Y, (float)boxRect.Width, (float)boxRect.Height, boxSKPaint ?? boxFill);
+                context.Canvas.DrawRectangle(boxFill, boxSKPaint, boxRect);
 
                 // Draw Median Line (horizontal line inside the box)
                 context.Canvas.DrawLine(boxSKPaint, new Point(ptMedian.X - boxWidth / 2.0, ptMedian.Y), new Point(ptMedian.X + boxWidth / 2.0, ptMedian.Y));
@@ -234,7 +234,7 @@ namespace ProCharts.Uno.Series
                     double outlAnim = median + (outl - median) * progress;
                     var ptOutl = context.Transform.ToScreen(m.X, outlAnim);
                     var outlierSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#EF4444")); // Red outlier dots
-                    context.Canvas.DrawCircle((float)ptOutl.X, (float)ptOutl.Y, (float)3.0, null ?? outlierSKPaint);
+                    context.Canvas.DrawEllipse(outlierSKPaint, null, ptOutl, 3.0, 3.0);
                 }
             }
         }

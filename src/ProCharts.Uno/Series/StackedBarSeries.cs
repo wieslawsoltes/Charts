@@ -99,7 +99,7 @@ namespace ProCharts.Uno.Series
                     }
                     else
                     {
-                        context.Canvas.DrawRect((float)barRect.X, (float)barRect.Y, (float)barRect.Width, (float)barRect.Height, barSKPaint ?? barFill);
+                        context.Canvas.DrawRectangle(barFill, barSKPaint, barRect);
                     }
                 }
             }
@@ -146,7 +146,7 @@ namespace ProCharts.Uno.Series
                     }
                     else
                     {
-                        context.Canvas.DrawRect((float)barRect.X, (float)barRect.Y, (float)barRect.Width, (float)barRect.Height, barSKPaint ?? barFill);
+                        context.Canvas.DrawRectangle(barFill, barSKPaint, barRect);
                     }
                 }
             }

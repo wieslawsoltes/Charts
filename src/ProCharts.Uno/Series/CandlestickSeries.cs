@@ -100,7 +100,7 @@ namespace ProCharts.Uno.Series
                 double height = Math.Max(1.0, bottomY - topY);
 
                 var bodyRect = new Rect(ptOpen.X - candleWidth / 2.0, topY, candleWidth, height);
-                context.Canvas.DrawRect((float)bodyRect.X, (float)bodyRect.Y, (float)bodyRect.Width, (float)bodyRect.Height, candleSKPaint ?? fillSKPaint);
+                context.Canvas.DrawRectangle(fillSKPaint, candleSKPaint, bodyRect);
             }
         }
     }

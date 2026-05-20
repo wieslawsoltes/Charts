@@ -99,8 +99,7 @@ namespace ProCharts.Uno.Series
                     var animatedPoints = AnimatePoints(segment, context.Transform, context.AnimationProgress);
                     foreach (var pt in animatedPoints)
                     {
-                        context.Canvas.DrawCircle((float)pt.X, (float)pt.Y, (float)halfSize, markerSKPaint ?? 
-                            markerFillSKPaint);
+                        context.Canvas.DrawEllipse(markerFillSKPaint, markerSKPaint, pt, halfSize, halfSize);
                     }
                 }
             }

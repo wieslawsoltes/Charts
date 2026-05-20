@@ -141,7 +141,7 @@ namespace ProCharts.Uno.Series
                 if (w > gap * 2.0 && h > 0)
                 {
                     var rect = new Rect(x + gap, y, w - gap * 2.0, h);
-                    context.Canvas.DrawRect((float)rect.X, (float)rect.Y, (float)rect.Width, (float)rect.Height, columnSKPaint ?? columnFill);
+                    context.Canvas.DrawRectangle(columnFill, columnSKPaint, rect);
                 }
             }
         }

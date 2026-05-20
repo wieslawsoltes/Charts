@@ -243,7 +243,7 @@ namespace ProCharts.Uno.Series
                 }
 
                 // Render violin density body
-                context.Canvas.DrawPath(geometry, strokeSKPaint ?? fillSKPaint);
+                context.Canvas.DrawGeometry(fillSKPaint, strokeSKPaint, geometry);
 
                 // Draw central axis line (Median / Range)
                 var ptMin = context.Transform.ToScreen(vm.X, vm.Min);
@@ -255,7 +255,7 @@ namespace ProCharts.Uno.Series
 
                 // Median point marker
                 var medianSKPaint = SKPaintes.White;
-                context.Canvas.DrawCircle((float)ptMedian.X, (float)ptMedian.Y, (float)3.5, null ?? medianSKPaint);
+                context.Canvas.DrawEllipse(medianSKPaint, null, ptMedian, 3.5, 3.5);
             }
         }
     }

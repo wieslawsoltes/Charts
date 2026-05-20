@@ -20,6 +20,7 @@ public partial class App : Application
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         MainWindow = new Window();
+        MainWindow.Title = "ProCharts Interactive Gallery";
 #if DEBUG
         MainWindow.UseStudio();
 #endif

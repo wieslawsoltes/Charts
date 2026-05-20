@@ -77,8 +77,8 @@ namespace ProCharts.Uno.Maths
             }
 
             // Measure bounds
-            Font.MeasureText(Text, out SKRect textBounds, Paint);
-            Width = textBounds.Width;
+            float advanceWidth = Font.MeasureText(Text, out SKRect textBounds, Paint);
+            Width = advanceWidth;
             Height = Math.Max(fontSize, textBounds.Height); // Use fontSize as fallback for height
         }
     }
