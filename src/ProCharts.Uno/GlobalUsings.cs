@@ -1,0 +1,15 @@
+global using Point = ProCharts.Uno.Maths.Point;
+global using Rect = ProCharts.Uno.Maths.Rect;
+global using ProCharts.Uno;
+global using ProCharts.Uno.Maths;
+global using ProCharts.Uno.Styles;
+global using ProCharts.Uno.Series;
+global using ProCharts.Uno.Controls;
+global using ProCharts.Uno.Components;
+global using Avalonia.Collections;
+global using EllipseGeometry = ProCharts.Uno.Maths.EllipseGeometry;
+global using Geometry = ProCharts.Uno.Maths.Geometry;
+global using CombinedGeometry = ProCharts.Uno.Maths.CombinedGeometry;
+global using GeometryCombineMode = ProCharts.Uno.Maths.GeometryCombineMode;
+global using SweepDirection = ProCharts.Uno.Maths.SweepDirection;
+global using Matrix = ProCharts.Uno.Maths.Matrix;

@@ -1,7 +1,8 @@
-using Avalonia;
-using Avalonia.Media;
+using System;
+using Microsoft.UI.Xaml;
+using Windows.Foundation;
 
-namespace ProCharts.Components
+namespace ProCharts.Uno.Components
 {
     public enum AxisPosition
     {
@@ -11,87 +12,97 @@ namespace ProCharts.Components
         Bottom
     }
 
-    public class Axis : AvaloniaObject
+    public partial class Axis : DependencyObject
     {
-        public static readonly StyledProperty<string?> TitleProperty =
-            AvaloniaProperty.Register<Axis, string?>(nameof(Title));
+        public static readonly DependencyProperty TitleProperty =
+            DependencyProperty.Register(nameof(Title), typeof(string), typeof(Axis), new PropertyMetadata(default(string), OnPropertyChanged));
 
-        public static readonly StyledProperty<double?> MinimumProperty =
-            AvaloniaProperty.Register<Axis, double?>(nameof(Minimum));
+        public static readonly DependencyProperty MinimumProperty =
+            DependencyProperty.Register(nameof(Minimum), typeof(double?), typeof(Axis), new PropertyMetadata(default(double?), OnPropertyChanged));
 
-        public static readonly StyledProperty<double?> MaximumProperty =
-            AvaloniaProperty.Register<Axis, double?>(nameof(Maximum));
+        public static readonly DependencyProperty MaximumProperty =
+            DependencyProperty.Register(nameof(Maximum), typeof(double?), typeof(Axis), new PropertyMetadata(default(double?), OnPropertyChanged));
 
-        public static readonly StyledProperty<double?> TickIntervalProperty =
-            AvaloniaProperty.Register<Axis, double?>(nameof(TickInterval));
+        public static readonly DependencyProperty TickIntervalProperty =
+            DependencyProperty.Register(nameof(TickInterval), typeof(double?), typeof(Axis), new PropertyMetadata(default(double?), OnPropertyChanged));
 
-        public static readonly StyledProperty<string> LabelFormatProperty =
-            AvaloniaProperty.Register<Axis, string>(nameof(LabelFormat), "G");
+        public static readonly DependencyProperty LabelFormatProperty =
+            DependencyProperty.Register(nameof(LabelFormat), typeof(string), typeof(Axis), new PropertyMetadata("G", OnPropertyChanged));
 
-        public static readonly StyledProperty<bool> IsVisibleProperty =
-            AvaloniaProperty.Register<Axis, bool>(nameof(IsVisible), true);
+        public static readonly DependencyProperty IsVisibleProperty =
+            DependencyProperty.Register(nameof(IsVisible), typeof(bool), typeof(Axis), new PropertyMetadata(true, OnPropertyChanged));
 
-        public static readonly StyledProperty<AxisPosition> PositionProperty =
-            AvaloniaProperty.Register<Axis, AxisPosition>(nameof(Position), AxisPosition.Bottom);
+        public static readonly DependencyProperty PositionProperty =
+            DependencyProperty.Register(nameof(Position), typeof(AxisPosition), typeof(Axis), new PropertyMetadata(AxisPosition.Bottom, OnPropertyChanged));
 
-        public static readonly StyledProperty<bool> IsLogarithmicProperty =
-            AvaloniaProperty.Register<Axis, bool>(nameof(IsLogarithmic), false);
+        public static readonly DependencyProperty IsLogarithmicProperty =
+            DependencyProperty.Register(nameof(IsLogarithmic), typeof(bool), typeof(Axis), new PropertyMetadata(false, OnPropertyChanged));
 
-        public static readonly StyledProperty<bool> IsReversedProperty =
-            AvaloniaProperty.Register<Axis, bool>(nameof(IsReversed), false);
+        public static readonly DependencyProperty IsReversedProperty =
+            DependencyProperty.Register(nameof(IsReversed), typeof(bool), typeof(Axis), new PropertyMetadata(false, OnPropertyChanged));
 
         public string? Title
         {
-            get => GetValue(TitleProperty);
+            get => (string?)GetValue(TitleProperty);
             set => SetValue(TitleProperty, value);
         }
 
         public double? Minimum
         {
-            get => GetValue(MinimumProperty);
+            get => (double?)GetValue(MinimumProperty);
             set => SetValue(MinimumProperty, value);
         }
 
         public double? Maximum
         {
-            get => GetValue(MaximumProperty);
+            get => (double?)GetValue(MaximumProperty);
             set => SetValue(MaximumProperty, value);
         }
 
         public double? TickInterval
         {
-            get => GetValue(TickIntervalProperty);
+            get => (double?)GetValue(TickIntervalProperty);
             set => SetValue(TickIntervalProperty, value);
         }
 
         public string LabelFormat
         {
-            get => GetValue(LabelFormatProperty);
+            get => (string)GetValue(LabelFormatProperty);
             set => SetValue(LabelFormatProperty, value);
         }
 
         public bool IsVisible
         {
-            get => GetValue(IsVisibleProperty);
+            get => (bool)GetValue(IsVisibleProperty);
             set => SetValue(IsVisibleProperty, value);
         }
 
         public AxisPosition Position
         {
-            get => GetValue(PositionProperty);
+            get => (AxisPosition)GetValue(PositionProperty);
             set => SetValue(PositionProperty, value);
         }
 
         public bool IsLogarithmic
         {
-            get => GetValue(IsLogarithmicProperty);
+            get => (bool)GetValue(IsLogarithmicProperty);
             set => SetValue(IsLogarithmicProperty, value);
         }
 
         public bool IsReversed
         {
-            get => GetValue(IsReversedProperty);
+            get => (bool)GetValue(IsReversedProperty);
             set => SetValue(IsReversedProperty, value);
+        }
+
+        public event EventHandler? Changed;
+
+        private static void OnPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is Axis self)
+            {
+                self.Changed?.Invoke(self, EventArgs.Empty);
+            }
         }
 
         // --- MATH HELPERS ---
