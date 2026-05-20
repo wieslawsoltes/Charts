@@ -1,0 +1,158 @@
+using System;
+using Windows.Foundation;
+using Microsoft.UI.Xaml;
+using SkiaSharp;
+using Microsoft.UI.Xaml.Media;
+using Windows.UI;
+using Microsoft.UI.Dispatching;
+using ProCharts.Uno.Styles;
+
+namespace ProCharts.Uno.Controls
+{
+    public class LiquidFillGauge : ChartBase
+    {
+        public static readonly DependencyProperty ValueProperty =
+            DependencyProperty.Register(nameof(Value), typeof(double), typeof(LiquidFillGauge), new PropertyMetadata(0.0, OnPropertyChanged)); // 0.0 to 100.0
+
+        public static readonly DependencyProperty LiquidSKColorProperty =
+            DependencyProperty.Register(nameof(LiquidSKColor), typeof(SKPaint), typeof(LiquidFillGauge), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+
+        public static readonly DependencyProperty WaveAmplitudeProperty =
+            DependencyProperty.Register(nameof(WaveAmplitude), typeof(double), typeof(LiquidFillGauge), new PropertyMetadata(8.0, OnPropertyChanged));
+
+        public double Value { get => (double)GetValue(ValueProperty);
+            set => SetValue(ValueProperty, value);
+        }
+
+        public SKPaint? LiquidSKColor { get => (SKPaint?)GetValue(LiquidSKColorProperty);
+            set => SetValue(LiquidSKColorProperty, value);
+        }
+
+        public double WaveAmplitude { get => (double)GetValue(WaveAmplitudeProperty);
+            set => SetValue(WaveAmplitudeProperty, value);
+        }
+
+        private double _waveOffset = 0.0;
+        private DispatcherTimer? _waveTimer;
+
+        public LiquidFillGauge()
+        {
+
+            Loaded += (s, e) => StartWaveAnimation();
+            Unloaded += (s, e) => StopWaveAnimation();
+        }
+
+        private void StartWaveAnimation()
+        {
+            StopWaveAnimation();
+            _waveTimer = new DispatcherTimer();
+            _waveTimer.Interval = TimeSpan.FromMilliseconds(33); // ~30 FPS wave motion
+            _waveTimer.Tick += (s, e) =>
+            {
+                _waveOffset += 0.15; // Speed of horizontal wave movement
+                InvalidateVisual();
+            };
+            _waveTimer.Start();
+        }
+
+        private void StopWaveAnimation()
+        {
+            _waveTimer?.Stop();
+            _waveTimer = null;
+        }
+
+        protected override Rect CalculatePlotArea(Size bounds)
+        {
+            double padding = 16;
+            if (!string.IsNullOrEmpty(Title)) padding += 24;
+
+            double side = Math.Min(bounds.Width, bounds.Height) - padding * 2;
+            side = Math.Max(10, side);
+
+            double cx = (bounds.Width - side) / 2.0;
+            double cy = (bounds.Height - side) / 2.0;
+
+            if (!string.IsNullOrEmpty(Title)) cy += 12;
+
+            return new Rect(cx, cy, side, side);
+        }
+
+        protected override void RenderChart(SKCanvas context)
+        {
+            var area = EffectivePlotArea;
+            var center = area.Center;
+            double radius = area.Width / 2.0;
+
+            double progress = AnimationProgress;
+            double pct = Math.Clamp(Value * progress / 100.0, 0.0, 1.0);
+
+            // 1. Draw Outer Glass Ring
+            var ringSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#40FFFFFF")), 4.0);
+            var fillBg = new SolidSKColorSKPaint(SKColor.Parse("#10FFFFFF")); // Dark slate transparent core
+            context.DrawEllipse(fillBg, ringSKPaint, center, radius, radius);
+
+            // 2. Wave Level Coordinate
+            // pct = 0 means bottom of circle (center.Y + radius), pct = 1 means top (center.Y - radius)
+            double targetY = (center.Y + radius) - (radius * 2.0 * pct);
+
+            if (pct > 0.001)
+            {
+                // Create overlapping waves using mathematical path clipping or boundary intersection
+                // To keep drawing fast and robust, we build a SKPath that fills the bottom of the circle
+                // up to targetY with a sine-wave peak profile, and clip it within the circle bounds.
+                
+                var waveSKColor1 = LiquidSKColor ?? new SolidSKColorSKPaint(SKColor.Parse("#8006B6D4")); // Transparent Cyan
+                var waveSKColor2 = LiquidSKColor ?? new SolidSKColorSKPaint(SKColor.Parse("#B00891B2")); // Solid Cyan
+
+                // Create a circular clipping state to keep waves clean inside the circle
+                var circleGeom = new EllipseGeometry(new Rect(area.Left, area.Top, area.Width, area.Height));
+                using (context.PushGeometryClip(circleGeom))
+                {
+                    // Draw Wave 1 (Back Wave, slightly offset)
+                    DrawWavePath(context, area, targetY, _waveOffset, WaveAmplitude, waveSKColor1);
+
+                    // Draw Wave 2 (Front Wave, primary offset)
+                    DrawWavePath(context, area, targetY, _waveOffset + Math.PI, WaveAmplitude, waveSKColor2);
+                }
+            }
+
+            // 3. Draw Digital Percentage Overlay in Center
+            var textSKPaint = SystemSKPaint;
+            var ftPct = new FormattedText(
+                $"{pct * 100.0:F0}%",
+                System.Globalization.CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
+                radius * 0.4,
+                textSKPaint);
+
+            double tx = center.X - ftPct.Width / 2.0;
+            double ty = center.Y - ftPct.Height / 2.0;
+            context.DrawText(ftPct, new Point(tx, ty));
+        }
+
+        private void DrawWavePath(SKCanvas context, Rect area, double targetY, double phase, double amp, SKPaint brush)
+        {
+            var geometry = new SKPath();
+            using (var ctx = geometry.Open())
+            {
+                geometry.MoveTo(new Point(area.Left, area.Bottom), true);
+                
+                // Draw wave along the top boundary
+                double step = 4.0;
+                for (double x = area.Left; x <= area.Right; x += step)
+                {
+                    // Sine-wave calculation
+                    double wavelength = area.Width / 1.5;
+                    double y = targetY + amp * Math.Sin((x / wavelength) * 2.0 * Math.PI + phase);
+                    geometry.LineTo(new Point(x, y));
+                }
+
+                // Close the shape at the bottom
+                geometry.LineTo(new Point(area.Right, area.Bottom));
+            }
+
+            context.DrawGeometry(brush, null, geometry);
+        }
+    }
+}
