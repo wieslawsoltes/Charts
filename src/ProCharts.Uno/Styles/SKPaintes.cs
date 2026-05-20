@@ -1,9 +1,149 @@
 using System;
 using System.Collections.Generic;
-using SkiaSharp;
+using Microsoft.UI.Xaml.Media;
+using Windows.UI;
 
 namespace ProCharts.Uno
 {
+    // --- BASIC PAINT TYPES ---
+
+    public enum SKPaintStyle
+    {
+        Fill,
+        Stroke,
+        StrokeAndFill
+    }
+
+    public enum SKStrokeCap
+    {
+        Butt,
+        Round,
+        Square
+    }
+
+    public enum SKStrokeJoin
+    {
+        Miter,
+        Round,
+        Bevel
+    }
+
+    public struct SKColor
+    {
+        public byte Alpha { get; set; }
+        public byte Red { get; set; }
+        public byte Green { get; set; }
+        public byte Blue { get; set; }
+
+        public SKColor(byte red, byte green, byte blue, byte alpha = 255)
+        {
+            Red = red;
+            Green = green;
+            Blue = blue;
+            Alpha = alpha;
+        }
+
+        public SKColor(byte red, byte green, byte blue) : this(red, green, blue, 255) { }
+
+        public SKColor(Windows.UI.Color color)
+        {
+            Red = color.R;
+            Green = color.G;
+            Blue = color.B;
+            Alpha = color.A;
+        }
+
+        public static implicit operator Windows.UI.Color(SKColor color) => Windows.UI.Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue);
+        public static implicit operator SKColor(Windows.UI.Color color) => new SKColor(color);
+
+        public Windows.UI.Color ToColor() => (Windows.UI.Color)this;
+
+        public static SKColor Parse(string hex)
+        {
+            if (string.IsNullOrEmpty(hex)) return new SKColor(0, 0, 0, 0);
+            hex = hex.TrimStart('#');
+            if (hex.Length == 8)
+            {
+                byte a = Convert.ToByte(hex.Substring(0, 2), 16);
+                byte r = Convert.ToByte(hex.Substring(2, 2), 16);
+                byte g = Convert.ToByte(hex.Substring(4, 2), 16);
+                byte b = Convert.ToByte(hex.Substring(6, 2), 16);
+                return new SKColor(r, g, b, a);
+            }
+            else if (hex.Length == 6)
+            {
+                byte r = Convert.ToByte(hex.Substring(0, 2), 16);
+                byte g = Convert.ToByte(hex.Substring(2, 2), 16);
+                byte b = Convert.ToByte(hex.Substring(4, 2), 16);
+                return new SKColor(r, g, b, 255);
+            }
+            return new SKColor(0, 0, 0, 255);
+        }
+    }
+
+    public static class SKColors
+    {
+        public static SKColor White => new SKColor(255, 255, 255);
+        public static SKColor Black => new SKColor(0, 0, 0);
+        public static SKColor Transparent => new SKColor(0, 0, 0, 0);
+        public static SKColor SkyBlue => new SKColor(135, 206, 235);
+        public static SKColor Purple => new SKColor(128, 0, 128);
+        public static SKColor Teal => new SKColor(0, 128, 128);
+    }
+
+    public class SKPaint
+    {
+        private SKColor _color;
+        private Brush? _winUIBrush;
+
+        public SKColor Color
+        {
+            get
+            {
+                if (_winUIBrush is SolidColorBrush scb) return new SKColor(scb.Color);
+                return _color;
+            }
+            set
+            {
+                _color = value;
+                _winUIBrush = null;
+            }
+        }
+
+        public SKPaintStyle Style { get; set; } = SKPaintStyle.Fill;
+        public float StrokeWidth { get; set; } = 1.0f;
+        public SKStrokeCap StrokeCap { get; set; } = SKStrokeCap.Butt;
+        public SKStrokeJoin StrokeJoin { get; set; } = SKStrokeJoin.Miter;
+        public bool IsAntialias { get; set; } = true;
+
+        // Legacy Skia fields mapped to no-ops or simple properties
+        public object? Shader { get; set; }
+        public object? PathEffect { get; set; }
+        public object? MaskFilter { get; set; }
+        public object? ImageFilter { get; set; }
+        public object? BlendMode { get; set; }
+
+        public SKPaint() { }
+
+        public SKPaint(Brush brush)
+        {
+            _winUIBrush = brush;
+            if (brush is SolidColorBrush scb)
+            {
+                _color = new SKColor(scb.Color);
+            }
+        }
+
+        public virtual Brush ToBrush()
+        {
+            if (_winUIBrush != null) return _winUIBrush;
+            return new SolidColorBrush(_color.ToColor());
+        }
+
+        public static implicit operator Brush(SKPaint? paint) => paint?.ToBrush()!;
+        public static implicit operator SKPaint(Brush? brush) => brush != null ? new SKPaint(brush) : null!;
+    }
+
     public static class SKPaintes
     {
         public static SKPaint White => new SKPaint { Color = SKColors.White, IsAntialias = true };
@@ -37,6 +177,8 @@ namespace ProCharts.Uno
         }
     }
 
+    // --- PEN AND DASH STYLES ---
+
     public class DashStyle
     {
         public IReadOnlyList<double> Dashes { get; }
@@ -53,29 +195,39 @@ namespace ProCharts.Uno
 
     public class Pen : SKPaint
     {
-        public SKPaint? Brush { get; }
+        public Brush? Brush { get; }
+        public DashStyle? Dash { get; }
 
-        public Pen(SKPaint? brush, double thickness = 1.0, DashStyle? dashStyle = null, SKStrokeCap lineCap = SKStrokeCap.Butt, SKStrokeJoin lineJoin = SKStrokeJoin.Miter)
+        public Pen(Brush? brush, double thickness = 1.0, DashStyle? dashStyle = null, SKStrokeCap lineCap = SKStrokeCap.Butt, SKStrokeJoin lineJoin = SKStrokeJoin.Miter)
         {
             Brush = brush;
             Style = SKPaintStyle.Stroke;
             StrokeWidth = (float)thickness;
-            Color = brush?.Color ?? SKColors.Black;
-            IsAntialias = true;
+            Dash = dashStyle;
             StrokeCap = lineCap;
             StrokeJoin = lineJoin;
 
-            if (dashStyle != null && dashStyle.Dashes != null)
+            if (brush is SolidColorBrush scb)
             {
-                var floats = new float[dashStyle.Dashes.Count];
-                for (int i = 0; i < dashStyle.Dashes.Count; i++)
-                {
-                    floats[i] = (float)dashStyle.Dashes[i];
-                }
-                PathEffect = SKPathEffect.CreateDash(floats, (float)dashStyle.Offset);
+                Color = new SKColor(scb.Color);
+            }
+            else if ((object?)brush is SKPaint paint)
+            {
+                Color = paint.Color;
+            }
+            else
+            {
+                Color = brush.GetColor();
             }
         }
+
+        public override Brush ToBrush()
+        {
+            return Brush ?? base.ToBrush();
+        }
     }
+
+    // --- GRADIENTS AND RELATIVE COORDINATES ---
 
     public enum RelativeUnit
     {
@@ -96,18 +248,18 @@ namespace ProCharts.Uno
             Unit = unit;
         }
 
-        public SKPoint ToSKPoint(SKRect bounds)
+        public Windows.Foundation.Point ToPoint(ProCharts.Uno.Maths.Rect bounds)
         {
             if (Unit == RelativeUnit.Relative)
             {
-                return new SKPoint(
-                    (float)(bounds.Left + X * bounds.Width),
-                    (float)(bounds.Top + Y * bounds.Height)
+                return new Windows.Foundation.Point(
+                    bounds.Left + X * bounds.Width,
+                    bounds.Top + Y * bounds.Height
                 );
             }
             else
             {
-                return new SKPoint((float)X, (float)Y);
+                return new Windows.Foundation.Point(X, Y);
             }
         }
     }
@@ -143,32 +295,44 @@ namespace ProCharts.Uno
             IsAntialias = true;
         }
 
-        public void ApplyShader(SKRect bounds)
+        public override Brush ToBrush()
         {
-            if (GradientStops == null || GradientStops.Count == 0) return;
+            var brush = new LinearGradientBrush();
+            brush.StartPoint = new Windows.Foundation.Point(StartPoint.X, StartPoint.Y);
+            brush.EndPoint = new Windows.Foundation.Point(EndPoint.X, EndPoint.Y);
+            brush.MappingMode = StartPoint.Unit == RelativeUnit.Relative ? BrushMappingMode.RelativeToBoundingBox : BrushMappingMode.Absolute;
 
-            // Sort stops by offset
-            var sortedStops = new List<GradientStop>(GradientStops);
-            sortedStops.Sort((a, b) => a.Offset.CompareTo(b.Offset));
-
-            var colors = new SKColor[sortedStops.Count];
-            var positions = new float[sortedStops.Count];
-            for (int i = 0; i < sortedStops.Count; i++)
+            foreach (var stop in GradientStops)
             {
-                colors[i] = sortedStops[i].Color;
-                positions[i] = (float)sortedStops[i].Offset;
+                brush.GradientStops.Add(new Microsoft.UI.Xaml.Media.GradientStop
+                {
+                    Color = stop.Color.ToColor(),
+                    Offset = stop.Offset
+                });
             }
+            return brush;
+        }
+    }
 
-            var start = StartPoint.ToSKPoint(bounds);
-            var end = EndPoint.ToSKPoint(bounds);
+    // --- BRUSH EXTENSIONS ---
 
-            Shader = SKShader.CreateLinearGradient(
-                start,
-                end,
-                colors,
-                positions,
-                SKShaderTileMode.Clamp
-            );
+    public static class BrushExtensions
+    {
+        public static Windows.UI.Color GetColor(this Brush? brush)
+        {
+            if (brush is SolidColorBrush scb)
+            {
+                return scb.Color;
+            }
+            if (brush is LinearGradientBrush lgb && lgb.GradientStops.Count > 0)
+            {
+                return lgb.GradientStops[0].Color;
+            }
+            if ((object?)brush is SKPaint paint)
+            {
+                return paint.Color.ToColor();
+            }
+            return Microsoft.UI.Colors.Transparent;
         }
     }
 }

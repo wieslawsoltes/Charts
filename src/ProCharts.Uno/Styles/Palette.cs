@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Windows.Foundation;
-using SkiaSharp;
+using Microsoft.UI.Xaml.Media;
 
 namespace ProCharts.Uno.Styles
 {
