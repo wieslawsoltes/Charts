@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+using Microsoft.UI.Xaml.Media;
 
 namespace ProCharts.Uno.Series
 {
@@ -21,10 +21,10 @@ namespace ProCharts.Uno.Series
             DependencyProperty.Register(nameof(ValuePath), typeof(string), typeof(ChartSeries), new PropertyMetadata(default(string), OnPropertyChanged));
 
         public static readonly DependencyProperty FillProperty =
-            DependencyProperty.Register(nameof(Fill), typeof(SKPaint), typeof(ChartSeries), new PropertyMetadata(default(SKPaint), OnPropertyChanged));
+            DependencyProperty.Register(nameof(Fill), typeof(Brush), typeof(ChartSeries), new PropertyMetadata(default(Brush), OnPropertyChanged));
 
         public static readonly DependencyProperty StrokeProperty =
-            DependencyProperty.Register(nameof(Stroke), typeof(SKPaint), typeof(ChartSeries), new PropertyMetadata(default(SKPaint), OnPropertyChanged));
+            DependencyProperty.Register(nameof(Stroke), typeof(Brush), typeof(ChartSeries), new PropertyMetadata(default(Brush), OnPropertyChanged));
 
         public static readonly DependencyProperty StrokeThicknessProperty =
             DependencyProperty.Register(nameof(StrokeThickness), typeof(double), typeof(ChartSeries), new PropertyMetadata(1.0, OnPropertyChanged));
@@ -55,15 +55,15 @@ namespace ProCharts.Uno.Series
             set => SetValue(ValuePathProperty, value);
         }
 
-        public SKPaint? Fill
+        public Brush? Fill
         {
-            get => (SKPaint?)GetValue(FillProperty);
+            get => (Brush?)GetValue(FillProperty);
             set => SetValue(FillProperty, value);
         }
 
-        public SKPaint? Stroke
+        public Brush? Stroke
         {
-            get => (SKPaint?)GetValue(StrokeProperty);
+            get => (Brush?)GetValue(StrokeProperty);
             set => SetValue(StrokeProperty, value);
         }
 
