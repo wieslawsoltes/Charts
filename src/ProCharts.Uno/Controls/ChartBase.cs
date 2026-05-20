@@ -124,12 +124,17 @@ namespace ProCharts.Uno.Controls
 
         protected ChartBase()
         {
-            _canvas = new SKXamlCanvas();
+            _canvas = new SKXamlCanvas
+            {
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
             this.Children.Add(_canvas);
             _canvas.PaintSurface += OnPaintSurface;
 
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
+            SizeChanged += (s, e) => InvalidateVisual();
 
             // Interactive pointer event registration
             PointerMoved += (s, e) =>
@@ -277,26 +282,40 @@ namespace ProCharts.Uno.Controls
             var bounds = new Size(ActualWidth, ActualHeight);
             if (bounds.Width <= 0 || bounds.Height <= 0) return;
 
-            // 1. Calculate boundaries
-            EffectivePlotArea = CalculatePlotArea(bounds);
+            // Calculate scale factors between physical surface and logical control bounds
+            float scaleX = (float)(e.Info.Width / bounds.Width);
+            float scaleY = (float)(e.Info.Height / bounds.Height);
 
-            // 2. Draw Title
-            DrawTitle(canvas, bounds);
+            canvas.Save();
+            canvas.Scale(scaleX, scaleY);
 
-            // 3. Draw Plot Area Background
-            var bg = PlotAreaBackground;
-            if (bg != null)
+            try
             {
-                canvas.DrawRect((float)EffectivePlotArea.X, (float)EffectivePlotArea.Y, (float)EffectivePlotArea.Width, (float)EffectivePlotArea.Height, bg);
+                // 1. Calculate boundaries
+                EffectivePlotArea = CalculatePlotArea(bounds);
+
+                // 2. Draw Title
+                DrawTitle(canvas, bounds);
+
+                // 3. Draw Plot Area Background
+                var bg = PlotAreaBackground;
+                if (bg != null)
+                {
+                    canvas.DrawRect((float)EffectivePlotArea.X, (float)EffectivePlotArea.Y, (float)EffectivePlotArea.Width, (float)EffectivePlotArea.Height, bg);
+                }
+
+                // 4. Custom derived rendering (Gridlines, Axes, Series)
+                RenderChart(canvas);
+
+                // 5. Draw dynamic interactive Tooltip on top
+                if (_mousePoint.HasValue)
+                {
+                    DrawTooltip(canvas, _mousePoint.Value);
+                }
             }
-
-            // 4. Custom derived rendering (Gridlines, Axes, Series)
-            RenderChart(canvas);
-
-            // 5. Draw dynamic interactive Tooltip on top
-            if (_mousePoint.HasValue)
+            finally
             {
-                DrawTooltip(canvas, _mousePoint.Value);
+                canvas.Restore();
             }
         }
 
