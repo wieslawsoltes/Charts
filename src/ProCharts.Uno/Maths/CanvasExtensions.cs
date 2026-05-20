@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using SkiaSharp;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
 
 namespace ProCharts.Uno.Maths
@@ -42,9 +43,6 @@ namespace ProCharts.Uno.Maths
         // Implicit conversions
         public static implicit operator Windows.Foundation.Point(Point p) => new Windows.Foundation.Point(p.X, p.Y);
         public static implicit operator Point(Windows.Foundation.Point p) => new Point(p.X, p.Y);
-
-        public static implicit operator SKPoint(Point p) => new SKPoint((float)p.X, (float)p.Y);
-        public static implicit operator Point(SKPoint p) => new Point(p.X, p.Y);
     }
 
     public struct Rect
@@ -110,9 +108,6 @@ namespace ProCharts.Uno.Maths
         // Implicit conversions
         public static implicit operator Windows.Foundation.Rect(Rect r) => new Windows.Foundation.Rect(r.X, r.Y, r.Width, r.Height);
         public static implicit operator Rect(Windows.Foundation.Rect r) => new Rect(r.X, r.Y, r.Width, r.Height);
-
-        public static implicit operator SKRect(Rect r) => new SKRect((float)r.Left, (float)r.Top, (float)r.Right, (float)r.Bottom);
-        public static implicit operator Rect(SKRect r) => new Rect(r.Left, r.Top, r.Width, r.Height);
     }
 
     public class RoundedRect
@@ -143,44 +138,61 @@ namespace ProCharts.Uno.Maths
 
     public struct Matrix
     {
-        public SKMatrix Value { get; }
+        public double M11 { get; set; }
+        public double M12 { get; set; }
+        public double M21 { get; set; }
+        public double M22 { get; set; }
+        public double OffsetX { get; set; }
+        public double OffsetY { get; set; }
 
-        public Matrix(SKMatrix value)
+        public Matrix(double m11, double m12, double m21, double m22, double offsetX, double offsetY)
         {
-            Value = value;
+            M11 = m11;
+            M12 = m12;
+            M21 = m21;
+            M22 = m22;
+            OffsetX = offsetX;
+            OffsetY = offsetY;
         }
 
         public static Matrix CreateRotation(double angleInRadians)
         {
-            return new Matrix(SKMatrix.CreateRotation((float)angleInRadians));
+            double cos = Math.Cos(angleInRadians);
+            double sin = Math.Sin(angleInRadians);
+            return new Matrix(cos, sin, -sin, cos, 0, 0);
         }
 
         public static Matrix CreateTranslation(double x, double y)
         {
-            return new Matrix(SKMatrix.CreateTranslation((float)x, (float)y));
+            return new Matrix(1, 0, 0, 1, x, y);
         }
 
         public static Matrix CreateScale(double x, double y)
         {
-            return new Matrix(SKMatrix.CreateScale((float)x, (float)y));
+            return new Matrix(x, 0, 0, y, 0, 0);
         }
 
-        public static Matrix Identity => new Matrix(SKMatrix.CreateIdentity());
+        public static Matrix Identity => new Matrix(1, 0, 0, 1, 0, 0);
 
         public static Matrix operator *(Matrix left, Matrix right)
         {
-            return new Matrix(SKMatrix.Concat(left.Value, right.Value));
+            return new Matrix(
+                left.M11 * right.M11 + left.M12 * right.M21,
+                left.M11 * right.M12 + left.M12 * right.M22,
+                left.M21 * right.M11 + left.M22 * right.M21,
+                left.M21 * right.M12 + left.M22 * right.M22,
+                left.OffsetX * right.M11 + left.OffsetY * right.M21 + right.OffsetX,
+                left.OffsetX * right.M12 + left.OffsetY * right.M22 + right.OffsetY
+            );
         }
-
-        public static implicit operator SKMatrix(Matrix m) => m.Value;
-        public static implicit operator Matrix(SKMatrix m) => new Matrix(m);
     }
 
     // --- GEOMETRY BUILDING AND COMBINING ---
 
     public abstract class Geometry
     {
-        public abstract SKPath ToSKPath();
+        public abstract Microsoft.UI.Xaml.Media.Geometry ToWinUIGeometry();
+        public abstract Rect GetBounds();
     }
 
     public class EllipseGeometry : Geometry
@@ -191,11 +203,16 @@ namespace ProCharts.Uno.Maths
             Rect = rect;
         }
 
-        public override SKPath ToSKPath()
+        public override Rect GetBounds() => Rect;
+
+        public override Microsoft.UI.Xaml.Media.Geometry ToWinUIGeometry()
         {
-            var path = new SKPath();
-            path.AddOval(new SKRect((float)Rect.Left, (float)Rect.Top, (float)Rect.Right, (float)Rect.Bottom));
-            return path;
+            return new Microsoft.UI.Xaml.Media.EllipseGeometry
+            {
+                Center = Rect.Center,
+                RadiusX = Rect.Width / 2.0,
+                RadiusY = Rect.Height / 2.0
+            };
         }
     }
 
@@ -220,237 +237,516 @@ namespace ProCharts.Uno.Maths
             Geometry2 = geometry2;
         }
 
-        public override SKPath ToSKPath()
+        public override Rect GetBounds()
         {
-            var p1 = Geometry1?.ToSKPath() ?? new SKPath();
-            var p2 = Geometry2?.ToSKPath() ?? new SKPath();
+            var b1 = Geometry1?.GetBounds() ?? new Rect();
+            var b2 = Geometry2?.GetBounds() ?? new Rect();
+            if (Geometry1 == null) return b2;
+            if (Geometry2 == null) return b1;
+            double x = Math.Min(b1.X, b2.X);
+            double y = Math.Min(b1.Y, b2.Y);
+            double w = Math.Max(b1.Right, b2.Right) - x;
+            double h = Math.Max(b1.Bottom, b2.Bottom) - y;
+            return new Rect(x, y, w, h);
+        }
 
-            var op = SKPathOp.Union;
-            switch (CombineMode)
+        public override Microsoft.UI.Xaml.Media.Geometry ToWinUIGeometry()
+        {
+            var g1 = Geometry1?.ToWinUIGeometry();
+            var g2 = Geometry2?.ToWinUIGeometry();
+
+            if (g1 == null) return g2 ?? new Microsoft.UI.Xaml.Media.GeometryGroup();
+            if (g2 == null) return g1;
+
+            if (CombineMode == GeometryCombineMode.Exclude)
             {
-                case GeometryCombineMode.Union:
-                    op = SKPathOp.Union;
-                    break;
-                case GeometryCombineMode.Intersect:
-                    op = SKPathOp.Intersect;
-                    break;
-                case GeometryCombineMode.Xor:
-                    op = SKPathOp.Xor;
-                    break;
-                case GeometryCombineMode.Exclude:
-                    op = SKPathOp.Difference;
-                    break;
+                var group = new Microsoft.UI.Xaml.Media.GeometryGroup
+                {
+                    FillRule = Microsoft.UI.Xaml.Media.FillRule.EvenOdd
+                };
+                group.Children.Add(g1);
+                group.Children.Add(g2);
+                return group;
             }
-
-            var path = p1.Op(p2, op);
-            return path ?? p1;
+            else
+            {
+                var group = new Microsoft.UI.Xaml.Media.GeometryGroup();
+                group.Children.Add(g1);
+                group.Children.Add(g2);
+                return group;
+            }
         }
     }
 
-    // --- CANVAS AND PATH EXTENSION METHODS ---
-
-    public static class CanvasExtensions
+    public class StreamGeometry : Geometry
     {
-        private static void PreparePaint(SKPaint? paint, SKRect bounds)
+        public Microsoft.UI.Xaml.Media.PathGeometry PathGeometry { get; } = new Microsoft.UI.Xaml.Media.PathGeometry();
+        private Microsoft.UI.Xaml.Media.PathFigure? _currentFigure;
+
+        private double _minX = double.MaxValue;
+        private double _minY = double.MaxValue;
+        private double _maxX = double.MinValue;
+        private double _maxY = double.MinValue;
+
+        private void UpdateBounds(Point p)
         {
-            if (paint is LinearGradientSKPaint lgp)
+            if (p.X < _minX) _minX = p.X;
+            if (p.Y < _minY) _minY = p.Y;
+            if (p.X > _maxX) _maxX = p.X;
+            if (p.Y > _maxY) _maxY = p.Y;
+        }
+
+        public override Rect GetBounds()
+        {
+            if (_minX == double.MaxValue) return new Rect();
+            return new Rect(_minX, _minY, _maxX - _minX, _maxY - _minY);
+        }
+
+        public override Microsoft.UI.Xaml.Media.Geometry ToWinUIGeometry() => PathGeometry;
+
+        public void MoveTo(Point p, bool isFilled = true)
+        {
+            UpdateBounds(p);
+            _currentFigure = new Microsoft.UI.Xaml.Media.PathFigure
             {
-                lgp.ApplyShader(bounds);
+                StartPoint = p,
+                IsFilled = isFilled,
+                IsClosed = false
+            };
+            PathGeometry.Figures.Add(_currentFigure);
+        }
+
+        public void LineTo(Point p)
+        {
+            UpdateBounds(p);
+            if (_currentFigure == null) MoveTo(p);
+            _currentFigure!.Segments.Add(new Microsoft.UI.Xaml.Media.LineSegment { Point = p });
+        }
+
+        public void CubicBezierTo(Point p1, Point p2, Point p3)
+        {
+            UpdateBounds(p1);
+            UpdateBounds(p2);
+            UpdateBounds(p3);
+            if (_currentFigure == null) MoveTo(p1);
+            _currentFigure!.Segments.Add(new Microsoft.UI.Xaml.Media.BezierSegment
+            {
+                Point1 = p1,
+                Point2 = p2,
+                Point3 = p3
+            });
+        }
+
+        public void QuadBezierTo(Point p1, Point p2)
+        {
+            UpdateBounds(p1);
+            UpdateBounds(p2);
+            if (_currentFigure == null) MoveTo(p1);
+            _currentFigure!.Segments.Add(new Microsoft.UI.Xaml.Media.QuadraticBezierSegment
+            {
+                Point1 = p1,
+                Point2 = p2
+            });
+        }
+
+        public void ArcTo(Point p, Size size, double rotationAngle, bool isLargeArc, SweepDirection sweepDirection)
+        {
+            UpdateBounds(p);
+            if (_currentFigure == null) MoveTo(p);
+            _currentFigure!.Segments.Add(new Microsoft.UI.Xaml.Media.ArcSegment
+            {
+                Point = p,
+                Size = size,
+                RotationAngle = rotationAngle,
+                IsLargeArc = isLargeArc,
+                SweepDirection = sweepDirection == SweepDirection.Clockwise ? Microsoft.UI.Xaml.Media.SweepDirection.Clockwise : Microsoft.UI.Xaml.Media.SweepDirection.Counterclockwise
+            });
+        }
+
+        public void Close()
+        {
+            if (_currentFigure != null)
+            {
+                _currentFigure.IsClosed = true;
             }
-            else if (paint is Pen pen && pen.Brush is LinearGradientSKPaint penLgp)
+        }
+    }
+
+    // --- DRAWING CONTEXT ENGINE ---
+
+    public class DrawingContext
+    {
+        private readonly Microsoft.UI.Xaml.Controls.Canvas _canvas;
+        private readonly Stack<TransformGroup> _transformStack = new();
+        private readonly Stack<Geometry> _clipStack = new();
+
+        public DrawingContext(Microsoft.UI.Xaml.Controls.Canvas canvas)
+        {
+            _canvas = canvas;
+        }
+
+        private TransformGroup CurrentTransform
+        {
+            get
             {
-                penLgp.ApplyShader(bounds);
-                pen.Shader = penLgp.Shader;
+                var tg = new TransformGroup();
+                foreach (var t in _transformStack)
+                {
+                    if (t is TransformGroup subGroup)
+                    {
+                        foreach (var child in subGroup.Children)
+                        {
+                            tg.Children.Add(CloneTransform(child));
+                        }
+                    }
+                    else
+                    {
+                        tg.Children.Add(CloneTransform(t));
+                    }
+                }
+                return tg;
             }
         }
 
-        public static void DrawLine(this SKCanvas canvas, SKPaint? paint, Point p1, Point p2)
+        private Transform CloneTransform(Transform t)
+        {
+            if (t is MatrixTransform mt)
+            {
+                return new MatrixTransform { Matrix = mt.Matrix };
+            }
+            if (t is ScaleTransform st)
+            {
+                return new ScaleTransform { ScaleX = st.ScaleX, ScaleY = st.ScaleY, CenterX = st.CenterX, CenterY = st.CenterY };
+            }
+            if (t is TranslateTransform tt)
+            {
+                return new TranslateTransform { X = tt.X, Y = tt.Y };
+            }
+            if (t is RotateTransform rt)
+            {
+                return new RotateTransform { Angle = rt.Angle, CenterX = rt.CenterX, CenterY = rt.CenterY };
+            }
+            if (t is TransformGroup tg)
+            {
+                var newTg = new TransformGroup();
+                foreach (var child in tg.Children)
+                {
+                    newTg.Children.Add(CloneTransform(child));
+                }
+                return newTg;
+            }
+            return t;
+        }
+
+        private RectangleGeometry? CurrentClip
+        {
+            get
+            {
+                if (_clipStack.Count == 0) return null;
+                Rect result = _clipStack.Peek().GetBounds();
+                foreach (var clip in _clipStack)
+                {
+                    var b = clip.GetBounds();
+                    double x = Math.Max(result.X, b.X);
+                    double y = Math.Max(result.Y, b.Y);
+                    double right = Math.Min(result.Right, b.Right);
+                    double bottom = Math.Min(result.Bottom, b.Bottom);
+                    double w = Math.Max(0, right - x);
+                    double h = Math.Max(0, bottom - y);
+                    result = new Rect(x, y, w, h);
+                }
+                return new RectangleGeometry { Rect = result };
+            }
+        }
+
+        private void ApplyTransformAndClip(UIElement element)
+        {
+            if (_transformStack.Count > 0)
+            {
+                element.RenderTransform = CurrentTransform;
+            }
+            var clip = CurrentClip;
+            if (clip != null)
+            {
+                element.Clip = clip;
+            }
+        }
+
+        private void ApplyStrokeAndFill(Microsoft.UI.Xaml.Shapes.Shape shape, SKPaint? fill, SKPaint? stroke)
+        {
+            if (fill != null)
+            {
+                shape.Fill = fill.ToBrush();
+            }
+            if (stroke != null)
+            {
+                shape.Stroke = stroke.ToBrush();
+                shape.StrokeThickness = stroke.StrokeWidth;
+
+                if (stroke is Pen pen)
+                {
+                    if (pen.Dash != null && pen.Dash.Dashes != null && pen.Dash.Dashes.Count > 0)
+                    {
+                        var dashCollection = new DoubleCollection();
+                        foreach (var dash in pen.Dash.Dashes)
+                        {
+                            dashCollection.Add(dash);
+                        }
+                        shape.StrokeDashArray = dashCollection;
+                        shape.StrokeDashOffset = pen.Dash.Offset;
+                    }
+                }
+
+                switch (stroke.StrokeCap)
+                {
+                    case SKStrokeCap.Round:
+                        shape.StrokeStartLineCap = PenLineCap.Round;
+                        shape.StrokeEndLineCap = PenLineCap.Round;
+                        break;
+                    case SKStrokeCap.Square:
+                        shape.StrokeStartLineCap = PenLineCap.Square;
+                        shape.StrokeEndLineCap = PenLineCap.Square;
+                        break;
+                    default:
+                        shape.StrokeStartLineCap = PenLineCap.Flat;
+                        shape.StrokeEndLineCap = PenLineCap.Flat;
+                        break;
+                }
+
+                switch (stroke.StrokeJoin)
+                {
+                    case SKStrokeJoin.Round:
+                        shape.StrokeLineJoin = PenLineJoin.Round;
+                        break;
+                    case SKStrokeJoin.Bevel:
+                        shape.StrokeLineJoin = PenLineJoin.Bevel;
+                        break;
+                    default:
+                        shape.StrokeLineJoin = PenLineJoin.Miter;
+                        break;
+                }
+            }
+        }
+
+        public void DrawLine(SKPaint? paint, Point p1, Point p2)
         {
             if (paint == null) return;
-            var bounds = new SKRect((float)Math.Min(p1.X, p2.X), (float)Math.Min(p1.Y, p2.Y), (float)Math.Max(p1.X, p2.X), (float)Math.Max(p1.Y, p2.Y));
-            PreparePaint(paint, bounds);
-            canvas.DrawLine((float)p1.X, (float)p1.Y, (float)p2.X, (float)p2.Y, paint);
+            var line = new Microsoft.UI.Xaml.Shapes.Line
+            {
+                X1 = p1.X,
+                Y1 = p1.Y,
+                X2 = p2.X,
+                Y2 = p2.Y
+            };
+            ApplyStrokeAndFill(line, null, paint);
+            ApplyTransformAndClip(line);
+            _canvas.Children.Add(line);
         }
 
-        public static void DrawText(this SKCanvas canvas, FormattedText? ft, Point origin)
+        public void DrawLine(double x1, double y1, double x2, double y2, SKPaint? paint)
+        {
+            DrawLine(paint, new Point(x1, y1), new Point(x2, y2));
+        }
+
+        public void DrawPath(StreamGeometry? path, SKPaint? paint)
+        {
+            if (paint == null) return;
+            if (paint.Style == SKPaintStyle.Stroke)
+            {
+                DrawGeometry(null, paint, path);
+            }
+            else if (paint.Style == SKPaintStyle.Fill)
+            {
+                DrawGeometry(paint, null, path);
+            }
+            else
+            {
+                DrawGeometry(paint, paint, path);
+            }
+        }
+
+        public void DrawText(FormattedText? ft, Point origin)
         {
             if (ft == null || string.IsNullOrEmpty(ft.Text)) return;
-            if (ft.Paint != null)
+
+            var tb = new TextBlock
             {
-                PreparePaint(ft.Paint, new SKRect((float)origin.X, (float)origin.Y, (float)(origin.X + ft.Width), (float)(origin.Y + ft.Height)));
+                Text = ft.Text,
+                FontSize = ft.FontSize,
+                FlowDirection = ft.FlowDirection,
+                Foreground = ft.Paint?.ToBrush() ?? new SolidColorBrush(Microsoft.UI.Colors.Black)
+            };
+
+            if (ft.Typeface != null)
+            {
+                tb.FontFamily = new FontFamily(ft.Typeface.FontFamily);
+                tb.FontStyle = ft.Typeface.FontStyle == FontStyle.Italic ? Windows.UI.Text.FontStyle.Italic : Windows.UI.Text.FontStyle.Normal;
+
+                switch (ft.Typeface.FontWeight)
+                {
+                    case FontWeight.Bold:
+                        tb.FontWeight = Microsoft.UI.Text.FontWeights.Bold;
+                        break;
+                    case FontWeight.SemiBold:
+                        tb.FontWeight = Microsoft.UI.Text.FontWeights.SemiBold;
+                        break;
+                    case FontWeight.Medium:
+                        tb.FontWeight = Microsoft.UI.Text.FontWeights.Medium;
+                        break;
+                    case FontWeight.Light:
+                        tb.FontWeight = Microsoft.UI.Text.FontWeights.Light;
+                        break;
+                    default:
+                        tb.FontWeight = Microsoft.UI.Text.FontWeights.Normal;
+                        break;
+                }
             }
-            canvas.DrawText(ft.Text, (float)origin.X, (float)(origin.Y + ft.Height), ft.Font, ft.Paint);
+
+            Canvas.SetLeft(tb, origin.X);
+            Canvas.SetTop(tb, origin.Y);
+            ApplyTransformAndClip(tb);
+            _canvas.Children.Add(tb);
         }
 
-        public static void DrawRectangle(this SKCanvas canvas, SKPaint? fill, SKPaint? stroke, Rect rect)
+        public void DrawRectangle(SKPaint? fill, SKPaint? stroke, Rect rect)
         {
-            SKRect r = rect;
-            if (fill != null)
+            var r = new Microsoft.UI.Xaml.Shapes.Rectangle
             {
-                PreparePaint(fill, r);
-                canvas.DrawRect(r, fill);
-            }
-            if (stroke != null)
-            {
-                var oldStyle = stroke.Style;
-                stroke.Style = SKPaintStyle.Stroke;
-                PreparePaint(stroke, r);
-                canvas.DrawRect(r, stroke);
-                stroke.Style = oldStyle;
-            }
+                Width = Math.Max(0, rect.Width),
+                Height = Math.Max(0, rect.Height)
+            };
+            ApplyStrokeAndFill(r, fill, stroke);
+            Canvas.SetLeft(r, rect.X);
+            Canvas.SetTop(r, rect.Y);
+            ApplyTransformAndClip(r);
+            _canvas.Children.Add(r);
         }
 
-        public static void DrawRectangle(this SKCanvas canvas, SKPaint? fill, SKPaint? stroke, RoundedRect roundedRect)
+        public void DrawRectangle(SKPaint? fill, SKPaint? stroke, RoundedRect roundedRect)
         {
-            var rr = new SKRoundRect();
-            var rect = new SKRect((float)roundedRect.Rect.Left, (float)roundedRect.Rect.Top, (float)roundedRect.Rect.Right, (float)roundedRect.Rect.Bottom);
-            rr.SetRectRadii(rect, new[]
+            var r = new Microsoft.UI.Xaml.Shapes.Rectangle
             {
-                new SKPoint((float)roundedRect.CornerRadius.TopLeft, (float)roundedRect.CornerRadius.TopLeft),
-                new SKPoint((float)roundedRect.CornerRadius.TopRight, (float)roundedRect.CornerRadius.TopRight),
-                new SKPoint((float)roundedRect.CornerRadius.BottomRight, (float)roundedRect.CornerRadius.BottomRight),
-                new SKPoint((float)roundedRect.CornerRadius.BottomLeft, (float)roundedRect.CornerRadius.BottomLeft),
-            });
-
-            if (fill != null)
-            {
-                var oldStyle = fill.Style;
-                fill.Style = SKPaintStyle.Fill;
-                PreparePaint(fill, rect);
-                canvas.DrawRoundRect(rr, fill);
-                fill.Style = oldStyle;
-            }
-            if (stroke != null)
-            {
-                var oldStyle = stroke.Style;
-                stroke.Style = SKPaintStyle.Stroke;
-                PreparePaint(stroke, rect);
-                canvas.DrawRoundRect(rr, stroke);
-                stroke.Style = oldStyle;
-            }
+                Width = Math.Max(0, roundedRect.Rect.Width),
+                Height = Math.Max(0, roundedRect.Rect.Height),
+                RadiusX = roundedRect.CornerRadius.TopLeft,
+                RadiusY = roundedRect.CornerRadius.TopLeft
+            };
+            ApplyStrokeAndFill(r, fill, stroke);
+            Canvas.SetLeft(r, roundedRect.Rect.X);
+            Canvas.SetTop(r, roundedRect.Rect.Y);
+            ApplyTransformAndClip(r);
+            _canvas.Children.Add(r);
         }
 
-        public static void DrawEllipse(this SKCanvas canvas, SKPaint? fill, SKPaint? stroke, Point center, double rx, double ry)
+        public void DrawEllipse(SKPaint? fill, SKPaint? stroke, Point center, double rx, double ry)
         {
-            var rect = new SKRect((float)(center.X - rx), (float)(center.Y - ry), (float)(center.X + rx), (float)(center.Y + ry));
-            if (fill != null)
+            var e = new Microsoft.UI.Xaml.Shapes.Ellipse
             {
-                var oldStyle = fill.Style;
-                fill.Style = SKPaintStyle.Fill;
-                PreparePaint(fill, rect);
-                canvas.DrawOval((float)center.X, (float)center.Y, (float)rx, (float)ry, fill);
-                fill.Style = oldStyle;
-            }
-            if (stroke != null)
-            {
-                var oldStyle = stroke.Style;
-                stroke.Style = SKPaintStyle.Stroke;
-                PreparePaint(stroke, rect);
-                canvas.DrawOval((float)center.X, (float)center.Y, (float)rx, (float)ry, stroke);
-                stroke.Style = oldStyle;
-            }
+                Width = rx * 2,
+                Height = ry * 2
+            };
+            ApplyStrokeAndFill(e, fill, stroke);
+            Canvas.SetLeft(e, center.X - rx);
+            Canvas.SetTop(e, center.Y - ry);
+            ApplyTransformAndClip(e);
+            _canvas.Children.Add(e);
         }
 
-        public static void DrawGeometry(this SKCanvas canvas, SKPaint? fill, SKPaint? stroke, Geometry? geometry)
+        public void DrawGeometry(SKPaint? fill, SKPaint? stroke, Geometry? geometry)
         {
             if (geometry == null) return;
-            var path = geometry.ToSKPath();
-            canvas.DrawGeometry(fill, stroke, path);
+            var winGeometry = geometry.ToWinUIGeometry();
+            DrawGeometryInternal(fill, stroke, winGeometry);
         }
 
-        public static void DrawGeometry(this SKCanvas canvas, SKPaint? fill, SKPaint? stroke, SKPath? path)
+        public void DrawGeometry(SKPaint? fill, SKPaint? stroke, StreamGeometry? path)
         {
             if (path == null) return;
-            var bounds = path.Bounds;
-            if (fill != null)
-            {
-                var oldStyle = fill.Style;
-                fill.Style = SKPaintStyle.Fill;
-                PreparePaint(fill, bounds);
-                canvas.DrawPath(path, fill);
-                fill.Style = oldStyle;
-            }
-            if (stroke != null)
-            {
-                var oldStyle = stroke.Style;
-                stroke.Style = SKPaintStyle.Stroke;
-                PreparePaint(stroke, bounds);
-                canvas.DrawPath(path, stroke);
-                stroke.Style = oldStyle;
-            }
+            var winGeometry = path.ToWinUIGeometry();
+            DrawGeometryInternal(fill, stroke, winGeometry);
         }
 
-        public static IDisposable PushTransform(this SKCanvas canvas, SKMatrix matrix)
+        private void DrawGeometryInternal(SKPaint? fill, SKPaint? stroke, Microsoft.UI.Xaml.Media.Geometry winGeometry)
         {
-            canvas.Save();
-            canvas.Concat(matrix);
-            return new CanvasSavePopper(canvas);
-        }
-
-        public static IDisposable PushGeometryClip(this SKCanvas canvas, Geometry clipGeometry)
-        {
-            canvas.Save();
-            if (clipGeometry != null)
+            var p = new Microsoft.UI.Xaml.Shapes.Path
             {
-                var path = clipGeometry.ToSKPath();
-                canvas.ClipPath(path);
-            }
-            return new CanvasSavePopper(canvas);
+                Data = winGeometry
+            };
+            ApplyStrokeAndFill(p, fill, stroke);
+            Canvas.SetLeft(p, 0);
+            Canvas.SetTop(p, 0);
+            ApplyTransformAndClip(p);
+            _canvas.Children.Add(p);
         }
 
-        private class CanvasSavePopper : IDisposable
+        public IDisposable PushTransform(Matrix matrix)
         {
-            private readonly SKCanvas _canvas;
-            public CanvasSavePopper(SKCanvas canvas) => _canvas = canvas;
-            public void Dispose() => _canvas.Restore();
+            var transform = new TransformGroup();
+            transform.Children.Add(new MatrixTransform
+            {
+                Matrix = new Microsoft.UI.Xaml.Media.Matrix(
+                    matrix.M11, matrix.M12,
+                    matrix.M21, matrix.M22,
+                    matrix.OffsetX, matrix.OffsetY)
+            });
+            _transformStack.Push(transform);
+            return new ActionDisposable(() => _transformStack.Pop());
+        }
+
+        public IDisposable PushGeometryClip(Geometry clipGeometry)
+        {
+            _clipStack.Push(clipGeometry);
+            return new ActionDisposable(() => _clipStack.Pop());
         }
     }
+
+    public class ActionDisposable : IDisposable
+    {
+        private readonly Action _action;
+        public ActionDisposable(Action action) => _action = action;
+        public void Dispose() => _action();
+    }
+
+    // --- PATH EXTENSIONS ---
 
     public static class PathExtensions
     {
-        public static PathOpenContext Open(this SKPath path)
+        public static PathOpenContext Open(this StreamGeometry path)
         {
             return new PathOpenContext(path);
         }
 
-        public static void MoveTo(this SKPath path, Point p)
+        public static void MoveTo(this StreamGeometry path, Point p)
         {
-            path.MoveTo((float)p.X, (float)p.Y);
+            path.MoveTo(p);
         }
 
-        public static void MoveTo(this SKPath path, Point p, bool isFilled)
+        public static void MoveTo(this StreamGeometry path, Point p, bool isFilled)
         {
-            path.MoveTo((float)p.X, (float)p.Y);
+            path.MoveTo(p, isFilled);
         }
 
-        public static void LineTo(this SKPath path, Point p)
+        public static void LineTo(this StreamGeometry path, Point p)
         {
-            path.LineTo((float)p.X, (float)p.Y);
+            path.LineTo(p);
         }
 
-        public static void CubicBezierTo(this SKPath path, Point p1, Point p2, Point p3)
+        public static void CubicBezierTo(this StreamGeometry path, Point p1, Point p2, Point p3)
         {
-            path.CubicTo((float)p1.X, (float)p1.Y, (float)p2.X, (float)p2.Y, (float)p3.X, (float)p3.Y);
+            path.CubicBezierTo(p1, p2, p3);
         }
 
-        public static void QuadBezierTo(this SKPath path, Point p1, Point p2)
+        public static void QuadBezierTo(this StreamGeometry path, Point p1, Point p2)
         {
-            path.QuadTo((float)p1.X, (float)p1.Y, (float)p2.X, (float)p2.Y);
+            path.QuadBezierTo(p1, p2);
         }
 
-        public static void ArcTo(this SKPath path, Point p, Size size, double rotationAngle, bool isLargeArc, SweepDirection sweepDirection)
+        public static void ArcTo(this StreamGeometry path, Point p, Size size, double rotationAngle, bool isLargeArc, SweepDirection sweepDirection)
         {
-            path.ArcTo(
-                (float)size.Width,
-                (float)size.Height,
-                (float)rotationAngle,
-                isLargeArc ? SKPathArcSize.Large : SKPathArcSize.Small,
-                sweepDirection == SweepDirection.Clockwise ? SKPathDirection.Clockwise : SKPathDirection.CounterClockwise,
-                (float)p.X,
-                (float)p.Y);
+            path.ArcTo(p, size, rotationAngle, isLargeArc, sweepDirection);
         }
 
-        public static void Close(this SKPath path, bool close)
+        public static void Close(this StreamGeometry path, bool close)
         {
             if (close) path.Close();
         }
@@ -458,14 +754,14 @@ namespace ProCharts.Uno.Maths
 
     public class PathOpenContext : IDisposable
     {
-        private readonly SKPath _path;
-        public PathOpenContext(SKPath path) => _path = path;
+        private readonly StreamGeometry _path;
+        public PathOpenContext(StreamGeometry path) => _path = path;
 
         public void MoveTo(Point p, bool isFilled = true) => _path.MoveTo(p, isFilled);
         public void LineTo(Point p) => _path.LineTo(p);
         public void CubicBezierTo(Point p1, Point p2, Point p3) => _path.CubicBezierTo(p1, p2, p3);
         public void QuadBezierTo(Point p1, Point p2) => _path.QuadBezierTo(p1, p2);
-        
+
         public void ArcTo(Point p, Size size, double rotationAngle, bool isLargeArc, SweepDirection sweepDirection) =>
             _path.ArcTo(p, size, rotationAngle, isLargeArc, sweepDirection);
 
