@@ -53,11 +53,48 @@ namespace ProCharts.Uno.Maths
             Text = text ?? string.Empty;
             
             // Clone or configure the paint
-            Paint = new SKPaint
+            if (paint != null)
             {
-                Color = paint?.Color ?? SKColors.Black,
-                IsAntialias = true
-            };
+                if (paint is LinearGradientSKPaint lgp)
+                {
+                    Paint = new LinearGradientSKPaint
+                    {
+                        Color = lgp.Color,
+                        IsAntialias = lgp.IsAntialias,
+                        StartPoint = lgp.StartPoint,
+                        EndPoint = lgp.EndPoint,
+                        GradientStops = lgp.GradientStops,
+                        Shader = lgp.Shader,
+                        Style = lgp.Style,
+                        PathEffect = lgp.PathEffect,
+                        MaskFilter = lgp.MaskFilter,
+                        ImageFilter = lgp.ImageFilter,
+                        BlendMode = lgp.BlendMode
+                    };
+                }
+                else
+                {
+                    Paint = new SKPaint
+                    {
+                        Color = paint.Color,
+                        IsAntialias = paint.IsAntialias,
+                        Shader = paint.Shader,
+                        Style = paint.Style,
+                        PathEffect = paint.PathEffect,
+                        MaskFilter = paint.MaskFilter,
+                        ImageFilter = paint.ImageFilter,
+                        BlendMode = paint.BlendMode
+                    };
+                }
+            }
+            else
+            {
+                Paint = new SKPaint
+                {
+                    Color = SKColors.Black,
+                    IsAntialias = true
+                };
+            }
 
             Font = new SKFont();
             Font.Size = (float)fontSize;

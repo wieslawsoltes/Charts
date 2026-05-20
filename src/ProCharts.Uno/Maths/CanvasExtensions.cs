@@ -257,6 +257,11 @@ namespace ProCharts.Uno.Maths
             {
                 lgp.ApplyShader(bounds);
             }
+            else if (paint is Pen pen && pen.Brush is LinearGradientSKPaint penLgp)
+            {
+                penLgp.ApplyShader(bounds);
+                pen.Shader = penLgp.Shader;
+            }
         }
 
         public static void DrawLine(this SKCanvas canvas, SKPaint? paint, Point p1, Point p2)

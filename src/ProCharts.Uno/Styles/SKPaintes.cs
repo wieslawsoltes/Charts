@@ -53,8 +53,11 @@ namespace ProCharts.Uno
 
     public class Pen : SKPaint
     {
+        public SKPaint? Brush { get; }
+
         public Pen(SKPaint? brush, double thickness = 1.0, DashStyle? dashStyle = null, SKStrokeCap lineCap = SKStrokeCap.Butt, SKStrokeJoin lineJoin = SKStrokeJoin.Miter)
         {
+            Brush = brush;
             Style = SKPaintStyle.Stroke;
             StrokeWidth = (float)thickness;
             Color = brush?.Color ?? SKColors.Black;
