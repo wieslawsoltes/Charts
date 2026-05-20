@@ -222,11 +222,11 @@ namespace ProCharts.Uno.Controls
 
                 // Ribbon fill brush (highly transparent matching node color or custom link color)
                 SKColor brushSKColor = SKColors.Teal;
-                if (srcNode.SKColor is SolidSKColorSKPaint scb) brushSKColor = scb.SKColor;
+                if (srcNode.SKColor != null) brushSKColor = srcNode.SKColor.Color;
                 else if (Palette != null)
                 {
                     var b = activePalette.GetSKPaint(Nodes.IndexOf(srcNode));
-                    if (b is SolidSKColorSKPaint scbPal) brushSKColor = scbPal.SKColor;
+                    if (b != null) brushSKColor = b.Color;
                 }
                 var ribbonSKPaint = link.SKColor ?? new SolidSKColorSKPaint(new SKColor((byte)(brushSKColor.Red), (byte)(brushSKColor.Green), (byte)(brushSKColor.Blue), (byte)(50)));
 

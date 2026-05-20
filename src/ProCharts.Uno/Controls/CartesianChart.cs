@@ -304,7 +304,7 @@ namespace ProCharts.Uno.Controls
                     var screenPt = transform.ToScreen(pt.X, pt.Y);
                     var pulseSKPaint = new Pen(seriesSKPaint, 1.5);
                     SKColor brushSKColor = SKColors.Purple;
-                    if (seriesSKPaint is SolidSKColorSKPaint scb) brushSKColor = scb.SKColor;
+                    if (seriesSKPaint != null) brushSKColor = seriesSKPaint.Color;
                     var pulseFill = new SolidSKColorSKPaint(new SKColor((byte)(brushSKColor.Red), (byte)(brushSKColor.Green), (byte)(brushSKColor.Blue), (byte)(40)));
                     
                     context.DrawEllipse(seriesSKPaint, null, screenPt, 4.0, 4.0);

@@ -258,11 +258,11 @@ namespace ProCharts.Uno.Controls
 
                     // Translucent flowing link color based on source node color
                     SKColor cSKColor = SKColors.SkyBlue;
-                    if (srcNode.SKColor is SolidSKColorSKPaint scb) cSKColor = scb.SKColor;
+                    if (srcNode.SKColor != null) cSKColor = srcNode.SKColor.Color;
                     else if (Palette != null)
                     {
                         var b = activePalette.GetSKPaint(Nodes.IndexOf(srcNode));
-                        if (b is SolidSKColorSKPaint scbPal) cSKColor = scbPal.SKColor;
+                        if (b != null) cSKColor = b.Color;
                     }
 
                     var ribbonSKPaint = link.SKColor ?? new SolidSKColorSKPaint(new SKColor((byte)(cSKColor.Red), (byte)(cSKColor.Green), (byte)(cSKColor.Blue), (byte)(45)));
