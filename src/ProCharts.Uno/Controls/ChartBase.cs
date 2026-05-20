@@ -108,7 +108,7 @@ namespace ProCharts.Uno.Controls
         // --- INTERNAL FIELDS ---
 
         protected Rect EffectivePlotArea { get; set; }
-        public Rect Bounds => new Rect(0, 0, ActualWidth, ActualHeight);
+        public Rect Bounds { get; protected set; }
         private DispatcherTimer? _animationTimer;
         private Stopwatch? _animationStopwatch;
         protected Point? MousePoint => _mousePoint;
@@ -141,7 +141,9 @@ namespace ProCharts.Uno.Controls
             PointerMoved += (s, e) =>
             {
                 var pt = e.GetCurrentPoint(this).Position;
-                var bounds = new Size(ActualWidth, ActualHeight);
+                double w = Bounds.Width > 0 ? Bounds.Width : ActualWidth;
+                double h = Bounds.Height > 0 ? Bounds.Height : ActualHeight;
+                var bounds = new Size(w, h);
                 if (bounds.Width > 0 && bounds.Height > 0)
                 {
                     EffectivePlotArea = CalculatePlotArea(bounds);
@@ -286,15 +288,19 @@ namespace ProCharts.Uno.Controls
             var canvas = e.Surface.Canvas;
             canvas.Clear(SKColors.Transparent);
 
-            var bounds = new Size(ActualWidth, ActualHeight);
-            if (bounds.Width <= 0 || bounds.Height <= 0) return;
+            double dpiScale = XamlRoot?.RasterizationScale ?? 1.0;
+            if (dpiScale <= 0) dpiScale = 1.0;
 
-            // Calculate scale factors between physical surface and logical control bounds
-            float scaleX = (float)(e.Info.Width / bounds.Width);
-            float scaleY = (float)(e.Info.Height / bounds.Height);
+            double logicalWidth = e.Info.Width / dpiScale;
+            double logicalHeight = e.Info.Height / dpiScale;
+
+            if (logicalWidth <= 0 || logicalHeight <= 0) return;
+
+            Bounds = new Rect(0, 0, logicalWidth, logicalHeight);
+            var bounds = new Size(logicalWidth, logicalHeight);
 
             canvas.Save();
-            canvas.Scale(scaleX, scaleY);
+            canvas.Scale((float)dpiScale, (float)dpiScale);
 
             try
             {
