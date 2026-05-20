@@ -1,11 +1,14 @@
 <Solution>
   <Folder Name="/samples/">
     <Project Path="samples/ProCharts.Gallery/ProCharts.Gallery.csproj" />
+    <Project Path="samples/ProCharts.Uno.Gallery/ProCharts.Uno.Gallery/ProCharts.Uno.Gallery.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/ProCharts/ProCharts.csproj" />
+    <Project Path="src/ProCharts.Uno/ProCharts.Uno.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ProCharts.Tests/ProCharts.Tests.csproj" />
+    <Project Path="tests/ProCharts.Uno.Tests/ProCharts.Uno.Tests.csproj" />
   </Folder>
 </Solution>
