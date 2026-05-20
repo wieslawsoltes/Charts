@@ -77,9 +77,9 @@ namespace ProCharts.Uno.Series
 
             // Create a gorgeous linear gradient brush if no custom Fill is set
             var areaFill = Fill;
-            if (areaFill == null && seriesSKPaint is SolidSKColorSKPaint solidSKPaint)
+            if (areaFill == null && seriesSKPaint != null)
             {
-                var color = solidSKPaint.SKColor;
+                var color = seriesSKPaint.Color;
                 areaFill = new LinearGradientSKPaint
                 {
                     StartPoint = new RelativePoint(0.5, 0, RelativeUnit.Relative),

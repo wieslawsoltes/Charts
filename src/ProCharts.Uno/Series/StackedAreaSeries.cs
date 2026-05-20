@@ -45,9 +45,9 @@ namespace ProCharts.Uno.Series
             var areaStroke = Stroke ?? context.DefaultSKPaint;
             var areaSKPaint = new Pen(areaStroke, StrokeThickness, lineCap: SKStrokeCap.Round, lineJoin: SKStrokeJoin.Round);
 
-            if (areaFill == null && areaStroke is SolidSKColorSKPaint solidSKPaint)
+            if (areaFill == null && areaStroke != null)
             {
-                var color = solidSKPaint.SKColor;
+                var color = areaStroke.Color;
                 areaFill = new LinearGradientSKPaint
                 {
                     StartPoint = new RelativePoint(0.5, 0, RelativeUnit.Relative),
@@ -118,7 +118,7 @@ namespace ProCharts.Uno.Series
 
                 geometry.Close(true);
             }
-            context.Canvas.DrawPath(fillGeometry, null ?? areaFill);
+            context.Canvas.DrawGeometry(areaFill, null, fillGeometry);
 
             // Draw line stroke on top path only
             var strokeGeometry = new SKPath();
@@ -130,7 +130,7 @@ namespace ProCharts.Uno.Series
                     geometry.LineTo(topScreenPoints[i]);
                 }
             }
-            context.Canvas.DrawPath(strokeGeometry, areaSKPaint ?? null);
+            context.Canvas.DrawGeometry(null, areaSKPaint, strokeGeometry);
         }
     }
 }
