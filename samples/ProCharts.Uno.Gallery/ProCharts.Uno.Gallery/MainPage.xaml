@@ -82,22 +82,22 @@
                 </StackPanel>
 
                 <!-- Navigation List -->
-                <ListBox Grid.Row="1" x:Name="CategoryList" Background="Transparent" BorderThickness="0" SelectionChanged="OnCategoryChanged">
-                    <ListBox.Resources>
-                        <SolidColorBrush x:Key="ListBoxItemBackgroundSelected" Color="#4F46E5" />
-                        <SolidColorBrush x:Key="ListBoxItemBackgroundSelectedPointerOver" Color="#6366F1" />
-                        <SolidColorBrush x:Key="ListBoxItemBackgroundSelectedPressed" Color="#4338CA" />
-                        <SolidColorBrush x:Key="ListBoxItemForegroundSelected" Color="White" />
-                        <SolidColorBrush x:Key="ListBoxItemForegroundSelectedPointerOver" Color="White" />
-                        <SolidColorBrush x:Key="ListBoxItemForegroundSelectedPressed" Color="White" />
+                <ListView Grid.Row="1" x:Name="CategoryList" Background="Transparent" BorderThickness="0" SelectionChanged="OnCategoryChanged">
+                    <ListView.Resources>
+                        <SolidColorBrush x:Key="ListViewItemBackgroundSelected" Color="#4F46E5" />
+                        <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPointerOver" Color="#6366F1" />
+                        <SolidColorBrush x:Key="ListViewItemBackgroundSelectedPressed" Color="#4338CA" />
+                        <SolidColorBrush x:Key="ListViewItemForegroundSelected" Color="White" />
+                        <SolidColorBrush x:Key="ListViewItemForegroundSelectedPointerOver" Color="White" />
+                        <SolidColorBrush x:Key="ListViewItemForegroundSelectedPressed" Color="White" />
                         
-                        <SolidColorBrush x:Key="ListBoxItemBackgroundPointerOver" Color="#334155" />
-                        <SolidColorBrush x:Key="ListBoxItemForegroundPointerOver" Color="White" />
-                        <SolidColorBrush x:Key="ListBoxItemBackgroundPressed" Color="#1E293B" />
-                        <SolidColorBrush x:Key="ListBoxItemForegroundPressed" Color="White" />
-                    </ListBox.Resources>
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
+                        <SolidColorBrush x:Key="ListViewItemBackgroundPointerOver" Color="#334155" />
+                        <SolidColorBrush x:Key="ListViewItemForegroundPointerOver" Color="White" />
+                        <SolidColorBrush x:Key="ListViewItemBackgroundPressed" Color="#1E293B" />
+                        <SolidColorBrush x:Key="ListViewItemForegroundPressed" Color="White" />
+                    </ListView.Resources>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
                             <Setter Property="CornerRadius" Value="8"/>
                             <Setter Property="Padding" Value="12,12"/>
                             <Setter Property="Margin" Value="0,4"/>
@@ -106,20 +106,20 @@
                             <Setter Property="Background" Value="Transparent"/>
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                         </Style>
-                    </ListBox.ItemContainerStyle>
+                    </ListView.ItemContainerStyle>
                     
-                    <ListBoxItem Content="Linear &amp; Spline" Tag="Line" />
-                    <ListBoxItem Content="Area Gradients" Tag="Area" />
-                    <ListBoxItem Content="Column &amp; Bar" Tag="Bar" />
-                    <ListBoxItem Content="Pie &amp; Donut" Tag="Pie" />
-                    <ListBoxItem Content="Real-time Performance" Tag="RealTime" />
-                    <ListBoxItem Content="Financial Plots" Tag="Financial" />
-                    <ListBoxItem Content="Status Gauges" Tag="Gauges" />
-                    <ListBoxItem Content="Hierarchy &amp; Flows" Tag="Hierarchy" />
-                    <ListBoxItem Content="Statistical Plotting" Tag="Statistical" />
-                    <ListBoxItem Content="Analytics Dashboards" Tag="Analytics" />
-                    <ListBoxItem Content="Advanced Analytics" Tag="AdvancedAnalytics" />
-                </ListBox>
+                    <ListViewItem Content="Linear &amp; Spline" Tag="Line" />
+                    <ListViewItem Content="Area Gradients" Tag="Area" />
+                    <ListViewItem Content="Column &amp; Bar" Tag="Bar" />
+                    <ListViewItem Content="Pie &amp; Donut" Tag="Pie" />
+                    <ListViewItem Content="Real-time Performance" Tag="RealTime" />
+                    <ListViewItem Content="Financial Plots" Tag="Financial" />
+                    <ListViewItem Content="Status Gauges" Tag="Gauges" />
+                    <ListViewItem Content="Hierarchy &amp; Flows" Tag="Hierarchy" />
+                    <ListViewItem Content="Statistical Plotting" Tag="Statistical" />
+                    <ListViewItem Content="Analytics Dashboards" Tag="Analytics" />
+                    <ListViewItem Content="Advanced Analytics" Tag="AdvancedAnalytics" />
+                </ListView>
 
                 <!-- Info Box -->
                 <Border Grid.Row="2" Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Padding="12">
@@ -157,15 +157,9 @@
             <Grid Grid.Row="1" ColumnDefinitions="*, 340">
                 <!-- CHART RENDER PANEL -->
                 <Border Grid.Column="0" Background="#0B0F19" Padding="24">
-                    <Pivot x:Name="ContentPivot" SelectionChanged="OnPivotSelectionChanged" Background="Transparent">
-                        <Pivot.HeaderTemplate>
-                            <DataTemplate>
-                                <Grid Height="0" Width="0" Margin="0" Padding="0" Visibility="Collapsed" />
-                            </DataTemplate>
-                        </Pivot.HeaderTemplate>
-
+                    <Grid x:Name="ContentPanel" Background="Transparent">
                         <!-- 1. LINE CHART VIEW -->
-                        <PivotItem x:Name="LineView" Tag="Line">
+                        <Grid x:Name="LineView" Visibility="Visible">
                             <pc:CartesianChart x:Name="LineChart" Title="Revenue &amp; Cost Analysis" IsAnimationEnabled="True">
                                 <pc:CartesianChart.XAxis>
                                     <pu:Axis Title="Months" Position="Bottom" />
@@ -174,10 +168,10 @@
                                     <pu:Axis Title="Amount (USD)" Position="Left" />
                                 </pc:CartesianChart.YAxis>
                             </pc:CartesianChart>
-                        </PivotItem>
+                        </Grid>
 
                         <!-- 2. AREA CHART VIEW -->
-                        <PivotItem x:Name="AreaView" Tag="Area">
+                        <Grid x:Name="AreaView" Visibility="Collapsed">
                             <pc:CartesianChart x:Name="AreaChart" Title="System Resource Monitoring" IsAnimationEnabled="True">
                                 <pc:CartesianChart.XAxis>
                                     <pu:Axis Title="Time Interval" Position="Bottom" />
@@ -186,10 +180,10 @@
                                     <pu:Axis Title="Resource Usage (%)" Position="Left" Minimum="0" Maximum="100" />
                                 </pc:CartesianChart.YAxis>
                             </pc:CartesianChart>
-                        </PivotItem>
+                        </Grid>
 
                         <!-- 3. BAR CHART VIEW -->
-                        <PivotItem x:Name="BarView" Tag="Bar">
+                        <Grid x:Name="BarView" Visibility="Collapsed">
                             <Grid>
                                 <pc:CartesianChart x:Name="BarChart" Title="Product Regional Performance" IsAnimationEnabled="True">
                                     <pc:CartesianChart.XAxis>
@@ -203,19 +197,19 @@
                                 <pc:DivergingBarChart x:Name="DivergingBarChartCtrl" Title="Customer Sentiment Diverging Bounds" Visibility="Collapsed" />
                                 <pc:TornadoChart x:Name="TornadoChartCtrl" Title="Risk Factor Sensitivity Tornado" Visibility="Collapsed" />
                             </Grid>
-                        </PivotItem>
+                        </Grid>
 
                         <!-- 4. PIE CHART VIEW -->
-                        <PivotItem x:Name="PieView" Tag="Pie">
+                        <Grid x:Name="PieView" Visibility="Collapsed">
                             <Grid>
                                 <pc:PieChart x:Name="PieChartCtrl" Title="Market Share Breakdown" IsAnimationEnabled="True" HollowRadius="0.0" />
                                 <pc:DonutChart x:Name="DonutChartCtrl" Title="Infrastructure Node Breakdown" CenterText="9,420" CenterSubText="TOTAL STREAMS" Visibility="Collapsed" />
                                 <pc:SemiDonutChart x:Name="SemiDonutChartCtrl" Title="Active Workload Threshold" CenterText="72%" Visibility="Collapsed" />
                             </Grid>
-                        </PivotItem>
+                        </Grid>
 
                         <!-- 5. REAL-TIME VIEW -->
-                        <PivotItem x:Name="RealTimeView" Tag="RealTime">
+                        <Grid x:Name="RealTimeView" Visibility="Collapsed">
                             <pc:CartesianChart x:Name="RealTimeChart" Title="High Frequency Telemetry Streams" IsAnimationEnabled="False">
                                 <pc:CartesianChart.XAxis>
                                     <pu:Axis Title="Data Feed" Position="Bottom" />
@@ -224,10 +218,10 @@
                                     <pu:Axis Title="Amplitude" Position="Left" Minimum="-100" Maximum="200" />
                                 </pc:CartesianChart.YAxis>
                             </pc:CartesianChart>
-                        </PivotItem>
+                        </Grid>
 
                         <!-- 6. FINANCIAL VIEW -->
-                        <PivotItem x:Name="FinancialView" Tag="Financial">
+                        <Grid x:Name="FinancialView" Visibility="Collapsed">
                             <pc:CartesianChart x:Name="FinancialChart" Title="Interactive Financial Market Feed" IsAnimationEnabled="True">
                                 <pc:CartesianChart.XAxis>
                                     <pu:Axis Title="Trading Days" Position="Bottom" />
@@ -236,10 +230,10 @@
                                     <pu:Axis Title="Stock Price (USD)" Position="Left" />
                                 </pc:CartesianChart.YAxis>
                             </pc:CartesianChart>
-                        </PivotItem>
+                        </Grid>
 
                         <!-- 7. GAUGES VIEW -->
-                        <PivotItem x:Name="GaugesView" Tag="Gauges">
+                        <Grid x:Name="GaugesView" Visibility="Collapsed">
                             <Grid RowDefinitions="*, *" ColumnDefinitions="*, *, *">
                                 <Border Grid.Row="0" Grid.Column="0" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
                                     <pc:CircularGauge x:Name="CircGauge" Title="CPU Core Temp" Minimum="0" Maximum="100" Unit="°C" Value="62.5" GaugeThickness="18" />
@@ -257,10 +251,10 @@
                                     <pc:GradientRingChart x:Name="GradRingChart" Title="System Streams Telemetry" RingThickness="10" RingSpacing="5" Maximum="100" />
                                 </Border>
                             </Grid>
-                        </PivotItem>
+                        </Grid>
 
                         <!-- 8. HIERARCHY VIEW -->
-                        <PivotItem x:Name="HierarchyView" Tag="Hierarchy">
+                        <Grid x:Name="HierarchyView" Visibility="Collapsed">
                             <Grid RowDefinitions="*, *" ColumnDefinitions="*, *">
                                 <Border Grid.Row="0" Grid.Column="0" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
                                     <pc:SankeyChart x:Name="SankeyFlow" Title="Energy Production Flows (Sankey)" />
@@ -275,10 +269,10 @@
                                     <pc:SunburstChart x:Name="SunburstFlow" Title="Company Org Hierarchy (Sunburst)" InnerHollowRadiusPercent="0.3" />
                                 </Border>
                             </Grid>
-                        </PivotItem>
+                        </Grid>
 
                         <!-- 9. STATISTICAL VIEW -->
-                        <PivotItem x:Name="StatisticalView" Tag="Statistical">
+                        <Grid x:Name="StatisticalView" Visibility="Collapsed">
                             <pc:CartesianChart x:Name="StatisticalChart" Title="Advanced Statistical Distribution Analysis" IsAnimationEnabled="True">
                                 <pc:CartesianChart.XAxis>
                                     <pu:Axis Title="Dataset" Position="Bottom" />
@@ -287,10 +281,10 @@
                                     <pu:Axis Title="Density / Value" Position="Left" />
                                 </pc:CartesianChart.YAxis>
                             </pc:CartesianChart>
-                        </PivotItem>
+                        </Grid>
 
                         <!-- 10. ANALYTICS VIEW -->
-                        <PivotItem x:Name="AnalyticsView" Tag="Analytics">
+                        <Grid x:Name="AnalyticsView" Visibility="Collapsed">
                             <Grid RowDefinitions="140, *, *">
                                 <Grid Grid.Row="0" ColumnDefinitions="*, *, *">
                                     <pc:KpiCard Grid.Column="0" x:Name="KpiCard1" Title="Total Sales Revenue" ValueString="$84,290" TrendValue="12.4" TrendUnit="%" Margin="4" />
@@ -304,10 +298,10 @@
                                     <pc:BulletChart x:Name="AnalyticsBullet" Title="Quarterly Revenue Growth Target (Millions)" Minimum="0" Maximum="150" Value="112.5" Target="120.0" BadRange="50.0" SatisfactoryRange="95.0" />
                                 </Border>
                             </Grid>
-                        </PivotItem>
+                        </Grid>
 
                         <!-- 11. ADVANCED ANALYTICS VIEW -->
-                        <PivotItem x:Name="AdvancedAnalyticsView" Tag="AdvancedAnalytics">
+                        <Grid x:Name="AdvancedAnalyticsView" Visibility="Collapsed">
                             <Grid RowDefinitions="*, *">
                                 <Grid Grid.Row="0" ColumnDefinitions="*, *">
                                     <Border Grid.Column="0" Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
@@ -326,8 +320,8 @@
                                     </Border>
                                 </Grid>
                             </Grid>
-                        </PivotItem>
-                    </Pivot>
+                        </Grid>
+                    </Grid>
                 </Border>
 
                 <!-- CONFIGURATION PANEL -->

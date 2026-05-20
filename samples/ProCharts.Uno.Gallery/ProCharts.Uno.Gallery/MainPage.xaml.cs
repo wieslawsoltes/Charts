@@ -32,7 +32,7 @@ namespace ProCharts.Uno.Gallery
         private readonly ObservableCollection<Point> _barSeries2Data = new();
 
         // Real-time fields
-        private DispatcherTimer _rtTimer;
+        private DispatcherTimer? _rtTimer;
         private readonly ObservableCollection<Point> _rtData = new();
         private double _rtTimeIndex = 0;
         private int _rtMaxPoints = 50;
@@ -655,131 +655,133 @@ namespace ProCharts.Uno.Gallery
         // --- NAVIGATION ROUTINES ---
         private void OnCategoryChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (CategoryList == null || ContentPivot == null) return;
+            if (CategoryList == null) return;
 
-            int index = CategoryList.SelectedIndex;
-            if (index >= 0 && index < ContentPivot.Items.Count)
+            if (CategoryList.SelectedItem is ListViewItem selectedItem && selectedItem.Tag is string tag)
             {
-                if (ContentPivot.SelectedIndex != index)
+                _activeCategory = tag;
+
+                // Stop active timers if switching away from Real-time
+                if (tag != "RealTime" && _rtTimer != null)
                 {
-                    ContentPivot.SelectedIndex = index;
+                    _rtTimer.Stop();
+                    _rtTimer = null;
+                    PlayPauseButton.Content = "Start Real-time Telemetry";
+                    PlayPauseButton.Background = GetSolidColorBrush("#4F46E5");
                 }
 
-                if (CategoryList.SelectedItem is ListBoxItem selectedItem && selectedItem.Tag is string tag)
+                // Hide all view grids
+                LineView.Visibility = Visibility.Collapsed;
+                AreaView.Visibility = Visibility.Collapsed;
+                BarView.Visibility = Visibility.Collapsed;
+                PieView.Visibility = Visibility.Collapsed;
+                RealTimeView.Visibility = Visibility.Collapsed;
+                FinancialView.Visibility = Visibility.Collapsed;
+                GaugesView.Visibility = Visibility.Collapsed;
+                HierarchyView.Visibility = Visibility.Collapsed;
+                StatisticalView.Visibility = Visibility.Collapsed;
+                AnalyticsView.Visibility = Visibility.Collapsed;
+                AdvancedAnalyticsView.Visibility = Visibility.Collapsed;
+
+                // Hide all config panels
+                LineControls.Visibility = Visibility.Collapsed;
+                AreaControls.Visibility = Visibility.Collapsed;
+                BarControls.Visibility = Visibility.Collapsed;
+                PieControls.Visibility = Visibility.Collapsed;
+                RealTimeControls.Visibility = Visibility.Collapsed;
+                FinancialControls.Visibility = Visibility.Collapsed;
+                GaugesControls.Visibility = Visibility.Collapsed;
+                HierarchyControls.Visibility = Visibility.Collapsed;
+                StatisticalControls.Visibility = Visibility.Collapsed;
+                AnalyticsControls.Visibility = Visibility.Collapsed;
+                AdvancedAnalyticsControls.Visibility = Visibility.Collapsed;
+
+                switch (tag)
                 {
-                    _activeCategory = tag;
-
-                    // Stop active timers if switching away from Real-time
-                    if (tag != "RealTime" && _rtTimer != null)
-                    {
-                        _rtTimer.Stop();
-                        _rtTimer = null;
-                        PlayPauseButton.Content = "Start Real-time Telemetry";
-                        PlayPauseButton.Background = GetSolidColorBrush("#4F46E5");
-                    }
-
-                    // Hide all config panels
-                    LineControls.Visibility = Visibility.Collapsed;
-                    AreaControls.Visibility = Visibility.Collapsed;
-                    BarControls.Visibility = Visibility.Collapsed;
-                    PieControls.Visibility = Visibility.Collapsed;
-                    RealTimeControls.Visibility = Visibility.Collapsed;
-                    FinancialControls.Visibility = Visibility.Collapsed;
-                    GaugesControls.Visibility = Visibility.Collapsed;
-                    HierarchyControls.Visibility = Visibility.Collapsed;
-                    StatisticalControls.Visibility = Visibility.Collapsed;
-                    AnalyticsControls.Visibility = Visibility.Collapsed;
-                    AdvancedAnalyticsControls.Visibility = Visibility.Collapsed;
-
-                    switch (tag)
-                    {
-                        case "Line":
-                            LineControls.Visibility = Visibility.Visible;
-                            _activeChart = LineChart;
-                            ActiveCategoryTitle.Text = "Linear & Spline Charts";
-                            ActiveCategorySubtitle.Text = "Displays continuous coordinates using high-performance vector rendering, markers, and splines.";
-                            break;
-                        case "Area":
-                            AreaControls.Visibility = Visibility.Visible;
-                            _activeChart = AreaChart;
-                            ActiveCategoryTitle.Text = "Area Gradient Charts";
-                            ActiveCategorySubtitle.Text = "Displays continuous coordinates with translucent background gradients, creating smooth layered landscapes.";
-                            break;
-                        case "Bar":
-                            BarControls.Visibility = Visibility.Visible;
-                            _activeChart = BarChart;
-                            ActiveCategoryTitle.Text = "Column & Bar Charts";
-                            ActiveCategorySubtitle.Text = "Displays categorical comparisons with clustered vertical columns or horizontal bars and rounded corners.";
-                            break;
-                        case "Pie":
-                            PieControls.Visibility = Visibility.Visible;
-                            _activeChart = PieChartCtrl;
-                            ActiveCategoryTitle.Text = "Pie & Donut Charts";
-                            ActiveCategorySubtitle.Text = "Displays proportional breakdowns in circular coordinates with hollow center configuration and hover slice explosion.";
-                            break;
-                        case "RealTime":
-                            RealTimeControls.Visibility = Visibility.Visible;
-                            _activeChart = RealTimeChart;
-                            ActiveCategoryTitle.Text = "Real-time Telemetry Stress Test";
-                            ActiveCategorySubtitle.Text = "Tests high frequency rendering performance of vectors drawn directly to the drawing context. Multi-axes enabled.";
-                            break;
-                        case "Financial":
-                            FinancialControls.Visibility = Visibility.Visible;
-                            _activeChart = FinancialChart;
-                            ActiveCategoryTitle.Text = "Financial Market Feeds";
-                            ActiveCategorySubtitle.Text = "Displays stock market price ranges using interactive candlesticks, tick OHLC points, or high-low Hilo bands.";
-                            break;
-                        case "Gauges":
-                            GaugesControls.Visibility = Visibility.Visible;
-                            _activeChart = CircGauge;
-                            ActiveCategoryTitle.Text = "Premium Status Gauges";
-                            ActiveCategorySubtitle.Text = "Interactive meters depicting real-time system metrics, fluid sine waves, and glassmorphic tracks.";
-                            break;
-                        case "Hierarchy":
-                            HierarchyControls.Visibility = Visibility.Visible;
-                            _activeChart = SankeyFlow;
-                            ActiveCategoryTitle.Text = "Hierarchy & Process Flows";
-                            ActiveCategorySubtitle.Text = "Visualizes network flows and recursive area partitions using organic Bezier curves and squarified layouts.";
-                            break;
-                        case "Statistical":
-                            StatisticalControls.Visibility = Visibility.Visible;
-                            _activeChart = StatisticalChart;
-                            ActiveCategoryTitle.Text = "Statistical Plotting";
-                            ActiveCategorySubtitle.Text = "Plots data density, quartiles, and swarms using box whiskers, beeswarm collision-packing, and histograms.";
-                            break;
-                        case "Analytics":
-                            AnalyticsControls.Visibility = Visibility.Visible;
-                            _activeChart = AnalyticsHeatmap;
-                            ActiveCategoryTitle.Text = "Executive Analytics Dashboards";
-                            ActiveCategorySubtitle.Text = "High-fidelity executive tracking system featuring mini sparklines, responsive categorical grids, and target bands.";
-                            break;
-                        case "AdvancedAnalytics":
-                            AdvancedAnalyticsControls.Visibility = Visibility.Visible;
-                            _activeChart = FunnelCtrl;
-                            ActiveCategoryTitle.Text = "Advanced Pipeline & WordCloud Analytics";
-                            ActiveCategorySubtitle.Text = "Advanced enterprise visualization including segment funnels, word clouds, waffle partitions, and ternary chemical plots.";
-                            break;
-                    }
-
-                    // Trigger entry animation on the newly selected chart
-                    _activeChart?.StartEntryAnimation();
+                    case "Line":
+                        LineView.Visibility = Visibility.Visible;
+                        LineControls.Visibility = Visibility.Visible;
+                        _activeChart = LineChart;
+                        ActiveCategoryTitle.Text = "Linear & Spline Charts";
+                        ActiveCategorySubtitle.Text = "Displays continuous coordinates using high-performance vector rendering, markers, and splines.";
+                        break;
+                    case "Area":
+                        AreaView.Visibility = Visibility.Visible;
+                        AreaControls.Visibility = Visibility.Visible;
+                        _activeChart = AreaChart;
+                        ActiveCategoryTitle.Text = "Area Gradient Charts";
+                        ActiveCategorySubtitle.Text = "Displays continuous coordinates with translucent background gradients, creating smooth layered landscapes.";
+                        break;
+                    case "Bar":
+                        BarView.Visibility = Visibility.Visible;
+                        BarControls.Visibility = Visibility.Visible;
+                        _activeChart = BarChart;
+                        ActiveCategoryTitle.Text = "Column & Bar Charts";
+                        ActiveCategorySubtitle.Text = "Displays categorical comparisons with clustered vertical columns or horizontal bars and rounded corners.";
+                        break;
+                    case "Pie":
+                        PieView.Visibility = Visibility.Visible;
+                        PieControls.Visibility = Visibility.Visible;
+                        _activeChart = PieChartCtrl;
+                        ActiveCategoryTitle.Text = "Pie & Donut Charts";
+                        ActiveCategorySubtitle.Text = "Displays proportional breakdowns in circular coordinates with hollow center configuration and hover slice explosion.";
+                        break;
+                    case "RealTime":
+                        RealTimeView.Visibility = Visibility.Visible;
+                        RealTimeControls.Visibility = Visibility.Visible;
+                        _activeChart = RealTimeChart;
+                        ActiveCategoryTitle.Text = "Real-time Telemetry Stress Test";
+                        ActiveCategorySubtitle.Text = "Tests high frequency rendering performance of vectors drawn directly to the drawing context. Multi-axes enabled.";
+                        break;
+                    case "Financial":
+                        FinancialView.Visibility = Visibility.Visible;
+                        FinancialControls.Visibility = Visibility.Visible;
+                        _activeChart = FinancialChart;
+                        ActiveCategoryTitle.Text = "Financial Market Feeds";
+                        ActiveCategorySubtitle.Text = "Displays stock market price ranges using interactive candlesticks, tick OHLC points, or high-low Hilo bands.";
+                        break;
+                    case "Gauges":
+                        GaugesView.Visibility = Visibility.Visible;
+                        GaugesControls.Visibility = Visibility.Visible;
+                        _activeChart = CircGauge;
+                        ActiveCategoryTitle.Text = "Premium Status Gauges";
+                        ActiveCategorySubtitle.Text = "Interactive meters depicting real-time system metrics, fluid sine waves, and glassmorphic tracks.";
+                        break;
+                    case "Hierarchy":
+                        HierarchyView.Visibility = Visibility.Visible;
+                        HierarchyControls.Visibility = Visibility.Visible;
+                        _activeChart = SankeyFlow;
+                        ActiveCategoryTitle.Text = "Hierarchy & Process Flows";
+                        ActiveCategorySubtitle.Text = "Visualizes network flows and recursive area partitions using organic Bezier curves and squarified layouts.";
+                        break;
+                    case "Statistical":
+                        StatisticalView.Visibility = Visibility.Visible;
+                        StatisticalControls.Visibility = Visibility.Visible;
+                        _activeChart = StatisticalChart;
+                        ActiveCategoryTitle.Text = "Statistical Plotting";
+                        ActiveCategorySubtitle.Text = "Plots data density, quartiles, and swarms using box whiskers, beeswarm collision-packing, and histograms.";
+                        break;
+                    case "Analytics":
+                        AnalyticsView.Visibility = Visibility.Visible;
+                        AnalyticsControls.Visibility = Visibility.Visible;
+                        _activeChart = AnalyticsHeatmap;
+                        ActiveCategoryTitle.Text = "Executive Analytics Dashboards";
+                        ActiveCategorySubtitle.Text = "High-fidelity executive tracking system featuring mini sparklines, responsive categorical grids, and target bands.";
+                        break;
+                    case "AdvancedAnalytics":
+                        AdvancedAnalyticsView.Visibility = Visibility.Visible;
+                        AdvancedAnalyticsControls.Visibility = Visibility.Visible;
+                        _activeChart = FunnelCtrl;
+                        ActiveCategoryTitle.Text = "Advanced Pipeline & WordCloud Analytics";
+                        ActiveCategorySubtitle.Text = "Advanced enterprise visualization including segment funnels, word clouds, waffle partitions, and ternary chemical plots.";
+                        break;
                 }
+
+                // Trigger entry animation on the newly selected chart
+                _activeChart?.StartEntryAnimation();
             }
         }
 
-        private void OnPivotSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (CategoryList == null || ContentPivot == null) return;
-
-            int index = ContentPivot.SelectedIndex;
-            if (index >= 0 && index < CategoryList.Items.Count)
-            {
-                if (CategoryList.SelectedIndex != index)
-                {
-                    CategoryList.SelectedIndex = index;
-                }
-            }
-        }
 
         // --- GLOBAL CHART OPTIONS ---
         private void OnPaletteChanged(object sender, SelectionChangedEventArgs e)
