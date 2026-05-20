@@ -112,21 +112,88 @@ namespace ProCharts.Uno.Components
         /// </summary>
         public double[] GetTicks(double min, double max)
         {
-            double interval = TickInterval ?? CalculateDefaultInterval(min, max);
-            if (interval <= 0) interval = 1.0;
-
-            // Align start to the nearest interval tick
-            double start = Math.Ceiling(min / interval) * interval;
-            
-            var list = new System.Collections.Generic.List<double>();
-            for (double val = start; val <= max + 1e-9; val += interval)
+            if (IsLogarithmic)
             {
-                list.Add(val);
-                // Prevent infinite loop if interval is extremely tiny
-                if (list.Count > 100) break;
-            }
+                var list = new System.Collections.Generic.List<double>();
+                double adjMin = min <= 0 ? 1e-5 : min;
+                double adjMax = max <= 0 ? 1.0 : max;
+                if (adjMin > adjMax) adjMin = adjMax / 10.0;
 
-            return list.ToArray();
+                double logMin = Math.Log10(adjMin);
+                double logMax = Math.Log10(adjMax);
+
+                int startDec = (int)Math.Floor(logMin);
+                int endDec = (int)Math.Ceiling(logMax);
+
+                int decadeCount = endDec - startDec;
+                if (decadeCount > 10)
+                {
+                    // Wide span: major decades skipping steps to avoid label overlaps
+                    int step = (int)Math.Ceiling(decadeCount / 10.0);
+                    for (int d = startDec; d <= endDec; d += step)
+                    {
+                        double val = Math.Pow(10, d);
+                        if (val >= adjMin - 1e-9 && val <= adjMax + 1e-9)
+                        {
+                            list.Add(val);
+                        }
+                    }
+                }
+                else if (decadeCount > 3)
+                {
+                    // Moderate span: major decades (e.g. 1, 10, 100, 1000)
+                    for (int d = startDec; d <= endDec; d++)
+                    {
+                        double val = Math.Pow(10, d);
+                        if (val >= adjMin - 1e-9 && val <= adjMax + 1e-9)
+                        {
+                            list.Add(val);
+                        }
+                    }
+                }
+                else
+                {
+                    // Narrow span: sub-decade steps (e.g. 1, 2, 3, ..., 9, 10)
+                    for (int d = startDec - 1; d <= endDec + 1; d++)
+                    {
+                        double baseVal = Math.Pow(10, d);
+                        for (int i = 1; i <= 9; i++)
+                        {
+                            double val = baseVal * i;
+                            if (val >= adjMin - 1e-9 && val <= adjMax + 1e-9)
+                            {
+                                if (!list.Contains(val)) list.Add(val);
+                            }
+                        }
+                    }
+                }
+
+                if (list.Count == 0)
+                {
+                    list.Add(adjMin);
+                    list.Add(adjMax);
+                }
+
+                return list.ToArray();
+            }
+            else
+            {
+                double interval = TickInterval ?? CalculateDefaultInterval(min, max);
+                if (interval <= 0) interval = 1.0;
+
+                // Align start to the nearest interval tick
+                double start = Math.Ceiling(min / interval) * interval;
+                
+                var list = new System.Collections.Generic.List<double>();
+                for (double val = start; val <= max + 1e-9; val += interval)
+                {
+                    list.Add(val);
+                    // Prevent infinite loop if interval is extremely tiny
+                    if (list.Count > 100) break;
+                }
+
+                return list.ToArray();
+            }
         }
 
         private double CalculateDefaultInterval(double min, double max)

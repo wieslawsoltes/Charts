@@ -41,6 +41,8 @@ namespace ProCharts.Uno.Controls
             HorizontalAlignment = HorizontalAlignment.Center;
             VerticalAlignment = VerticalAlignment.Center;
             Margin = new Thickness(8);
+
+            ActualThemeChanged += (s, e) => RebuildItems(); // Rebuild when theme changes
         }
 
         private void OnChartChanged(ChartBase? oldChart, ChartBase? newChart)
@@ -56,7 +58,11 @@ namespace ProCharts.Uno.Controls
             var seriesList = Chart.GetSeries().ToList();
             var activePalette = Chart.Palette ?? Palette.Default;
 
-            var textBrush = ActualTheme == ElementTheme.Dark 
+            bool isDark = ActualTheme == ElementTheme.Default 
+                ? Application.Current.RequestedTheme == ApplicationTheme.Dark 
+                : ActualTheme == ElementTheme.Dark;
+
+            var textBrush = isDark 
                 ? new SolidColorBrush(Microsoft.UI.Colors.White) 
                 : new SolidColorBrush(Microsoft.UI.Colors.Black);
 

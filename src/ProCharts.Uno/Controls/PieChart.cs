@@ -194,18 +194,23 @@ namespace ProCharts.Uno.Controls
                 double adjustedAngle = (angle - StartAngle) % 360.0;
                 if (adjustedAngle < 0) adjustedAngle += 360.0;
 
-                double currentAngle = 0.0;
-                var visibleSeries = Series.Where(s => s.IsVisible).ToList();
+                double limitAngle = Math.Abs(TotalAngle);
 
-                foreach (var series in visibleSeries)
+                if (adjustedAngle <= limitAngle)
                 {
-                    double sweep = 360.0 * (series.Value / totalValue);
-                    if (adjustedAngle >= currentAngle && adjustedAngle < currentAngle + sweep)
+                    double currentAngle = 0.0;
+                    var visibleSeries = Series.Where(s => s.IsVisible).ToList();
+
+                    foreach (var series in visibleSeries)
                     {
-                        currentHover = series;
-                        break;
+                        double sweep = limitAngle * (series.Value / totalValue);
+                        if (adjustedAngle >= currentAngle && adjustedAngle < currentAngle + sweep)
+                        {
+                            currentHover = series;
+                            break;
+                        }
+                        currentAngle += sweep;
                     }
-                    currentAngle += sweep;
                 }
             }
 

@@ -26,7 +26,7 @@ namespace ProCharts.Uno.Controls
             DependencyProperty.Register(nameof(CPath), typeof(string), typeof(TernaryChart), new PropertyMetadata(default(string?), OnPropertyChanged));
 
         public static readonly DependencyProperty MarkerSKPaintProperty =
-            DependencyProperty.Register(nameof(MarkerSKPaint), typeof(SKPaint), typeof(TornadoChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+            DependencyProperty.Register(nameof(MarkerSKPaint), typeof(SKPaint), typeof(TernaryChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
 
         public IEnumerable? ItemsSource
         {

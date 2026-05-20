@@ -103,23 +103,50 @@ namespace ProCharts.Controls
         protected override Rect CalculatePlotArea(Size bounds)
         {
             double top = 16;
-            double bottom = 48;
-            double left = 64;
+            double bottom = 16;
+            double left = 24;
             double right = 24;
 
+            // X-Axis padding
+            if (XAxis != null && XAxis.Position == AxisPosition.Top)
+            {
+                top = 48;
+                if (!string.IsNullOrEmpty(XAxis.Title))
+                {
+                    top += 20;
+                }
+            }
+            else
+            {
+                bottom = 48;
+                if (XAxis != null && !string.IsNullOrEmpty(XAxis.Title))
+                {
+                    bottom += 20;
+                }
+            }
+
+            // Y-Axis padding
+            if (YAxis != null && YAxis.Position == AxisPosition.Right)
+            {
+                right = 64;
+                if (!string.IsNullOrEmpty(YAxis.Title))
+                {
+                    right += 20;
+                }
+            }
+            else
+            {
+                left = 64;
+                if (YAxis != null && !string.IsNullOrEmpty(YAxis.Title))
+                {
+                    left += 20;
+                }
+            }
+
+            // General title padding always at the top
             if (!string.IsNullOrEmpty(Title))
             {
                 top += 28;
-            }
-
-            if (XAxis != null && !string.IsNullOrEmpty(XAxis.Title))
-            {
-                bottom += 20; // Extra padding for X axis title
-            }
-
-            if (YAxis != null && !string.IsNullOrEmpty(YAxis.Title))
-            {
-                left += 20; // Extra padding for Y axis title
             }
 
             double w = Math.Max(10, bounds.Width - left - right);
@@ -246,8 +273,7 @@ namespace ProCharts.Controls
                 currentXMin, currentXMax,
                 currentYMin, currentYMax,
                 XAxis.IsLogarithmic, YAxis.IsLogarithmic,
-                XAxis.Position == AxisPosition.Top,
-                YAxis.Position == AxisPosition.Right);
+                XAxis.IsReversed, YAxis.IsReversed);
 
             double dataX = transform.ToData(mousePoint).X;
 
@@ -269,9 +295,18 @@ namespace ProCharts.Controls
                 if (!series.IsVisible) continue;
 
                 var points = series.GetDataPoints();
-                var pt = points.FirstOrDefault(p => Math.Abs(p.X - targetX) < 1e-5);
-                if (pt != default && !double.IsNaN(pt.Y))
+                var ptIndex = -1;
+                for (int k = 0; k < points.Count; k++)
                 {
+                    if (Math.Abs(points[k].X - targetX) < 1e-5)
+                    {
+                        ptIndex = k;
+                        break;
+                    }
+                }
+                if (ptIndex != -1 && !double.IsNaN(points[ptIndex].Y))
+                {
+                    var pt = points[ptIndex];
                     var seriesBrush = series.Fill ?? activePalette.GetBrush(i);
                     tooltipItems.Add((string.IsNullOrEmpty(series.Title) ? $"Series {i + 1}" : series.Title!, pt.Y, seriesBrush));
 
@@ -382,8 +417,7 @@ namespace ProCharts.Controls
                 currentXMin, currentXMax,
                 currentYMin, currentYMax,
                 XAxis.IsLogarithmic, YAxis.IsLogarithmic,
-                XAxis.Position == AxisPosition.Top,
-                YAxis.Position == AxisPosition.Right);
+                XAxis.IsReversed, YAxis.IsReversed);
 
             RenderGridLinesAndAxes(context, transform);
 
@@ -422,7 +456,6 @@ namespace ProCharts.Controls
                 var points = series.GetDataPoints();
                 if (points == null || points.Count == 0) continue;
 
-                hasData = true;
                 foreach (var pt in points)
                 {
                     if (double.IsNaN(pt.X) || double.IsInfinity(pt.X) ||
@@ -435,6 +468,7 @@ namespace ProCharts.Controls
                     xMax = Math.Max(xMax, pt.X);
                     yMin = Math.Min(yMin, pt.Y);
                     yMax = Math.Max(yMax, pt.Y);
+                    hasData = true;
                 }
             }
 
@@ -479,8 +513,9 @@ namespace ProCharts.Controls
                 {
                     var pt = transform.ToScreen(transform.XMin, val);
                     
-                    // Gridline
-                    if (val != transform.YMin || YAxis.Position == AxisPosition.Right)
+                    // Gridline - check X-axis active line position to avoid overlaps
+                    double xAxisLineY = XAxis.Position == AxisPosition.Top ? EffectivePlotArea.Top : EffectivePlotArea.Bottom;
+                    if (Math.Abs(pt.Y - xAxisLineY) > 1e-3)
                     {
                         context.DrawLine(gridPen, new Point(EffectivePlotArea.Left, pt.Y), new Point(EffectivePlotArea.Right, pt.Y));
                     }
@@ -495,13 +530,20 @@ namespace ProCharts.Controls
                         11,
                         textBrush);
 
-                    double lx = EffectivePlotArea.Left - ft.Width - 8;
+                    double lx = YAxis.Position == AxisPosition.Right ? EffectivePlotArea.Right + 8 : EffectivePlotArea.Left - ft.Width - 8;
                     double ly = pt.Y - ft.Height / 2.0;
                     context.DrawText(ft, new Point(lx, ly));
                 }
 
-                // Left Y-Axis main line
-                context.DrawLine(axisPen, new Point(EffectivePlotArea.Left, EffectivePlotArea.Top), new Point(EffectivePlotArea.Left, EffectivePlotArea.Bottom));
+                // Y-Axis main line
+                if (YAxis.Position == AxisPosition.Right)
+                {
+                    context.DrawLine(axisPen, new Point(EffectivePlotArea.Right, EffectivePlotArea.Top), new Point(EffectivePlotArea.Right, EffectivePlotArea.Bottom));
+                }
+                else
+                {
+                    context.DrawLine(axisPen, new Point(EffectivePlotArea.Left, EffectivePlotArea.Top), new Point(EffectivePlotArea.Left, EffectivePlotArea.Bottom));
+                }
 
                 // Draw Y-Axis Title
                 if (!string.IsNullOrEmpty(YAxis.Title))
@@ -515,7 +557,8 @@ namespace ProCharts.Controls
                         textBrush);
 
                     // Draw vertical text rotated by -90 degrees
-                    using (context.PushTransform(Matrix.CreateRotation(-Math.PI / 2.0) * Matrix.CreateTranslation(16, EffectivePlotArea.Center.Y + ftTitle.Width / 2.0)))
+                    double xTranslate = YAxis.Position == AxisPosition.Right ? Bounds.Width - 16 : 16;
+                    using (context.PushTransform(Matrix.CreateRotation(-Math.PI / 2.0) * Matrix.CreateTranslation(xTranslate, EffectivePlotArea.Center.Y + ftTitle.Width / 2.0)))
                     {
                         context.DrawText(ftTitle, new Point(0, 0));
                     }
@@ -530,8 +573,9 @@ namespace ProCharts.Controls
                 {
                     var pt = transform.ToScreen(val, transform.YMin);
 
-                    // Gridline
-                    if (val != transform.XMin || XAxis.Position == AxisPosition.Top)
+                    // Gridline - check Y-axis active line position to avoid overlaps
+                    double yAxisLineX = YAxis.Position == AxisPosition.Right ? EffectivePlotArea.Right : EffectivePlotArea.Left;
+                    if (Math.Abs(pt.X - yAxisLineX) > 1e-3)
                     {
                         context.DrawLine(gridPen, new Point(pt.X, EffectivePlotArea.Top), new Point(pt.X, EffectivePlotArea.Bottom));
                     }
@@ -547,12 +591,19 @@ namespace ProCharts.Controls
                         textBrush);
 
                     double lx = pt.X - ft.Width / 2.0;
-                    double ly = EffectivePlotArea.Bottom + 6;
+                    double ly = XAxis.Position == AxisPosition.Top ? EffectivePlotArea.Top - ft.Height - 6 : EffectivePlotArea.Bottom + 6;
                     context.DrawText(ft, new Point(lx, ly));
                 }
 
-                // Bottom X-Axis main line
-                context.DrawLine(axisPen, new Point(EffectivePlotArea.Left, EffectivePlotArea.Bottom), new Point(EffectivePlotArea.Right, EffectivePlotArea.Bottom));
+                // X-Axis main line
+                if (XAxis.Position == AxisPosition.Top)
+                {
+                    context.DrawLine(axisPen, new Point(EffectivePlotArea.Left, EffectivePlotArea.Top), new Point(EffectivePlotArea.Right, EffectivePlotArea.Top));
+                }
+                else
+                {
+                    context.DrawLine(axisPen, new Point(EffectivePlotArea.Left, EffectivePlotArea.Bottom), new Point(EffectivePlotArea.Right, EffectivePlotArea.Bottom));
+                }
 
                 // Draw X-Axis Title
                 if (!string.IsNullOrEmpty(XAxis.Title))
@@ -566,7 +617,7 @@ namespace ProCharts.Controls
                         textBrush);
 
                     double lx = EffectivePlotArea.Left + (EffectivePlotArea.Width - ftTitle.Width) / 2.0;
-                    double ly = EffectivePlotArea.Bottom + 24;
+                    double ly = XAxis.Position == AxisPosition.Top ? EffectivePlotArea.Top - ftTitle.Height - 24 : EffectivePlotArea.Bottom + 24;
                     context.DrawText(ftTitle, new Point(lx, ly));
                 }
             }

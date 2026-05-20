@@ -135,6 +135,7 @@ namespace ProCharts.Uno.Controls
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
             SizeChanged += (s, e) => InvalidateVisual();
+            ActualThemeChanged += (s, e) => InvalidateVisual(); // Trigger repaint on system/requested theme change
 
             // Interactive pointer event registration
             PointerMoved += (s, e) =>
@@ -242,8 +243,14 @@ namespace ProCharts.Uno.Controls
             _animationStopwatch = null;
         }
 
+        protected bool IsDarkTheme => ActualTheme == ElementTheme.Default 
+            ? Application.Current.RequestedTheme == ApplicationTheme.Dark 
+            : ActualTheme == ElementTheme.Dark;
+
         protected override Size MeasureOverride(Size availableSize)
         {
+            base.MeasureOverride(availableSize); // Ensure child canvas and content are measured!
+
             double width = double.IsNaN(Width) ? 300 : Width;
             double height = double.IsNaN(Height) ? 200 : Height;
 
@@ -349,7 +356,7 @@ namespace ProCharts.Uno.Controls
 
         protected SKPaint SystemSKPaint => LabelForeground ?? new SKPaint 
         { 
-            Color = ActualTheme == ElementTheme.Light ? SKColors.Black : SKColors.White,
+            Color = IsDarkTheme ? SKColors.White : SKColors.Black,
             IsAntialias = true
         };
     }

@@ -163,12 +163,12 @@ namespace ProCharts.Uno.Controls
                     var areaGeom = new SKPath();
                     using (var ctx = areaGeom.Open())
                     {
-                        geometry.MoveTo(new Point(pts[0].X, area.Bottom), true);
+                        areaGeom.MoveTo(new Point(pts[0].X, area.Bottom), true);
                         foreach (var pt in pts)
                         {
-                            geometry.LineTo(pt);
+                            areaGeom.LineTo(pt);
                         }
-                        geometry.LineTo(new Point(pts.Last().X, area.Bottom));
+                        areaGeom.LineTo(new Point(pts.Last().X, area.Bottom));
                     }
 
                     SKColor sparkSKColor = isPositive ? SKColor.Parse("#10B981") : SKColor.Parse("#EF4444");
