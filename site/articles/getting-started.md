@@ -88,6 +88,7 @@ namespace TelemetryApp.ViewModels;
 public class TelemetryViewModel : INotifyPropertyChanged
 {
     private readonly Timer _timer;
+    private readonly SynchronizationContext? _syncContext;
     private double _currentTimeIndex = 0;
     private readonly Random _random = new();
 
@@ -96,6 +97,9 @@ public class TelemetryViewModel : INotifyPropertyChanged
 
     public TelemetryViewModel()
     {
+        // Capture the synchronization context of the UI thread to marshal updates safely
+        _syncContext = SynchronizationContext.Current;
+
         // Pre-populate historical telemetry data
         for (int i = 0; i < 50; i++)
         {
@@ -108,8 +112,15 @@ public class TelemetryViewModel : INotifyPropertyChanged
 
     private void OnTimerTick(object? state)
     {
-        // Dispatch UI updates thread-safely in your host application
-        AppendTelemetrySample();
+        // Marshal updates back to the UI thread using the captured SynchronizationContext
+        if (_syncContext != null)
+        {
+            _syncContext.Post(_ => AppendTelemetrySample(), null);
+        }
+        else
+        {
+            AppendTelemetrySample();
+        }
     }
 
     private void AppendTelemetrySample()
@@ -157,9 +168,9 @@ Bind your telemetry series collections directly to the chart. Enable glassmorphi
   <!-- Series Configurations -->
   <pc:CartesianChart.Series>
     <ps:AreaSeries Title="Uplink Stream" 
-                  Points="{Binding UplinkSignal}" 
-                  XBindingPath="TimeIndex"
-                  YBindingPath="Value"
+                  ItemsSource="{Binding UplinkSignal}" 
+                  CategoryPath="TimeIndex"
+                  ValuePath="Value"
                   Stroke="#06B6D4" 
                   StrokeThickness="2" 
                   Fill="#0891B2"
@@ -167,9 +178,9 @@ Bind your telemetry series collections directly to the chart. Enable glassmorphi
                   IsSmooth="True" />
                   
     <ps:LineSeries Title="Downlink Stream" 
-                  Points="{Binding DownlinkSignal}" 
-                  XBindingPath="TimeIndex"
-                  YBindingPath="Value"
+                  ItemsSource="{Binding DownlinkSignal}" 
+                  CategoryPath="TimeIndex"
+                  ValuePath="Value"
                   Stroke="#8B5CF6" 
                   StrokeThickness="3" 
                   IsSmooth="True" />

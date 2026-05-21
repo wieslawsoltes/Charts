@@ -9,26 +9,25 @@ description: Harness advanced glassmorphic charting and fluent layouts in Avalon
 
 ---
 
-## 1. Theme Resource Integration
+## 1. Out-of-the-Box Resource Configuration
 
-To ensure correct visual styling, dark-theme assets, and control template bindings, import the ProCharts styling resources in your `App.axaml` file. ProCharts fully supports Avalonia's `RequestedThemeVariant="Dark"` and adaptive system palette hooks.
+Because `ProCharts.Avalonia` executes all layout and vector composition directly inside its custom rendering pipeline via Skia or Direct2D, the controls are fully self-contained. Unlike traditional theme-dependent component libraries, **ProCharts does not require any external theme dictionaries or StyleInclude files** in `App.axaml`.
+
+You can import the base fluent themes as normal:
 
 ```xml
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:pc="clr-namespace:ProCharts.Avalonia.Controls;assembly=ProCharts.Avalonia"
              x:Class="TelemetryApp.App"
              RequestedThemeVariant="Dark">
-  
   <Application.Styles>
     <!-- Base Avalonia fluent theme styles -->
     <FluentTheme />
-    
-    <!-- Include the ProCharts control theme resources -->
-    <StyleInclude Source="avares://ProCharts.Avalonia/Themes/Generic.axaml" />
   </Application.Styles>
 </Application>
 ```
+
+The charting controls hook directly into Avalonia's `RequestedThemeVariant` to adapt their visual palette between Light and Dark modes automatically, using adaptive system brushes without requiring separate style templates.
 
 ---
 

@@ -143,7 +143,7 @@ While ProCharts implements safety bounds internally by padding equal boundaries 
                    XMin="0" XMax="10"
                    YMin="0" YMax="200">
   <pc:CartesianChart.Series>
-    <ps:LineSeries Points="{Binding ConstantSeries}" />
+    <ps:LineSeries ItemsSource="{Binding ConstantSeries}" />
   </pc:CartesianChart.Series>
 </pc:CartesianChart>
 ```
