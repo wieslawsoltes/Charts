@@ -106,7 +106,7 @@ namespace ProCharts.Uno.Controls
         // --- INTERNAL FIELDS ---
 
         protected Rect EffectivePlotArea { get; set; }
-        public Rect Bounds { get; protected set; }
+        public new Rect Bounds { get; protected set; }
         private DispatcherTimer? _animationTimer;
         private Stopwatch? _animationStopwatch;
         protected Point? MousePoint => _mousePoint;

@@ -1,0 +1,8 @@
+docs:
+  - {path: readme.md, title: Overview}
+  - {path: getting-started.md, title: Getting Started}
+  - {path: installation.md, title: Installation}
+  - {path: architecture.md, title: Architecture}
+  - {path: avalonia-guide.md, title: Avalonia UI}
+  - {path: uno-guide.md, title: Uno Platform}
+  - {path: troubleshooting.md, title: Troubleshooting}
