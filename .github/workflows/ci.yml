@@ -35,6 +35,9 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Install Workloads
+        run: dotnet workload restore ProCharts.slnx
+
       - name: Restore
         run: dotnet restore ProCharts.slnx
 
@@ -85,6 +88,9 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Install Workloads
+        run: dotnet workload restore ProCharts.slnx
+
       - name: Build Avalonia Gallery
         run: dotnet build samples/ProCharts.Avalonia.Gallery/ProCharts.Avalonia.Gallery.csproj -c Release -p:ContinuousIntegrationBuild=true
 
@@ -101,6 +107,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install Workloads
+        run: dotnet workload restore ProCharts.slnx
 
       - name: Pack
         run: ./pack.sh 1.0.0-ci.${{ github.run_number }}

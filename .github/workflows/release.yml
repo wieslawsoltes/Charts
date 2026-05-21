@@ -37,6 +37,9 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Install Workloads
+        run: dotnet workload restore ProCharts.slnx
+
       - name: Resolve version
         id: version
         shell: bash
