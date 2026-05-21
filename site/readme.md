@@ -1,15 +1,22 @@
-# ProCharts: Premium Native Charting Engine for Avalonia UI
+---
+title: ProCharts
+description: Premium Native Vector Charting Engine for Avalonia UI and Uno Platform
+---
 
-Welcome to **ProCharts**, a fully native, high-performance, and visually stunning charting engine built from the ground up for Avalonia UI. 
+# ProCharts: Premium Native Vector Charting Engine
 
-ProCharts abandons heavy and slow control-based tree hierarchies in favor of **direct vector rendering via the `DrawingContext` pipeline**, ensuring buttery smooth 60fps animations and flawless telemetry rendering even under extreme point density stresses (up to 5,000+ real-time coordinates).
+Welcome to **ProCharts**, a fully native, high-performance, and visually stunning charting engine built from the ground up for modern XAML applications. 
+
+ProCharts abandons heavy and slow control-based tree hierarchies in favor of **direct vector rendering via modern drawing pipelines**, ensuring buttery smooth 60fps animations and flawless telemetry rendering even under extreme point density stresses (up to 5,000+ real-time coordinates).
+
+ProCharts is available as completely symmetric packages for both **Avalonia UI** and **Uno Platform**.
 
 ---
 
 ## 🚀 Key Features
 
 * **Direct Vector Rendering**: Bypasses the UI logical tree to write directly to the screen via highly optimized GPU/Skia drawing context calls.
-* **Rich Aesthetic System**: State-of-the-art dark styling, customizable theme variants (`RequestedThemeVariant="Dark"`), glassmorphic hover overlays, pulsing concentric rings, and vibrant default palettes.
+* **Rich Aesthetic System**: State-of-the-art dark styling, glassmorphic hover overlays, pulsing concentric rings, and vibrant default palettes.
 * **Unified Interactivity**:
   * **Zooming**: Center-of-mouse wheel coordinate transformation.
   * **Panning**: Middle/Right click-and-drag view scaling.
@@ -48,16 +55,20 @@ The ProCharts system consists of three architectural layers working together:
 ```
 
 ### 1. Vector Drawing Pipeline
-Rather than defining individual paths as Avalonia Shapes, charts are drawn dynamically in `RenderChart(DrawingContext context)`:
+Rather than defining individual paths as heavy framework UI elements, charts are drawn dynamically in each framework's render loop:
 * Grid lines are calculated on-the-fly and rendered as thin, translucent single-stroke paths.
 * Bars are represented as `RoundedRect` objects to support custom corner styling.
 * Line segments are grouped and drawn either as lines or custom Bézier spline streams to reduce visual artifacting.
 
 ### 2. Coordinate Scaling Transforms
 Mapping data coordinate tuples `(X, Y)` to visual pixel bounds `(PX, PY)` is handled by `CoordinateTransform.cs`. It computes:
+
 $$PX = Left + (X - XMin) \times \frac{Width}{XMax - XMin}$$
+
 $$PY = Bottom - (Y - YMin) \times \frac{Height}{YMax - YMin}$$
+
 It natively supports reversed coordinates (plotting descending depths) and logarithmic scaling (compressing astronomical telemetry distributions):
+
 $$X_{log} = \log_{10}(X)$$
 
 ### 3. NaN Points and Empty Point Modes
@@ -66,95 +77,6 @@ When telemetry feeds drop connection, databases write `null` or `double.NaN`. Pr
 * **Gap**: Stops rendering the current stroke segment and resumes at the next valid point, drawing a clean visual break.
 * **Average**: Replaces the NaN coordinate with the mathematical mean of its immediate left and right valid neighbors.
 * **Interpolate**: Performs a linear transition between the neighboring valid points, masking the loss.
-
----
-
-## 📦 Getting Started
-
-### Installation
-Add the ProCharts assembly reference to your Avalonia application:
-
-```xml
-<Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="MyApp.App">
-    <Application.Styles>
-        <FluentTheme />
-    </Application.Styles>
-</Application>
-```
-
-### Basic Cartesian Chart Setup
-Add a `CartesianChart` directly into your XAML view:
-
-```xml
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:pc="clr-namespace:ProCharts.Controls;assembly=ProCharts"
-        xmlns:pu="clr-namespace:ProCharts.Components;assembly=ProCharts"
-        x:Class="MyApp.MainWindow"
-        Title="Enterprise Telemetry"
-        Width="800" Height="500">
-    
-    <Grid Padding="24" Background="#0F172A">
-        <pc:CartesianChart x:Name="MyChart" Title="Network Packet Throughput">
-            <pc:CartesianChart.XAxis>
-                <pu:Axis Title="Seconds Elapsed" Position="Bottom" />
-            </pc:CartesianChart.XAxis>
-            <pc:CartesianChart.YAxis>
-                <pu:Axis Title="Bandwidth (MB/s)" Position="Left" Minimum="0" />
-            </pc:CartesianChart.YAxis>
-        </pc:CartesianChart>
-    </Grid>
-</Window>
-```
-
-### Populating Series in Code-Behind
-Bind items to the series programmatically using the clean `ItemsSource` property:
-
-```csharp
-using System.Collections.ObjectModel;
-using Avalonia;
-using Avalonia.Controls;
-using ProCharts.Series;
-
-namespace MyApp
-{
-    public partial class MainWindow : Window
-    {
-        public MainWindow()
-        {
-            InitializeComponent();
-
-            var dataPoints = new ObservableCollection<Point>
-            {
-                new Point(0, 15),
-                new Point(1, 28),
-                new Point(2, 42),
-                new Point(3, double.NaN), // Automatic NaN Gap Handling
-                new Point(4, 55),
-                new Point(5, 78)
-            };
-
-            var lineSeries = new LineSeries
-            {
-                Title = "Primary WAN",
-                ItemsSource = dataPoints,
-                StrokeThickness = 3,
-                IsSmooth = true, // Enable Bézier Spline Interpolation
-                ShowMarkers = true,
-                MarkerSize = 8,
-                EmptyPointMode = EmptyPointMode.Gap
-            };
-
-            MyChart.Series.Add(lineSeries);
-            
-            // Trigger entry animations with Elastic easing
-            MyChart.StartEntryAnimation();
-        }
-    }
-}
-```
 
 ---
 
@@ -171,7 +93,9 @@ Designed for grouped comparisons. When multiple `BarSeries` are declared inside 
 
 ### `PieSeries`
 Translates standard values into proportional angles ($0^\circ$ to $360^\circ$). Built-in hover listeners dynamically calculate polar radii:
+
 $$R(\theta) = Center + ExplodeDistance \times \cos(\theta)$$
+
 Creating a frictionless radial exit physics effect.
 
 ---
@@ -181,18 +105,18 @@ Creating a frictionless radial exit physics effect.
 In addition to traditional Cartesian plots, ProCharts offers dedicated advanced controls for financial analysis, status monitoring, structural hierarchies, statistical distribution, and executive analytics dashboards:
 
 ### 📈 Financial Ecosystem
-* **`CandlestickSeries`**: Custom OHLC visual representing market trades. Renders high-fidelity wick stems and bull/bear filled body blocks with custom brush overrides.
+* **`CandlestickSeries`**: Custom OHLC visual representing market trades. Renders high-fidelity wick stems and body blocks with custom brush overrides.
 * **`OhlcSeries`**: Elegant tick-bar representation of Open, High, Low, and Close market prices with horizontal tick projections.
-* **`HiloSeries`**: Minimalist range plots showcasing high-to-low bands without open/close noise.
+* **`HiloSeries`**: Minimalist range plots showcasing high-to-low bands.
 
 ### 🎛️ Status & Monitoring Gauges
-* **`CircularGauge`**: Radial swept gauge featuring radial warnings, needle trackers, custom swept thickness, and a central digital readout supporting configurable Units (e.g., `°C`).
-* **`LinearGauge`**: Premium horizontal or vertical glassmorphic slider highlighting qualitative thresholds (Warning/Error) and custom `GaugeThickness`.
+* **`CircularGauge`**: Radial swept gauge featuring warnings, needle trackers, custom swept thickness, and a central digital readout.
+* **`LinearGauge`**: Premium horizontal or vertical glassmorphic slider highlighting qualitative thresholds (Warning/Error).
 * **`LiquidFillGauge`**: Dynamic container containing animated vector sine-wave liquid sweeps rising to represent precise telemetry storage.
 
 ### 🕸️ Hierarchy & Process Flows
 * **`SankeyChart`**: Stunning flow maps using Bézier curves to link variable weight ribbons from source to destination nodes.
-* **`TreemapChart`**: Squarified recursive partition rectangles visualizing deep hierarchical structures with adaptive categorical colors.
+* **`TreemapChart`**: Squarified partition rectangles visualizing deep hierarchical structures with adaptive categorical colors.
 
 ### 🧪 Statistical Plotting
 * **`BoxPlotSeries`**: Full distribution representation highlighting upper/lower bounds, whiskers, median line, interquartile ranges, and floating outlier markers.
@@ -214,9 +138,3 @@ ProCharts includes prebuilt custom palettes to match modern dark desktop trends:
 3. **Slate Dark**: Sleek metallic lavender and muted gray tones (`Palette.SlateDark`).
 4. **Retro**: Vibrant warm orange, pastel yellow, and soft rose (`Palette.Retro`).
 5. **Cyberpunk**: Rich high-contrast neon cyan, neon pink, and electric gold (`Palette.Cyberpunk`).
-
----
-
-## 🛡️ License
-
-ProCharts is licensed under the MIT License. Contributions and architectural extensions are always welcome.
