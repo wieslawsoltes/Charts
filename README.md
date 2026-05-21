@@ -22,7 +22,7 @@ Documentation site: [wieslawsoltes.github.io/ProCharts](https://wieslawsoltes.gi
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 - **Direct Vector Rendering**: Bypasses the UI logical tree to write directly to the screen via highly optimized GPU/Skia drawing context calls.
 - **Rich Aesthetic System**: State-of-the-art dark styling, glassmorphic hover overlays, pulsing concentric rings, and vibrant default palettes.
@@ -37,7 +37,7 @@ Documentation site: [wieslawsoltes.github.io/ProCharts](https://wieslawsoltes.gi
 
 ---
 
-## 🏛️ Architecture
+## Architecture
 
 | Layer | Responsibility |
 | --- | --- |
@@ -49,7 +49,7 @@ The adapters are intentionally thin and symmetric. They map framework-specific r
 
 ---
 
-## 💻 Usage
+## Usage
 
 ### 1. Installation
 
@@ -115,7 +115,7 @@ dotnet add package ProCharts.Uno
 
 ---
 
-## 🛠️ Local Development & Automation
+## Local Development & Automation
 
 This repository provides multiple pre-configured automation scripts to simplify local development:
 
@@ -126,6 +126,6 @@ This repository provides multiple pre-configured automation scripts to simplify 
 
 ---
 
-## 🛡️ License
+## License
 
 MIT. See [LICENSE](LICENSE).
