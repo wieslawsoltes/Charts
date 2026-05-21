@@ -173,8 +173,7 @@ Bind your telemetry series collections directly to the chart. Enable glassmorphi
                   ValuePath="Value"
                   Stroke="#06B6D4" 
                   StrokeThickness="2" 
-                  Fill="#0891B2"
-                  Opacity="0.3"
+                  Fill="#4D0891B2"
                   IsSmooth="True" />
                   
     <ps:LineSeries Title="Downlink Stream" 

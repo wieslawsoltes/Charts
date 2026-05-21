@@ -139,9 +139,13 @@ $$\text{ScaleFactor} = \frac{\text{Width}}{Y_{\max} - Y_{\min}} = \frac{\text{Wi
 While ProCharts implements safety bounds internally by padding equal boundaries (e.g., adjusting the domain to $[99.0, 101.0]$ when they match), you can prevent boundary resolution errors by setting explicit axis boundaries:
 
 ```xml
-<pc:CartesianChart Title="Constant Pressure Monitor"
-                   XMin="0" XMax="10"
-                   YMin="0" YMax="200">
+<pc:CartesianChart Title="Constant Pressure Monitor">
+  <pc:CartesianChart.XAxis>
+    <pc:Axis Minimum="0" Maximum="10" />
+  </pc:CartesianChart.XAxis>
+  <pc:CartesianChart.YAxis>
+    <pc:Axis Minimum="0" Maximum="200" />
+  </pc:CartesianChart.YAxis>
   <pc:CartesianChart.Series>
     <ps:LineSeries ItemsSource="{Binding ConstantSeries}" />
   </pc:CartesianChart.Series>
