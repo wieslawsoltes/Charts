@@ -5,7 +5,6 @@ using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
 
-using Avalonia.Collections;
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 
@@ -50,7 +49,7 @@ namespace ProCharts.Uno.Controls
             set => SetValue(GridLineBrushProperty, value);
         }
 
-        public AvaloniaList<CartesianSeries> Series { get; } = new AvaloniaList<CartesianSeries>();
+        public ObservableCollection<CartesianSeries> Series { get; } = new ObservableCollection<CartesianSeries>();
 
         public CartesianChart()
         {

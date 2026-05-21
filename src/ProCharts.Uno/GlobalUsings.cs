@@ -6,7 +6,7 @@ global using ProCharts.Uno.Styles;
 global using ProCharts.Uno.Series;
 global using ProCharts.Uno.Controls;
 global using ProCharts.Uno.Components;
-global using Avalonia.Collections;
+global using System.Collections.ObjectModel;
 global using EllipseGeometry = ProCharts.Uno.Maths.EllipseGeometry;
 global using Geometry = ProCharts.Uno.Maths.Geometry;
 global using CombinedGeometry = ProCharts.Uno.Maths.CombinedGeometry;

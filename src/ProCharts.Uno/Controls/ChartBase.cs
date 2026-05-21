@@ -138,8 +138,8 @@ namespace ProCharts.Uno.Controls
             PointerMoved += (s, e) =>
             {
                 var pt = e.GetCurrentPoint(this).Position;
-                double w = Bounds.Width > 0 ? Bounds.Width : ActualWidth;
-                double h = Bounds.Height > 0 ? Bounds.Height : ActualHeight;
+                double w = ActualWidth;
+                double h = ActualHeight;
                 var bounds = new Size(w, h);
                 if (bounds.Width > 0 && bounds.Height > 0)
                 {
@@ -170,8 +170,8 @@ namespace ProCharts.Uno.Controls
             if (_canvas == null) return;
             _canvas.Children.Clear();
 
-            double w = Bounds.Width > 0 ? Bounds.Width : ActualWidth;
-            double h = Bounds.Height > 0 ? Bounds.Height : ActualHeight;
+            double w = ActualWidth;
+            double h = ActualHeight;
             if (w <= 0 || h <= 0) return;
 
             Bounds = new Rect(0, 0, w, h);

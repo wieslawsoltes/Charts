@@ -3,7 +3,6 @@ using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
 
-using Avalonia.Collections;
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Series;

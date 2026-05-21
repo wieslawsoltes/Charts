@@ -4,7 +4,6 @@ using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
 
-using Avalonia.Collections;
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Series;
@@ -39,7 +38,7 @@ namespace ProCharts.Uno.Controls
             set => SetValue(HollowRadiusProperty, value);
         }
 
-        public AvaloniaList<PieSeries> Series { get; } = new AvaloniaList<PieSeries>();
+        public ObservableCollection<PieSeries> Series { get; } = new ObservableCollection<PieSeries>();
 
         public PieChart()
         {
