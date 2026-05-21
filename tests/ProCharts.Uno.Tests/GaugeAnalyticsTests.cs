@@ -49,7 +49,7 @@ namespace ProCharts.Uno.Tests
                 ItemsSource = data,
                 ValuePath = nameof(TelemetryItem.Metric),
                 TitlePath = nameof(TelemetryItem.Name),
-                SKColorPath = nameof(TelemetryItem.Color),
+                ColorPath = nameof(TelemetryItem.Color),
                 RingThickness = 15.0,
                 RingSpacing = 8.0,
                 Maximum = 120.0
@@ -58,7 +58,7 @@ namespace ProCharts.Uno.Tests
             Assert.Equal(data, chart.ItemsSource);
             Assert.Equal(nameof(TelemetryItem.Metric), chart.ValuePath);
             Assert.Equal(nameof(TelemetryItem.Name), chart.TitlePath);
-            Assert.Equal(nameof(TelemetryItem.Color), chart.SKColorPath);
+            Assert.Equal(nameof(TelemetryItem.Color), chart.ColorPath);
             Assert.Equal(15.0, chart.RingThickness);
             Assert.Equal(8.0, chart.RingSpacing);
             Assert.Equal(120.0, chart.Maximum);
