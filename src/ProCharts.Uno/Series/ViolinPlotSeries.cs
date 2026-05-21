@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -189,9 +189,9 @@ namespace ProCharts.Uno.Series
             var violinList = GetViolinList();
             if (violinList.Count == 0) return;
 
-            var fillSKPaint = Fill ?? new SolidSKColorSKPaint(SKColor.Parse("#508B5CF6")); // Transparent Lavender
-            var strokeSKColor = Stroke ?? new SolidSKColorSKPaint(SKColor.Parse("#8B5CF6"));
-            var strokeSKPaint = new Pen(strokeSKColor, StrokeThickness > 0 ? StrokeThickness : 1.5);
+            var fillBrush = Fill ?? new SolidColorBrush(Color.Parse("#508B5CF6")); // Transparent Lavender
+            var strokeColor = Stroke ?? new SolidColorBrush(Color.Parse("#8B5CF6"));
+            var strokeBrush = new Pen(strokeColor, StrokeThickness > 0 ? StrokeThickness : 1.5);
 
             double slotWidth = context.PlotArea.Width / Math.Max(1, violinList.Count);
             double maxViolinWidth = Math.Clamp(slotWidth * ViolinWidthPercent, 10.0, 120.0);
@@ -206,7 +206,7 @@ namespace ProCharts.Uno.Series
                 if (maxDensity <= 0.0) continue;
 
                 // Build a closed mirrored geometry path
-                var geometry = new SKPath();
+                var geometry = new StreamGeometry();
                 using (var ctx = geometry.Open())
                 {
                     // Right-side coordinates
@@ -243,19 +243,19 @@ namespace ProCharts.Uno.Series
                 }
 
                 // Render violin density body
-                context.Canvas.DrawGeometry(fillSKPaint, strokeSKPaint, geometry);
+                context.Canvas.DrawGeometry(fillBrush, strokeBrush, geometry);
 
                 // Draw central axis line (Median / Range)
                 var ptMin = context.Transform.ToScreen(vm.X, vm.Min);
                 var ptMax = context.Transform.ToScreen(vm.X, vm.Max);
                 var ptMedian = context.Transform.ToScreen(vm.X, vm.Median);
 
-                var axisSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#FFFFFF"), 0.6), 1.5);
-                context.Canvas.DrawLine((float)ptMin.X, (float)ptMin.Y, (float)ptMax.X, (float)ptMax.Y, axisSKPaint);
+                var axisBrush = new Pen(new SolidColorBrush(Color.Parse("#FFFFFF")) { Opacity = 0.6 }, 1.5);
+                context.Canvas.DrawLine((float)ptMin.X, (float)ptMin.Y, (float)ptMax.X, (float)ptMax.Y, axisBrush);
 
                 // Median point marker
-                var medianSKPaint = SKPaintes.White;
-                context.Canvas.DrawEllipse(medianSKPaint, null, ptMedian, 3.5, 3.5);
+                var medianBrush = Brushes.White;
+                context.Canvas.DrawEllipse(medianBrush, null, ptMedian, 3.5, 3.5);
             }
         }
     }

@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class SunburstChart : ChartBase
+    public partial class SunburstChart : ChartBase
     {
         public class SunburstNode
         {
             public string Name { get; set; } = string.Empty;
             public double Value { get; set; }
-            public SKPaint? SKColor { get; set; }
+            public Brush? Color { get; set; }
             public List<SunburstNode> Children { get; } = new List<SunburstNode>();
 
             // Layout helpers
@@ -63,7 +63,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(cx, cy, side, side);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             _flatNodes.Clear();
             if (RootNodes == null || RootNodes.Count == 0)
@@ -93,12 +93,12 @@ namespace ProCharts.Uno.Controls
 
             double currentAngle = 0.0;
             var activePalette = Palette ?? Palette.Default;
-            int nodeSKColorCounter = 0;
+            int nodeColorCounter = 0;
 
             foreach (var root in RootNodes)
             {
                 double rootSweep = 360.0 * (root.Value / rootSum);
-                LayoutNodeAngles(root, currentAngle, rootSweep, 0, hollowR, layerThickness, ref nodeSKColorCounter, activePalette);
+                LayoutNodeAngles(root, currentAngle, rootSweep, 0, hollowR, layerThickness, ref nodeColorCounter, activePalette);
                 currentAngle += rootSweep;
             }
 
@@ -115,18 +115,18 @@ namespace ProCharts.Uno.Controls
                 double nodeInner = hollowR + (node.InnerRadius - hollowR) * progress;
                 double nodeOuter = hollowR + (node.OuterRadius - hollowR) * progress;
 
-                var fillSKPaint = node.SKColor ?? activePalette.GetSKPaint(0);
+                var fillBrush = node.Color ?? activePalette.GetBrush(0);
                 if (node == _hoveredNode)
                 {
-                    fillSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#FFFFFF")); // Highlight hovered segment in pure white
+                    fillBrush = new SolidColorBrush(Color.Parse("#FFFFFF")); // Highlight hovered segment in pure white
                 }
 
-                var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
-                DrawArcSector(context, center, nodeInner, nodeOuter, node.StartAngle, sweep, fillSKPaint, borderSKPaint);
+                var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
+                DrawArcSector(context, center, nodeInner, nodeOuter, node.StartAngle, sweep, fillBrush, borderBrush);
             }
         }
 
-        private void DrawArcSector(SKCanvas context, Point center, double innerR, double outerR, double startAngle, double sweepAngle, SKPaint brush, SKPaint pen)
+        private void DrawArcSector(DrawingContext context, Point center, double innerR, double outerR, double startAngle, double sweepAngle, Brush brush, Pen? pen)
         {
             if (sweepAngle >= 359.95)
             {
@@ -138,7 +138,7 @@ namespace ProCharts.Uno.Controls
                 return;
             }
 
-            var geometry = new SKPath();
+            var geometry = new StreamGeometry();
             using (var ctx = geometry.Open())
             {
                 double radStart = startAngle * Math.PI / 180.0;
@@ -195,9 +195,9 @@ namespace ProCharts.Uno.Controls
             node.InnerRadius = hollowR + depth * thickness;
             node.OuterRadius = hollowR + (depth + 1) * thickness;
             
-            if (node.SKColor == null)
+            if (node.Color == null)
             {
-                node.SKColor = palette.GetSKPaint(colorCounter++);
+                node.Color = palette.GetBrush(colorCounter++);
             }
 
             _flatNodes.Add(node);
@@ -257,7 +257,7 @@ namespace ProCharts.Uno.Controls
             _hoveredNode = currentHover;
         }
 
-        protected override void DrawTooltip(SKCanvas context, Point mousePoint)
+        protected override void DrawTooltip(DrawingContext context, Point mousePoint)
         {
             if (_hoveredNode == null) return;
 
@@ -268,10 +268,10 @@ namespace ProCharts.Uno.Controls
 
             var fontTitle = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
             var fontText = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal);
-            var textSKPaint = SKPaintes.White;
+            var textBrush = Brushes.White;
 
-            var ftTitle = new FormattedText(_hoveredNode.Name, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textSKPaint);
-            var ftVal = new FormattedText($"Value: {_hoveredNode.Value:N1} (Level {_hoveredNode.Depth})", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textSKPaint);
+            var ftTitle = new FormattedText(_hoveredNode.Name, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textBrush);
+            var ftVal = new FormattedText($"Value: {_hoveredNode.Value:N1} (Level {_hoveredNode.Depth})", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textBrush);
 
             tooltipWidth = Math.Max(tooltipWidth, Math.Max(ftTitle.Width, ftVal.Width) + padding * 2 + 10);
 
@@ -285,17 +285,17 @@ namespace ProCharts.Uno.Controls
             ty = Math.Max(0, ty);
 
             var tooltipRect = new Rect(tx, ty, tooltipWidth, tooltipHeight);
-            var bgSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#EC1F242E"));
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
+            var bgBrush = new SolidColorBrush(Color.Parse("#EC1F242E"));
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
 
-            context.DrawRectangle(bgSKPaint, borderSKPaint, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
+            context.DrawRectangle(bgBrush, borderBrush, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
 
-            context.DrawEllipse(_hoveredNode.SKColor, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
+            context.DrawEllipse(_hoveredNode.Color, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
             context.DrawText(ftTitle, new Point(tx + padding + 12, ty + padding));
             context.DrawText(ftVal, new Point(tx + padding + 12, ty + padding + textHeight));
         }
 
-        private void RenderEmptyState(SKCanvas context)
+        private void RenderEmptyState(DrawingContext context)
         {
             var ft = new FormattedText(
                 "Configure Sunburst Tree Hierarchy Nodes",
@@ -303,7 +303,7 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Italic, FontWeight.SemiBold),
                 13,
-                SystemSKPaint);
+                SystemBrush);
 
             double tx = EffectivePlotArea.Left + (EffectivePlotArea.Width - ft.Width) / 2.0;
             double ty = EffectivePlotArea.Top + (EffectivePlotArea.Height - ft.Height) / 2.0;

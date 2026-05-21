@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -28,8 +28,8 @@ namespace ProCharts.Uno.Series
             // 2. Build segments for rendering (useful for Gap mode)
             var segments = BuildSegments(processedPoints);
 
-            var lineStroke = Stroke ?? context.DefaultSKPaint;
-            var lineSKPaint = new Pen(lineStroke, StrokeThickness, lineCap: SKStrokeCap.Round, lineJoin: SKStrokeJoin.Round);
+            var lineStroke = Stroke ?? context.DefaultBrush;
+            var lineBrush = new Pen(lineStroke, StrokeThickness, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
 
             // 3. Render each segment
             foreach (var segment in segments)
@@ -45,19 +45,19 @@ namespace ProCharts.Uno.Series
                 // Draw outline stroke on top
                 if (IsSmooth && animatedPoints.Count > 2)
                 {
-                    DrawBezierSpline(context.Canvas, lineSKPaint, animatedPoints);
+                    DrawBezierSpline(context.Canvas, lineBrush, animatedPoints);
                 }
                 else
                 {
-                    DrawStraightLines(context.Canvas, lineSKPaint, animatedPoints);
+                    DrawStraightLines(context.Canvas, lineBrush, animatedPoints);
                 }
             }
 
             // 4. Render Markers if active
             if (ShowMarkers)
             {
-                var markerFillSKPaint = MarkerFill ?? lineStroke;
-                var markerSKPaint = new Pen(lineStroke, 1.0);
+                var markerFillBrush = MarkerFill ?? lineStroke;
+                var markerBrush = new Pen(lineStroke, 1.0);
                 double halfSize = MarkerSize / 2.0;
 
                 foreach (var segment in segments)
@@ -65,35 +65,31 @@ namespace ProCharts.Uno.Series
                     var animatedPoints = AnimatePoints(segment, context.Transform, context.AnimationProgress);
                     foreach (var pt in animatedPoints)
                     {
-                        context.Canvas.DrawEllipse(markerFillSKPaint, markerSKPaint, pt, halfSize, halfSize);
+                        context.Canvas.DrawEllipse(markerFillBrush, markerBrush, pt, halfSize, halfSize);
                     }
                 }
             }
         }
 
-        private void DrawFilledArea(SKCanvas context, CoordinateTransform transform, List<Point> points, SKPaint seriesSKPaint)
+        private void DrawFilledArea(DrawingContext context, CoordinateTransform transform, List<Point> points, Brush seriesBrush)
         {
             if (points.Count < 2) return;
 
             // Create a gorgeous linear gradient brush if no custom Fill is set
             var areaFill = Fill;
-            if (areaFill == null && seriesSKPaint != null)
+            if (areaFill == null && seriesBrush != null)
             {
-                var color = seriesSKPaint.Color;
-                areaFill = new LinearGradientSKPaint
-                {
-                    StartPoint = new RelativePoint(0.5, 0, RelativeUnit.Relative),
-                    EndPoint = new RelativePoint(0.5, 1, RelativeUnit.Relative),
-                    GradientStops = new GradientStops
-                    {
-                        new GradientStop(new SKColor((byte)(color.Red), (byte)(color.Green), (byte)(color.Blue), (byte)((byte)(color.Alpha * 0.40))), 0.0),
-                        new GradientStop(new SKColor((byte)(color.Red), (byte)(color.Green), (byte)(color.Blue), (byte)((byte)(color.Alpha * 0.02))), 1.0)
-                    }
-                };
+                var color = seriesBrush.GetColor();
+                var lgb = new LinearGradientBrush();
+                lgb.StartPoint = new Windows.Foundation.Point(0.5, 0);
+                lgb.EndPoint = new Windows.Foundation.Point(0.5, 1);
+                lgb.GradientStops.Add(new GradientStop { Color = new Color(color.Red, color.Green, color.Blue, (byte)(color.Alpha * 0.40)), Offset = 0.0 });
+                lgb.GradientStops.Add(new GradientStop { Color = new Color(color.Red, color.Green, color.Blue, (byte)(color.Alpha * 0.02)), Offset = 1.0 });
+                areaFill = lgb;
             }
             else if (areaFill == null)
             {
-                areaFill = new SolidSKColorSKPaint(new SKColor((byte)(79), (byte)(70), (byte)(229), (byte)(50))); // Fallback semi-transparent indigo
+                areaFill = new SolidColorBrush(new Color(79, 70, 229, 50)); // Fallback semi-transparent indigo
             }
 
             // Determine baseline in Y screen space
@@ -107,7 +103,7 @@ namespace ProCharts.Uno.Series
             var firstBaselinePt = transform.ToScreen(firstX, rawBaselineY);
             var lastBaselinePt = transform.ToScreen(lastX, rawBaselineY);
 
-            var geometry = new SKPath();
+            var geometry = new StreamGeometry();
             using (var ctx = geometry.Open())
             {
                 // Start at the bottom left baseline cap

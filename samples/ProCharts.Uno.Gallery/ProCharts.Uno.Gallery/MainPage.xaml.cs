@@ -1928,7 +1928,7 @@ namespace ProCharts.Uno.Gallery
             byte g = byte.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
             byte b = byte.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
             byte a = hex.Length == 8 ? byte.Parse(hex.Substring(6, 2), System.Globalization.NumberStyles.HexNumber) : (byte)255;
-            return new SolidColorBrush(Color.FromArgb(a, r, g, b));
+            return new SolidColorBrush(Windows.UI.Color.FromArgb(a, r, g, b));
         }
     }
 

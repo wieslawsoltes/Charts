@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -27,13 +27,13 @@ namespace ProCharts.Uno.Series
             var rawPoints = GetDataPoints();
             if (rawPoints.Count < 2) return;
 
-            var lineStroke = Stroke ?? context.DefaultSKPaint;
-            var lineSKPaint = new Pen(lineStroke, StrokeThickness, lineCap: SKStrokeCap.Round, lineJoin: SKStrokeJoin.Round);
+            var lineStroke = Stroke ?? context.DefaultBrush;
+            var lineBrush = new Pen(lineStroke, StrokeThickness, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
 
             double progress = context.AnimationProgress;
             double baselineY = context.Transform.YMin;
 
-            var geometry = new SKPath();
+            var geometry = new StreamGeometry();
             // using (var ctx = geometry.Open())
             {
                 bool first = true;
@@ -72,7 +72,7 @@ namespace ProCharts.Uno.Series
                 }
             }
 
-            context.Canvas.DrawPath(geometry, lineSKPaint ?? null);
+            context.Canvas.DrawPath(geometry, lineBrush ?? null);
         }
     }
 }

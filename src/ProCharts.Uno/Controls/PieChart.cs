@@ -3,8 +3,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
-using Avalonia.Collections;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Series;
@@ -12,7 +11,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class PieChart : ChartBase
+    public partial class PieChart : ChartBase
     {
         // --- DEPENDENCY PROPERTIES ---
 
@@ -39,7 +38,7 @@ namespace ProCharts.Uno.Controls
             set => SetValue(HollowRadiusProperty, value);
         }
 
-        public AvaloniaList<PieSeries> Series { get; } = new AvaloniaList<PieSeries>();
+        public ObservableCollection<PieSeries> Series { get; } = new ObservableCollection<PieSeries>();
 
         public PieChart()
         {
@@ -97,7 +96,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(cx, cy, side, side);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             if (Series.Count == 0)
             {
@@ -126,7 +125,7 @@ namespace ProCharts.Uno.Controls
                 if (!series.IsVisible) continue;
 
                 double sliceSweep = TotalAngle * (series.Value / totalValue);
-                var defaultSKPaint = activePalette.GetSKPaint(i);
+                var defaultBrush = activePalette.GetBrush(i);
 
                 // Let the PieSeries render itself in circular coordinates
                 series.RenderSlice(
@@ -136,22 +135,22 @@ namespace ProCharts.Uno.Controls
                     innerRadius,
                     currentAngle,
                     sliceSweep * AnimationProgress, // Scale sweep by animation progress
-                    defaultSKPaint);
+                    defaultBrush);
 
                 currentAngle += sliceSweep;
             }
         }
 
-        private void RenderEmptyState(SKCanvas context)
+        private void RenderEmptyState(DrawingContext context)
         {
-            var textSKPaint = LabelForeground ?? SystemSKPaint;
+            var textBrush = LabelForeground ?? SystemBrush;
             var ft = new FormattedText(
                 "No Pie Slices Configured",
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Italic, FontWeight.SemiBold),
                 14,
-                textSKPaint);
+                textBrush);
 
             double tx = EffectivePlotArea.Left + (EffectivePlotArea.Width - ft.Width) / 2.0;
             double ty = EffectivePlotArea.Top + (EffectivePlotArea.Height - ft.Height) / 2.0;
@@ -239,7 +238,7 @@ namespace ProCharts.Uno.Controls
             }
         }
 
-        protected override void DrawTooltip(SKCanvas context, Point mousePoint)
+        protected override void DrawTooltip(DrawingContext context, Point mousePoint)
         {
             if (_hoveredSeries == null) return;
 
@@ -248,7 +247,7 @@ namespace ProCharts.Uno.Controls
 
             var activePalette = Palette ?? Palette.Default;
             int idx = Series.IndexOf(_hoveredSeries);
-            var seriesSKPaint = _hoveredSeries.Fill ?? activePalette.GetSKPaint(idx >= 0 ? idx : 0);
+            var seriesBrush = _hoveredSeries.Fill ?? activePalette.GetBrush(idx >= 0 ? idx : 0);
 
             double percentage = (_hoveredSeries.Value / totalValue) * 100.0;
 
@@ -260,7 +259,7 @@ namespace ProCharts.Uno.Controls
 
             var titleFont = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
             var textFont = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal);
-            var textSKPaint = SKPaintes.White;
+            var textBrush = Brushes.White;
 
             var ftTitle = new FormattedText(
                 string.IsNullOrEmpty(_hoveredSeries.Title) ? $"Series {idx + 1}" : _hoveredSeries.Title,
@@ -268,7 +267,7 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 titleFont,
                 11,
-                textSKPaint);
+                textBrush);
 
             var ftValue = new FormattedText(
                 $"Value: {_hoveredSeries.Value:N2} ({percentage:F1}%)",
@@ -276,7 +275,7 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 textFont,
                 11,
-                textSKPaint);
+                textBrush);
 
             tooltipWidth = Math.Max(tooltipWidth, Math.Max(ftTitle.Width, ftValue.Width) + padding * 2 + 15);
 
@@ -296,10 +295,10 @@ namespace ProCharts.Uno.Controls
             ty = Math.Max(0, ty);
 
             var tooltipRect = new Rect(tx, ty, tooltipWidth, tooltipHeight);
-            var bgSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#E81F242E"));
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
+            var bgBrush = new SolidColorBrush(Color.Parse("#E81F242E"));
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
 
-            context.DrawRectangle(bgSKPaint, borderSKPaint, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
+            context.DrawRectangle(bgBrush, borderBrush, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
 
             double curX = tx + padding;
             double curY = ty + padding;
@@ -307,7 +306,7 @@ namespace ProCharts.Uno.Controls
             context.DrawText(ftTitle, new Point(curX, curY));
             curY += titleHeight;
 
-            context.DrawEllipse(seriesSKPaint, null, new Point(curX + 4, curY + 6), 3.0, 3.0);
+            context.DrawEllipse(seriesBrush, null, new Point(curX + 4, curY + 6), 3.0, 3.0);
             context.DrawText(ftValue, new Point(curX + 14, curY));
         }
     }

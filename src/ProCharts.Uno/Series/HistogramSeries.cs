@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -114,10 +114,10 @@ namespace ProCharts.Uno.Series
             var bins = GetBins();
             if (bins.Count == 0) return;
 
-            var columnFill = Fill ?? new SolidSKColorSKPaint(SKColor.Parse("#40A855F7")); // Slate purple transparent
-            var columnStroke = Stroke ?? context.DefaultSKPaint;
+            var columnFill = Fill ?? new SolidColorBrush(Color.Parse("#40A855F7")); // Slate purple transparent
+            var columnStroke = Stroke ?? context.DefaultBrush;
             double strokeThickness = StrokeThickness > 0 ? StrokeThickness : 1.0;
-            var columnSKPaint = new Pen(columnStroke, strokeThickness);
+            var columnBrush = new Pen(columnStroke, strokeThickness);
 
             double progress = context.AnimationProgress;
 
@@ -141,7 +141,7 @@ namespace ProCharts.Uno.Series
                 if (w > gap * 2.0 && h > 0)
                 {
                     var rect = new Rect(x + gap, y, w - gap * 2.0, h);
-                    context.Canvas.DrawRectangle(columnFill, columnSKPaint, rect);
+                    context.Canvas.DrawRectangle(columnFill, columnBrush, rect);
                 }
             }
         }

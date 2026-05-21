@@ -1,7 +1,9 @@
 using System;
 using System.Globalization;
-using SkiaSharp;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Windows.Foundation;
 
 namespace ProCharts.Uno.Maths
 {
@@ -37,10 +39,12 @@ namespace ProCharts.Uno.Maths
     public class FormattedText
     {
         public string Text { get; }
-        public SKPaint Paint { get; }
-        public SKFont Font { get; }
+        public Brush Paint { get; }
         public double Width { get; }
         public double Height { get; }
+        public Typeface Typeface { get; }
+        public double FontSize { get; }
+        public FlowDirection FlowDirection { get; }
 
         public FormattedText(
             string text,
@@ -48,75 +52,50 @@ namespace ProCharts.Uno.Maths
             FlowDirection flowDirection,
             Typeface typeface,
             double fontSize,
-            SKPaint paint)
+            Brush paint)
         {
             Text = text ?? string.Empty;
-            
-            // Clone or configure the paint
-            if (paint != null)
+            Paint = paint;
+            Typeface = typeface;
+            FontSize = fontSize;
+            FlowDirection = flowDirection;
+
+            // Off-screen measure
+            var tb = new TextBlock
             {
-                if (paint is LinearGradientSKPaint lgp)
+                Text = Text,
+                FontSize = FontSize,
+                FlowDirection = FlowDirection
+            };
+
+            if (Typeface != null)
+            {
+                tb.FontFamily = new FontFamily(Typeface.FontFamily);
+                tb.FontStyle = Typeface.FontStyle == FontStyle.Italic ? Windows.UI.Text.FontStyle.Italic : Windows.UI.Text.FontStyle.Normal;
+
+                switch (Typeface.FontWeight)
                 {
-                    Paint = new LinearGradientSKPaint
-                    {
-                        Color = lgp.Color,
-                        IsAntialias = lgp.IsAntialias,
-                        StartPoint = lgp.StartPoint,
-                        EndPoint = lgp.EndPoint,
-                        GradientStops = lgp.GradientStops,
-                        Shader = lgp.Shader,
-                        Style = lgp.Style,
-                        PathEffect = lgp.PathEffect,
-                        MaskFilter = lgp.MaskFilter,
-                        ImageFilter = lgp.ImageFilter,
-                        BlendMode = lgp.BlendMode
-                    };
+                    case FontWeight.Bold:
+                        tb.FontWeight = Microsoft.UI.Text.FontWeights.Bold;
+                        break;
+                    case FontWeight.SemiBold:
+                        tb.FontWeight = Microsoft.UI.Text.FontWeights.SemiBold;
+                        break;
+                    case FontWeight.Medium:
+                        tb.FontWeight = Microsoft.UI.Text.FontWeights.Medium;
+                        break;
+                    case FontWeight.Light:
+                        tb.FontWeight = Microsoft.UI.Text.FontWeights.Light;
+                        break;
+                    default:
+                        tb.FontWeight = Microsoft.UI.Text.FontWeights.Normal;
+                        break;
                 }
-                else
-                {
-                    Paint = new SKPaint
-                    {
-                        Color = paint.Color,
-                        IsAntialias = paint.IsAntialias,
-                        Shader = paint.Shader,
-                        Style = paint.Style,
-                        PathEffect = paint.PathEffect,
-                        MaskFilter = paint.MaskFilter,
-                        ImageFilter = paint.ImageFilter,
-                        BlendMode = paint.BlendMode
-                    };
-                }
-            }
-            else
-            {
-                Paint = new SKPaint
-                {
-                    Color = SKColors.Black,
-                    IsAntialias = true
-                };
             }
 
-            Font = new SKFont();
-            Font.Size = (float)fontSize;
-            
-            if (typeface != null)
-            {
-                var weight = SKFontStyleWeight.Normal;
-                if (typeface.FontWeight == FontWeight.Bold) weight = SKFontStyleWeight.Bold;
-                else if (typeface.FontWeight == FontWeight.SemiBold) weight = SKFontStyleWeight.SemiBold;
-                else if (typeface.FontWeight == FontWeight.Medium) weight = SKFontStyleWeight.Medium;
-                else if (typeface.FontWeight == FontWeight.Light) weight = SKFontStyleWeight.Light;
-
-                Font.Typeface = SKTypeface.FromFamilyName(typeface.FontFamily, 
-                    weight,
-                    SKFontStyleWidth.Normal,
-                    typeface.FontStyle == FontStyle.Italic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright);
-            }
-
-            // Measure bounds
-            float advanceWidth = Font.MeasureText(Text, out SKRect textBounds, Paint);
-            Width = advanceWidth;
-            Height = Math.Max(fontSize, textBounds.Height); // Use fontSize as fallback for height
+            tb.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            Width = tb.DesiredSize.Width;
+            Height = tb.DesiredSize.Height > 0 ? tb.DesiredSize.Height : FontSize * 1.25;
         }
     }
 }

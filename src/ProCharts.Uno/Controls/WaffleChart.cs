@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class WaffleChart : ChartBase
+    public partial class WaffleChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(WaffleChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));
@@ -22,8 +22,8 @@ namespace ProCharts.Uno.Controls
         public static readonly DependencyProperty TitlePathProperty =
             DependencyProperty.Register(nameof(TitlePath), typeof(string), typeof(WaffleChart), new PropertyMetadata(default(string?), OnPropertyChanged));
 
-        public static readonly DependencyProperty SKColorPathProperty =
-            DependencyProperty.Register(nameof(SKColorPath), typeof(string), typeof(WaffleChart), new PropertyMetadata(default(string?), OnPropertyChanged));
+        public static readonly DependencyProperty ColorPathProperty =
+            DependencyProperty.Register(nameof(ColorPath), typeof(string), typeof(WaffleChart), new PropertyMetadata(default(string?), OnPropertyChanged));
 
         public static readonly DependencyProperty CellSpacingProperty =
             DependencyProperty.Register(nameof(CellSpacing), typeof(double), typeof(WaffleChart), new PropertyMetadata(3.0, OnPropertyChanged));
@@ -45,8 +45,8 @@ namespace ProCharts.Uno.Controls
             set => SetValue(TitlePathProperty, value);
         }
 
-        public string? SKColorPath { get => (string?)GetValue(SKColorPathProperty);
-            set => SetValue(SKColorPathProperty, value);
+        public string? ColorPath { get => (string?)GetValue(ColorPathProperty);
+            set => SetValue(ColorPathProperty, value);
         }
 
         public double CellSpacing { get => (double)GetValue(CellSpacingProperty);
@@ -63,7 +63,7 @@ namespace ProCharts.Uno.Controls
             public string Title { get; set; } = string.Empty;
             public double Value { get; set; }
             public int CellCount { get; set; }
-            public SKPaint? SKPaint { get; set; }
+            public Brush? Brush { get; set; }
         }
 
         private List<WaffleCategory> _categories = new List<WaffleCategory>();
@@ -91,7 +91,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(cx, cy, side, side);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             _categories.Clear();
             Array.Clear(_gridCells, 0, _gridCells.Length);
@@ -99,7 +99,7 @@ namespace ProCharts.Uno.Controls
             if (ItemsSource == null) return;
 
             // 1. Process categories
-            var items = new List<(string Title, double Value, SKPaint? SKPaint)>();
+            var items = new List<(string Title, double Value, Brush? Brush)>();
             int idx = 0;
             var activePalette = Palette ?? Palette.Default;
 
@@ -109,22 +109,22 @@ namespace ProCharts.Uno.Controls
 
                 var valObj = ResolvePropertyValue(rawItem, ValuePath);
                 var titleObj = ResolvePropertyValue(rawItem, TitlePath);
-                var colorObj = ResolvePropertyValue(rawItem, SKColorPath);
+                var colorObj = ResolvePropertyValue(rawItem, ColorPath);
 
                 double val = ConvertToDouble(valObj);
                 string title = titleObj?.ToString() ?? $"Category {idx + 1}";
-                SKPaint? brush = null;
+                Brush? brush = null;
 
-                if (colorObj is SKPaint b) brush = b;
-                else if (colorObj is SKColor c) brush = new SolidSKColorSKPaint(c);
+                if (colorObj is Brush b) brush = b;
+                else if (colorObj is Color c) brush = new SolidColorBrush(c);
                 else if (colorObj is string colStr)
                 {
-                    try { brush = new SolidSKColorSKPaint(SKColor.Parse(colStr)); } catch { }
+                    try { brush = new SolidColorBrush(Color.Parse(colStr)); } catch { }
                 }
 
                 if (!double.IsNaN(val) && val > 0)
                 {
-                    items.Add((title, val, brush ?? activePalette.GetSKPaint(idx)));
+                    items.Add((title, val, brush ?? activePalette.GetBrush(idx)));
                     idx++;
                 }
             }
@@ -169,7 +169,7 @@ namespace ProCharts.Uno.Controls
                     Title = items[i].Title,
                     Value = items[i].Value,
                     CellCount = counts[i],
-                    SKPaint = items[i].SKPaint
+                    Brush = items[i].Brush
                 });
             }
 
@@ -226,14 +226,14 @@ namespace ProCharts.Uno.Controls
                     double dy = (cellSize - h) / 2.0;
                     var animatedRect = new Rect(cellRect.X + dx, cellRect.Y + dy, w, h);
 
-                    SKPaint? cellSKPaint = SKPaintes.Transparent;
+                    Brush? cellBrush = Brushes.Transparent;
                     if (catIdx >= 0 && catIdx < _categories.Count)
                     {
-                        cellSKPaint = _categories[catIdx].SKPaint ?? activePalette.GetSKPaint(catIdx);
+                        cellBrush = _categories[catIdx].Brush ?? activePalette.GetBrush(catIdx);
                     }
                     else
                     {
-                        cellSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#1E293B"), 0.3); // Empty gray track
+                        cellBrush = new SolidColorBrush(Color.Parse("#1E293B")) { Opacity = 0.3 }; // Empty gray track
                     }
 
                     // Hover styling: dim non-hovered categories, highlight hovered
@@ -241,12 +241,12 @@ namespace ProCharts.Uno.Controls
                     {
                         if (catIdx != _hoveredCategoryIndex)
                         {
-                            cellSKPaint = new SolidSKColorSKPaint(new SKColor((byte)(148), (byte)(163), (byte)(184), (byte)(40))); // Muted slate gray
+                            cellBrush = new SolidColorBrush(new Color((byte)(148), (byte)(163), (byte)(184), (byte)(40))); // Muted slate gray
                         }
                     }
 
-                    var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#20FFFFFF")), 1.0);
-                    context.DrawRectangle(cellSKPaint, borderSKPaint, new RoundedRect(animatedRect, new CornerRadius(cornerR)));
+                    var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#20FFFFFF")), 1.0);
+                    context.DrawRectangle(cellBrush, borderBrush, new RoundedRect(animatedRect, new CornerRadius(cornerR)));
                 }
             }
         }
@@ -291,7 +291,7 @@ namespace ProCharts.Uno.Controls
             _hoveredCategoryIndex = hoveredCatIdx;
         }
 
-        protected override void DrawTooltip(SKCanvas context, Point mousePoint)
+        protected override void DrawTooltip(DrawingContext context, Point mousePoint)
         {
             if (_hoveredCategoryIndex == -1 || _hoveredCategoryIndex >= _categories.Count) return;
 
@@ -306,10 +306,10 @@ namespace ProCharts.Uno.Controls
 
             var fontTitle = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
             var fontText = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal);
-            var textSKPaint = SKPaintes.White;
+            var textBrush = Brushes.White;
 
-            var ftTitle = new FormattedText(hovered.Title, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textSKPaint);
-            var ftVal = new FormattedText($"{hovered.CellCount} Blocks ({percentage:F1}%)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textSKPaint);
+            var ftTitle = new FormattedText(hovered.Title, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textBrush);
+            var ftVal = new FormattedText($"{hovered.CellCount} Blocks ({percentage:F1}%)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textBrush);
 
             tooltipWidth = Math.Max(tooltipWidth, Math.Max(ftTitle.Width, ftVal.Width) + padding * 2 + 10);
 
@@ -323,12 +323,12 @@ namespace ProCharts.Uno.Controls
             ty = Math.Max(0, ty);
 
             var tooltipRect = new Rect(tx, ty, tooltipWidth, tooltipHeight);
-            var bgSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#EC1F242E"));
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
+            var bgBrush = new SolidColorBrush(Color.Parse("#EC1F242E"));
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
 
-            context.DrawRectangle(bgSKPaint, borderSKPaint, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
+            context.DrawRectangle(bgBrush, borderBrush, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
 
-            context.DrawEllipse(hovered.SKPaint, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
+            context.DrawEllipse(hovered.Brush, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
             context.DrawText(ftTitle, new Point(tx + padding + 12, ty + padding));
             context.DrawText(ftVal, new Point(tx + padding + 12, ty + padding + textHeight));
         }

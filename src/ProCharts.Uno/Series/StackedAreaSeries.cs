@@ -3,7 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Controls;
@@ -42,26 +42,22 @@ namespace ProCharts.Uno.Series
             if (seriesIndex < 0) return;
 
             var areaFill = Fill;
-            var areaStroke = Stroke ?? context.DefaultSKPaint;
-            var areaSKPaint = new Pen(areaStroke, StrokeThickness, lineCap: SKStrokeCap.Round, lineJoin: SKStrokeJoin.Round);
+            var areaStroke = Stroke ?? context.DefaultBrush;
+            var areaBrush = new Pen(areaStroke, StrokeThickness, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
 
             if (areaFill == null && areaStroke != null)
             {
-                var color = areaStroke.Color;
-                areaFill = new LinearGradientSKPaint
-                {
-                    StartPoint = new RelativePoint(0.5, 0, RelativeUnit.Relative),
-                    EndPoint = new RelativePoint(0.5, 1, RelativeUnit.Relative),
-                    GradientStops = new GradientStops
-                    {
-                        new GradientStop(new SKColor((byte)(color.Red), (byte)(color.Green), (byte)(color.Blue), (byte)((byte)(color.Alpha * 0.45))), 0.0),
-                        new GradientStop(new SKColor((byte)(color.Red), (byte)(color.Green), (byte)(color.Blue), (byte)((byte)(color.Alpha * 0.05))), 1.0)
-                    }
-                };
+                var color = areaStroke.GetColor();
+                var lgb = new LinearGradientBrush();
+                lgb.StartPoint = new Windows.Foundation.Point(0.5, 0);
+                lgb.EndPoint = new Windows.Foundation.Point(0.5, 1);
+                lgb.GradientStops.Add(new GradientStop { Color = new Color(color.R, color.G, color.B, (byte)(color.A * 0.45)), Offset = 0.0 });
+                lgb.GradientStops.Add(new GradientStop { Color = new Color(color.R, color.G, color.B, (byte)(color.A * 0.05)), Offset = 1.0 });
+                areaFill = lgb;
             }
             else if (areaFill == null)
             {
-                areaFill = new SolidSKColorSKPaint(new SKColor((byte)(6), (byte)(182), (byte)(212), (byte)(80))); // Cyan fallback
+                areaFill = new SolidColorBrush(new Color(6, 182, 212, 80)); // Cyan fallback
             }
 
             double progress = context.AnimationProgress;
@@ -99,7 +95,7 @@ namespace ProCharts.Uno.Series
             }
 
             // Draw filled polygon
-            var fillGeometry = new SKPath();
+            var fillGeometry = new StreamGeometry();
             using (var geometry = fillGeometry.Open())
             {
                 geometry.MoveTo(bottomScreenPoints[0], true);
@@ -121,7 +117,7 @@ namespace ProCharts.Uno.Series
             context.Canvas.DrawGeometry(areaFill, null, fillGeometry);
 
             // Draw line stroke on top path only
-            var strokeGeometry = new SKPath();
+            var strokeGeometry = new StreamGeometry();
             using (var geometry = strokeGeometry.Open())
             {
                 geometry.MoveTo(topScreenPoints[0], false);
@@ -130,7 +126,7 @@ namespace ProCharts.Uno.Series
                     geometry.LineTo(topScreenPoints[i]);
                 }
             }
-            context.Canvas.DrawGeometry(null, areaSKPaint, strokeGeometry);
+            context.Canvas.DrawGeometry(null, areaBrush, strokeGeometry);
         }
     }
 }

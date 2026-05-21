@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -27,7 +27,7 @@ namespace ProCharts.Uno.Series
             DependencyProperty.Register(nameof(MarkerSize), typeof(double), typeof(LineSeries), new PropertyMetadata(6.0, OnPropertyChanged));
 
         public static readonly DependencyProperty MarkerFillProperty =
-            DependencyProperty.Register(nameof(MarkerFill), typeof(SKPaint), typeof(LineSeries), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+            DependencyProperty.Register(nameof(MarkerFill), typeof(Brush), typeof(LineSeries), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
         // --- PROPERTIES ---
 
@@ -47,7 +47,7 @@ namespace ProCharts.Uno.Series
             set => SetValue(MarkerSizeProperty, value);
         }
 
-        public SKPaint? MarkerFill { get => (SKPaint?)GetValue(MarkerFillProperty);
+        public Brush? MarkerFill { get => (Brush?)GetValue(MarkerFillProperty);
             set => SetValue(MarkerFillProperty, value);
         }
 
@@ -66,8 +66,8 @@ namespace ProCharts.Uno.Series
             // 2. Build segments for rendering (useful for Gap mode)
             var segments = BuildSegments(processedPoints);
 
-            var lineStroke = Stroke ?? context.DefaultSKPaint;
-            var lineSKPaint = new Pen(lineStroke, StrokeThickness, lineCap: SKStrokeCap.Round, lineJoin: SKStrokeJoin.Round);
+            var lineStroke = Stroke ?? context.DefaultBrush;
+            var lineBrush = new Pen(lineStroke, StrokeThickness, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
 
             // 3. Render each segment
             foreach (var segment in segments)
@@ -79,19 +79,19 @@ namespace ProCharts.Uno.Series
 
                 if (IsSmooth && animatedPoints.Count > 2)
                 {
-                    DrawBezierSpline(context.Canvas, lineSKPaint, animatedPoints);
+                    DrawBezierSpline(context.Canvas, lineBrush, animatedPoints);
                 }
                 else
                 {
-                    DrawStraightLines(context.Canvas, lineSKPaint, animatedPoints);
+                    DrawStraightLines(context.Canvas, lineBrush, animatedPoints);
                 }
             }
 
             // 4. Render Markers if active
             if (ShowMarkers)
             {
-                var markerFillSKPaint = MarkerFill ?? lineStroke;
-                var markerSKPaint = new Pen(lineStroke, 1.0);
+                var markerFillBrush = MarkerFill ?? lineStroke;
+                var markerBrush = new Pen(lineStroke, 1.0);
                 double halfSize = MarkerSize / 2.0;
 
                 foreach (var segment in segments)
@@ -99,7 +99,7 @@ namespace ProCharts.Uno.Series
                     var animatedPoints = AnimatePoints(segment, context.Transform, context.AnimationProgress);
                     foreach (var pt in animatedPoints)
                     {
-                        context.Canvas.DrawEllipse(markerFillSKPaint, markerSKPaint, pt, halfSize, halfSize);
+                        context.Canvas.DrawEllipse(markerFillBrush, markerBrush, pt, halfSize, halfSize);
                     }
                 }
             }
@@ -206,9 +206,9 @@ namespace ProCharts.Uno.Series
             return animated;
         }
 
-        internal void DrawStraightLines(SKCanvas context, SKPaint pen, List<Point> points)
+        internal void DrawStraightLines(DrawingContext context, Pen pen, List<Point> points)
         {
-            var geometry = new SKPath();
+            var geometry = new StreamGeometry();
             using (var ctx = geometry.Open())
             {
                 geometry.MoveTo(points[0], false);
@@ -220,10 +220,10 @@ namespace ProCharts.Uno.Series
             context.DrawGeometry(null, pen, geometry);
         }
 
-        internal void DrawBezierSpline(SKCanvas context, SKPaint pen, List<Point> points)
+        internal void DrawBezierSpline(DrawingContext context, Pen pen, List<Point> points)
         {
             // Catmull-Rom control point calculation
-            var geometry = new SKPath();
+            var geometry = new StreamGeometry();
             using (var ctx = geometry.Open())
             {
                 geometry.MoveTo(points[0], false);

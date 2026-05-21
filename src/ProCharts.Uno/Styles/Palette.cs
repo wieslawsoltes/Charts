@@ -1,37 +1,36 @@
 using System.Collections.Generic;
-using Windows.Foundation;
-using SkiaSharp;
+using Microsoft.UI.Xaml.Media;
 
 namespace ProCharts.Uno.Styles
 {
     public class Palette
     {
         public string Name { get; }
-        public IReadOnlyList<SKPaint> SKPaintes { get; }
+        public IReadOnlyList<Brush> Brushes { get; }
 
-        public Palette(string name, IEnumerable<SKPaint> brushes)
+        public Palette(string name, IEnumerable<Brush> brushes)
         {
             Name = name;
-            SKPaintes = new List<SKPaint>(brushes).AsReadOnly();
+            Brushes = new List<Brush>(brushes).AsReadOnly();
         }
 
-        public Palette(string name, IEnumerable<SKColor> colors)
+        public Palette(string name, IEnumerable<Color> colors)
         {
             Name = name;
-            var list = new List<SKPaint>();
+            var list = new List<Brush>();
             foreach (var color in colors)
             {
-                list.Add(new SKPaint { Color = color, Style = SKPaintStyle.Fill, IsAntialias = true });
+                list.Add(new SolidColorBrush(color));
             }
-            SKPaintes = list.AsReadOnly();
+            Brushes = list.AsReadOnly();
         }
 
-        public SKPaint GetSKPaint(int index)
+        public Brush GetBrush(int index)
         {
-            if (SKPaintes.Count == 0)
-                return new SKPaint { Color = SKColor.Parse("#2196F3"), Style = SKPaintStyle.Fill, IsAntialias = true };
+            if (Brushes.Count == 0)
+                return new SolidColorBrush(Color.Parse("#2196F3"));
 
-            return SKPaintes[index % SKPaintes.Count];
+            return Brushes[index % Brushes.Count];
         }
 
         // --- PREBUILT PREMIUM PALETTES ---
@@ -41,13 +40,13 @@ namespace ProCharts.Uno.Styles
         /// </summary>
         public static Palette Modern { get; } = new Palette("Modern", new[]
         {
-            SKColor.Parse("#4F46E5"), // Indigo
-            SKColor.Parse("#06B6D4"), // Cyan
-            SKColor.Parse("#10B981"), // Emerald
-            SKColor.Parse("#F59E0B"), // Amber
-            SKColor.Parse("#8B5CF6"), // Purple
-            SKColor.Parse("#EC4899"), // Pink
-            SKColor.Parse("#3B82F6")  // Blue
+            Color.Parse("#4F46E5"), // Indigo
+            Color.Parse("#06B6D4"), // Cyan
+            Color.Parse("#10B981"), // Emerald
+            Color.Parse("#F59E0B"), // Amber
+            Color.Parse("#8B5CF6"), // Purple
+            Color.Parse("#EC4899"), // Pink
+            Color.Parse("#3B82F6")  // Blue
         });
 
         /// <summary>
@@ -55,12 +54,12 @@ namespace ProCharts.Uno.Styles
         /// </summary>
         public static Palette Emerald { get; } = new Palette("Emerald", new[]
         {
-            SKColor.Parse("#059669"), // Deep Emerald
-            SKColor.Parse("#34D399"), // Mint
-            SKColor.Parse("#10B981"), // Emerald
-            SKColor.Parse("#A7F3D0"), // Soft Green
-            SKColor.Parse("#065F46"), // Forest
-            SKColor.Parse("#6EE7B7")  // Light Green
+            Color.Parse("#059669"), // Deep Emerald
+            Color.Parse("#34D399"), // Mint
+            Color.Parse("#10B981"), // Emerald
+            Color.Parse("#A7F3D0"), // Soft Green
+            Color.Parse("#065F46"), // Forest
+            Color.Parse("#6EE7B7")  // Light Green
         });
 
         /// <summary>
@@ -68,12 +67,12 @@ namespace ProCharts.Uno.Styles
         /// </summary>
         public static Palette SlateDark { get; } = new Palette("SlateDark", new[]
         {
-            SKColor.Parse("#6366F1"), // Cool Indigo
-            SKColor.Parse("#818CF8"), // Soft Indigo
-            SKColor.Parse("#38BDF8"), // Sky Blue
-            SKColor.Parse("#A5B4FC"), // Lavender
-            SKColor.Parse("#94A3B8"), // Slate
-            SKColor.Parse("#C084FC")  // Orchid
+            Color.Parse("#6366F1"), // Cool Indigo
+            Color.Parse("#818CF8"), // Soft Indigo
+            Color.Parse("#38BDF8"), // Sky Blue
+            Color.Parse("#A5B4FC"), // Lavender
+            Color.Parse("#94A3B8"), // Slate
+            Color.Parse("#C084FC")  // Orchid
         });
 
         /// <summary>
@@ -81,12 +80,12 @@ namespace ProCharts.Uno.Styles
         /// </summary>
         public static Palette Retro { get; } = new Palette("Retro", new[]
         {
-            SKColor.Parse("#E11D48"), // Rose
-            SKColor.Parse("#F97316"), // Orange
-            SKColor.Parse("#FACC15"), // Yellow
-            SKColor.Parse("#14B8A6"), // Teal
-            SKColor.Parse("#65A30D"), // Lime
-            SKColor.Parse("#D946EF")  // Magenta
+            Color.Parse("#E11D48"), // Rose
+            Color.Parse("#F97316"), // Orange
+            Color.Parse("#FACC15"), // Yellow
+            Color.Parse("#14B8A6"), // Teal
+            Color.Parse("#65A30D"), // Lime
+            Color.Parse("#D946EF")  // Magenta
         });
 
         /// <summary>
@@ -94,12 +93,12 @@ namespace ProCharts.Uno.Styles
         /// </summary>
         public static Palette Cyberpunk { get; } = new Palette("Cyberpunk", new[]
         {
-            SKColor.Parse("#FF007F"), // Neon Pink
-            SKColor.Parse("#00F0FF"), // Neon Cyan
-            SKColor.Parse("#FFEA00"), // Electric Yellow
-            SKColor.Parse("#BD00FF"), // Electric Purple
-            SKColor.Parse("#00FF66"), // Neon Green
-            SKColor.Parse("#FF5E00")  // Neon Orange
+            Color.Parse("#FF007F"), // Neon Pink
+            Color.Parse("#00F0FF"), // Neon Cyan
+            Color.Parse("#FFEA00"), // Electric Yellow
+            Color.Parse("#BD00FF"), // Electric Purple
+            Color.Parse("#00FF66"), // Neon Green
+            Color.Parse("#FF5E00")  // Neon Orange
         });
 
         /// <summary>

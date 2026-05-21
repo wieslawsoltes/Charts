@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
-using SkiaSharp;
 using ProCharts.Uno.Controls;
 
 namespace ProCharts.Uno.Maths
@@ -8,20 +8,20 @@ namespace ProCharts.Uno.Maths
     public readonly struct SeriesRenderContext
     {
         public ChartBase Chart { get; }
-        public SKCanvas Canvas { get; }
+        public DrawingContext Canvas { get; }
         public CoordinateTransform Transform { get; }
         public double AnimationProgress { get; }
-        public SKRect PlotArea { get; }
-        public SKPaint DefaultPaint { get; }
-        public SKPaint DefaultSKPaint => DefaultPaint;
+        public Rect PlotArea { get; }
+        public Brush DefaultPaint { get; }
+        public Brush DefaultBrush => DefaultPaint;
 
         public SeriesRenderContext(
             ChartBase chart,
-            SKCanvas context,
+            DrawingContext context,
             CoordinateTransform transform,
             double animationProgress,
-            SKRect plotArea,
-            SKPaint defaultPaint)
+            Rect plotArea,
+            Brush defaultPaint)
         {
             Chart = chart;
             Canvas = context;

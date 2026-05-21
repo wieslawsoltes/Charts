@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class FunnelChart : ChartBase
+    public partial class FunnelChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(FunnelChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));
@@ -22,8 +22,8 @@ namespace ProCharts.Uno.Controls
         public static readonly DependencyProperty TitlePathProperty =
             DependencyProperty.Register(nameof(TitlePath), typeof(string), typeof(FunnelChart), new PropertyMetadata(default(string?), OnPropertyChanged));
 
-        public static readonly DependencyProperty SKColorPathProperty =
-            DependencyProperty.Register(nameof(SKColorPath), typeof(string), typeof(FunnelChart), new PropertyMetadata(default(string?), OnPropertyChanged));
+        public static readonly DependencyProperty ColorPathProperty =
+            DependencyProperty.Register(nameof(ColorPath), typeof(string), typeof(FunnelChart), new PropertyMetadata(default(string?), OnPropertyChanged));
 
         public static readonly DependencyProperty NeckWidthPercentProperty =
             DependencyProperty.Register(nameof(NeckWidthPercent), typeof(double), typeof(FunnelChart), new PropertyMetadata(0.35, OnPropertyChanged));
@@ -45,8 +45,8 @@ namespace ProCharts.Uno.Controls
             set => SetValue(TitlePathProperty, value);
         }
 
-        public string? SKColorPath { get => (string?)GetValue(SKColorPathProperty);
-            set => SetValue(SKColorPathProperty, value);
+        public string? ColorPath { get => (string?)GetValue(ColorPathProperty);
+            set => SetValue(ColorPathProperty, value);
         }
 
         public double NeckWidthPercent { get => (double)GetValue(NeckWidthPercentProperty);
@@ -61,7 +61,7 @@ namespace ProCharts.Uno.Controls
         {
             public string Title { get; set; } = string.Empty;
             public double Value { get; set; }
-            public SKPaint? SKPaint { get; set; }
+            public Brush? Brush { get; set; }
             public double TopY { get; set; }
             public double BottomY { get; set; }
             public double TopWidth { get; set; }
@@ -75,12 +75,12 @@ namespace ProCharts.Uno.Controls
         {
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             _segments.Clear();
             if (ItemsSource == null) return;
 
-            var rawItems = new List<(string Title, double Value, SKPaint? SKPaint)>();
+            var rawItems = new List<(string Title, double Value, Brush? Brush)>();
             int idx = 0;
             var activePalette = Palette ?? Palette.Default;
 
@@ -90,22 +90,22 @@ namespace ProCharts.Uno.Controls
 
                 var valObj = ResolvePropertyValue(rawItem, ValuePath);
                 var titleObj = ResolvePropertyValue(rawItem, TitlePath);
-                var colorObj = ResolvePropertyValue(rawItem, SKColorPath);
+                var colorObj = ResolvePropertyValue(rawItem, ColorPath);
 
                 double val = ConvertToDouble(valObj);
                 string title = titleObj?.ToString() ?? $"Stage {idx + 1}";
-                SKPaint? brush = null;
+                Brush? brush = null;
 
-                if (colorObj is SKPaint b) brush = b;
-                else if (colorObj is SKColor c) brush = new SolidSKColorSKPaint(c);
+                if (colorObj is Brush b) brush = b;
+                else if (colorObj is Color c) brush = new SolidColorBrush(c);
                 else if (colorObj is string colStr)
                 {
-                    try { brush = new SolidSKColorSKPaint(SKColor.Parse(colStr)); } catch { }
+                    try { brush = new SolidColorBrush(Color.Parse(colStr)); } catch { }
                 }
 
                 if (!double.IsNaN(val) && val > 0)
                 {
-                    rawItems.Add((title, val, brush ?? activePalette.GetSKPaint(idx)));
+                    rawItems.Add((title, val, brush ?? activePalette.GetBrush(idx)));
                     idx++;
                 }
             }
@@ -158,7 +158,7 @@ namespace ProCharts.Uno.Controls
                 {
                     Title = rawItems[i].Title,
                     Value = rawItems[i].Value,
-                    SKPaint = rawItems[i].SKPaint,
+                    Brush = rawItems[i].Brush,
                     TopY = animatedTopY,
                     BottomY = animatedBotY,
                     TopWidth = topW,
@@ -168,7 +168,7 @@ namespace ProCharts.Uno.Controls
                 _segments.Add(seg);
 
                 // Draw Trapezoid
-                var geometry = new SKPath();
+                var geometry = new StreamGeometry();
                 using (var ctx = geometry.Open())
                 {
                     geometry.MoveTo(new Point(area.Center.X - topW / 2.0, animatedTopY), true);
@@ -177,24 +177,24 @@ namespace ProCharts.Uno.Controls
                     geometry.LineTo(new Point(area.Center.X - botW / 2.0, animatedBotY));
                 }
 
-                var fillSKPaint = seg.SKPaint ?? activePalette.GetSKPaint(i);
+                var fillBrush = seg.Brush ?? activePalette.GetBrush(i);
                 if (i == _hoveredSegmentIndex)
                 {
                     // Create beautiful neon hover glow by using white outline or overlay
-                    fillSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#FFFFFF"));
+                    fillBrush = new SolidColorBrush(Color.Parse("#FFFFFF"));
                 }
 
-                var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#40FFFFFF")), 1.0);
-                context.DrawGeometry(fillSKPaint, borderSKPaint, geometry);
+                var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#40FFFFFF")), 1.0);
+                context.DrawGeometry(fillBrush, borderBrush, geometry);
 
                 // Draw Center Text Label inside the segment
                 if (animatedBotY - animatedTopY > 18)
                 {
                     string label = $"{seg.Title}: {seg.Value:N0}";
                     var font = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
-                    var textSKPaint = SKPaintes.White;
+                    var textBrush = Brushes.White;
 
-                    var ft = new FormattedText(label, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 11, textSKPaint);
+                    var ft = new FormattedText(label, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 11, textBrush);
                     if (ft.Width < Math.Min(topW, botW) - 10)
                     {
                         context.DrawText(ft, new Point(area.Center.X - ft.Width / 2.0, midY - ft.Height / 2.0));
@@ -202,8 +202,8 @@ namespace ProCharts.Uno.Controls
                     else
                     {
                         // Draw label on the right side if too narrow
-                        var rightLabelSKPaint = SystemSKPaint;
-                        var ftSide = new FormattedText(label, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 10, rightLabelSKPaint);
+                        var rightLabelBrush = SystemBrush;
+                        var ftSide = new FormattedText(label, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 10, rightLabelBrush);
                         context.DrawText(ftSide, new Point(area.Center.X + Math.Max(topW, botW) / 2.0 + 8, midY - ftSide.Height / 2.0));
                     }
                 }
@@ -241,7 +241,7 @@ namespace ProCharts.Uno.Controls
             _hoveredSegmentIndex = hoverIdx;
         }
 
-        protected override void DrawTooltip(SKCanvas context, Point mousePoint)
+        protected override void DrawTooltip(DrawingContext context, Point mousePoint)
         {
             if (_hoveredSegmentIndex == -1) return;
 
@@ -256,10 +256,10 @@ namespace ProCharts.Uno.Controls
 
             var fontTitle = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
             var fontText = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal);
-            var textSKPaint = SKPaintes.White;
+            var textBrush = Brushes.White;
 
-            var ftTitle = new FormattedText(hovered.Title, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textSKPaint);
-            var ftVal = new FormattedText($"Value: {hovered.Value:N0} ({pctOfMax:F1}% of Max)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textSKPaint);
+            var ftTitle = new FormattedText(hovered.Title, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textBrush);
+            var ftVal = new FormattedText($"Value: {hovered.Value:N0} ({pctOfMax:F1}% of Max)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textBrush);
 
             tooltipWidth = Math.Max(tooltipWidth, Math.Max(ftTitle.Width, ftVal.Width) + padding * 2 + 10);
 
@@ -273,12 +273,12 @@ namespace ProCharts.Uno.Controls
             ty = Math.Max(0, ty);
 
             var tooltipRect = new Rect(tx, ty, tooltipWidth, tooltipHeight);
-            var bgSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#EC1F242E"));
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
+            var bgBrush = new SolidColorBrush(Color.Parse("#EC1F242E"));
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
 
-            context.DrawRectangle(bgSKPaint, borderSKPaint, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
+            context.DrawRectangle(bgBrush, borderBrush, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
 
-            context.DrawEllipse(hovered.SKPaint, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
+            context.DrawEllipse(hovered.Brush, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
             context.DrawText(ftTitle, new Point(tx + padding + 12, ty + padding));
             context.DrawText(ftVal, new Point(tx + padding + 12, ty + padding + textHeight));
         }

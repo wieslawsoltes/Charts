@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class SankeyChart : ChartBase
+    public partial class SankeyChart : ChartBase
     {
         public class SankeyNode
         {
             public string Name { get; set; } = string.Empty;
             public double Value { get; set; }
-            public SKPaint? SKColor { get; set; }
+            public Brush? Color { get; set; }
             // Layout fields
             internal Rect Bounds { get; set; }
             internal double CurrentSourceOffset { get; set; }
@@ -28,7 +28,7 @@ namespace ProCharts.Uno.Controls
             public string Source { get; set; } = string.Empty;
             public string Target { get; set; } = string.Empty;
             public double Flow { get; set; }
-            public SKPaint? SKColor { get; set; }
+            public Brush? Color { get; set; }
         }
 
         public static readonly DependencyProperty NodesProperty =
@@ -64,7 +64,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(left, top, w, h);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             if (Nodes == null || Nodes.Count == 0 || Links == null || Links.Count == 0)
             {
@@ -133,9 +133,9 @@ namespace ProCharts.Uno.Controls
                 leftY += h + nodeGap;
 
                 // Draw Node
-                var brush = node.SKColor ?? activePalette.GetSKPaint(i);
-                var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#40FFFFFF")), 1.0);
-                context.DrawRectangle(brush, borderSKPaint, new RoundedRect(node.Bounds, new CornerRadius(4.0)));
+                var brush = node.Color ?? activePalette.GetBrush(i);
+                var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#40FFFFFF")), 1.0);
+                context.DrawRectangle(brush, borderBrush, new RoundedRect(node.Bounds, new CornerRadius(4.0)));
 
                 // Text Name Label
                 var labelFont = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.SemiBold);
@@ -145,7 +145,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     labelFont,
                     11,
-                    SystemSKPaint);
+                    SystemBrush);
                 context.DrawText(ftLabel, new Point(node.Bounds.Left - ftLabel.Width - 6.0, node.Bounds.Top + (node.Bounds.Height - ftLabel.Height) / 2.0));
             }
 
@@ -159,9 +159,9 @@ namespace ProCharts.Uno.Controls
                 rightY += h + nodeGap;
 
                 // Draw Node
-                var brush = node.SKColor ?? activePalette.GetSKPaint(i + leftNodes.Count);
-                var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#40FFFFFF")), 1.0);
-                context.DrawRectangle(brush, borderSKPaint, new RoundedRect(node.Bounds, new CornerRadius(4.0)));
+                var brush = node.Color ?? activePalette.GetBrush(i + leftNodes.Count);
+                var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#40FFFFFF")), 1.0);
+                context.DrawRectangle(brush, borderBrush, new RoundedRect(node.Bounds, new CornerRadius(4.0)));
 
                 // Text Name Label
                 var labelFont = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.SemiBold);
@@ -171,7 +171,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     labelFont,
                     11,
-                    SystemSKPaint);
+                    SystemBrush);
                 context.DrawText(ftLabel, new Point(node.Bounds.Right + 6.0, node.Bounds.Top + (node.Bounds.Height - ftLabel.Height) / 2.0));
             }
 
@@ -198,7 +198,7 @@ namespace ProCharts.Uno.Controls
                 var ptTgtBottom = new Point(tgtNode.Bounds.Left, tgtTop + flowHeight);
 
                 // Bezier ribbon geometry
-                var geometry = new SKPath();
+                var geometry = new StreamGeometry();
                 using (var ctx = geometry.Open())
                 {
                     geometry.MoveTo(ptSrcTop, true);
@@ -221,20 +221,20 @@ namespace ProCharts.Uno.Controls
                 }
 
                 // Ribbon fill brush (highly transparent matching node color or custom link color)
-                SKColor brushSKColor = SKColors.Teal;
-                if (srcNode.SKColor != null) brushSKColor = srcNode.SKColor.Color;
+                Color brushColor = Colors.Teal;
+                if (srcNode.Color != null) brushColor = srcNode.Color.GetColor();
                 else if (Palette != null)
                 {
-                    var b = activePalette.GetSKPaint(Nodes.IndexOf(srcNode));
-                    if (b != null) brushSKColor = b.Color;
+                    var b = activePalette.GetBrush(Nodes.IndexOf(srcNode));
+                    if (b != null) brushColor = b.GetColor();
                 }
-                var ribbonSKPaint = link.SKColor ?? new SolidSKColorSKPaint(new SKColor((byte)(brushSKColor.Red), (byte)(brushSKColor.Green), (byte)(brushSKColor.Blue), (byte)(50)));
+                var ribbonBrush = link.Color ?? new SolidColorBrush(new Color((byte)(brushColor.Red), (byte)(brushColor.Green), (byte)(brushColor.Blue), (byte)(50)));
 
-                context.DrawGeometry(ribbonSKPaint, null, geometry);
+                context.DrawGeometry(ribbonBrush, null, geometry);
             }
         }
 
-        private void RenderEmptyState(SKCanvas context)
+        private void RenderEmptyState(DrawingContext context)
         {
             var ft = new FormattedText(
                 "Configure Sankey Nodes and Flows",
@@ -242,7 +242,7 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Italic, FontWeight.SemiBold),
                 13,
-                SystemSKPaint);
+                SystemBrush);
 
             double tx = EffectivePlotArea.Left + (EffectivePlotArea.Width - ft.Width) / 2.0;
             double ty = EffectivePlotArea.Top + (EffectivePlotArea.Height - ft.Height) / 2.0;

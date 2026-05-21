@@ -1,7 +1,7 @@
 using System;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -42,9 +42,9 @@ namespace ProCharts.Uno.Series
             var rawPoints = GetDataPoints();
             if (rawPoints.Count == 0) return;
 
-            var bubbleFill = Fill ?? context.DefaultSKPaint;
+            var bubbleFill = Fill ?? context.DefaultBrush;
             var bubbleStroke = Stroke ?? bubbleFill;
-            var bubbleSKPaint = new Pen(bubbleStroke, StrokeThickness);
+            var bubbleBrush = new Pen(bubbleStroke, StrokeThickness);
 
             double progress = context.AnimationProgress;
 
@@ -97,7 +97,7 @@ namespace ProCharts.Uno.Series
                 double animatedY = screenBaselineY + (screenPt.Y - screenBaselineY) * progress;
                 var animatedPt = new Point(screenPt.X, animatedY);
 
-                context.Canvas.DrawEllipse(bubbleFill, bubbleSKPaint, animatedPt, halfSize, halfSize);
+                context.Canvas.DrawEllipse(bubbleFill, bubbleBrush, animatedPt, halfSize, halfSize);
             }
         }
     }

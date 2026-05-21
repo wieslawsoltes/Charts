@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class KpiCard : ChartBase
+    public partial class KpiCard : ChartBase
     {
         public static readonly DependencyProperty ValueStringProperty =
             DependencyProperty.Register(nameof(ValueString), typeof(string), typeof(KpiCard), new PropertyMetadata(default(string?), OnPropertyChanged));
@@ -52,43 +52,43 @@ namespace ProCharts.Uno.Controls
             return new Rect(padding, padding, bounds.Width - padding * 2, bounds.Height - padding * 2);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             var area = EffectivePlotArea;
 
             // 1. Draw premium glassmorphic background
-            var bgSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#1E293B")); // slate-800
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
-            context.DrawRectangle(bgSKPaint, borderSKPaint, new RoundedRect(Bounds, new CornerRadius(12.0)));
+            var bgBrush = new SolidColorBrush(Color.Parse("#1E293B")); // slate-800
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
+            context.DrawRectangle(bgBrush, borderBrush, new RoundedRect(Bounds, new CornerRadius(12.0)));
 
             // 2. Draw Title
-            var titleSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#94A3B8")); // slate-400
+            var titleBrush = new SolidColorBrush(Color.Parse("#94A3B8")); // slate-400
             var ftTitle = new FormattedText(
                 Title ?? "KPI Indicator",
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.SemiBold),
                 12,
-                titleSKPaint);
+                titleBrush);
             context.DrawText(ftTitle, area.Position);
 
             // 3. Draw Main Value
-            var valSKPaint = SKPaintes.White;
+            var valBrush = Brushes.White;
             var ftVal = new FormattedText(
                 ValueString ?? "0.0",
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                 28,
-                valSKPaint);
+                valBrush);
             context.DrawText(ftVal, new Point(area.Left, area.Top + 20));
 
             // 4. Draw Trend arrow and pill badge
             double trend = TrendValue;
             bool isPositive = trend >= 0;
-            var badgeBg = isPositive ? new SolidSKColorSKPaint(SKColor.Parse("#2010B981")) : new SolidSKColorSKPaint(SKColor.Parse("#20EF4444"));
-            var badgeBorder = isPositive ? new SolidSKColorSKPaint(SKColor.Parse("#8010B981")) : new SolidSKColorSKPaint(SKColor.Parse("#80EF4444"));
-            var badgeTextSKPaint = isPositive ? new SolidSKColorSKPaint(SKColor.Parse("#10B981")) : new SolidSKColorSKPaint(SKColor.Parse("#EF4444"));
+            var badgeBg = isPositive ? new SolidColorBrush(Color.Parse("#2010B981")) : new SolidColorBrush(Color.Parse("#20EF4444"));
+            var badgeBorder = isPositive ? new SolidColorBrush(Color.Parse("#8010B981")) : new SolidColorBrush(Color.Parse("#80EF4444"));
+            var badgeTextBrush = isPositive ? new SolidColorBrush(Color.Parse("#10B981")) : new SolidColorBrush(Color.Parse("#EF4444"));
 
             string trendSign = isPositive ? "▲" : "▼";
             string trendText = $"{trendSign} {Math.Abs(trend):F1}{TrendUnit}";
@@ -99,7 +99,7 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                 10,
-                badgeTextSKPaint);
+                badgeTextBrush);
 
             double badgeX = area.Right - ftTrend.Width - 12.0;
             double badgeY = area.Top;
@@ -133,8 +133,8 @@ namespace ProCharts.Uno.Controls
                     if (Math.Abs(max - min) < 1e-9) max = min + 1.0;
 
                     double progress = AnimationProgress;
-                    var sparkStroke = isPositive ? new SolidSKColorSKPaint(SKColor.Parse("#10B981")) : new SolidSKColorSKPaint(SKColor.Parse("#EF4444"));
-                    var sparkSKPaint = new Pen(sparkStroke, 2.0, lineCap: SKStrokeCap.Round, lineJoin: SKStrokeJoin.Round);
+                    var sparkStroke = isPositive ? new SolidColorBrush(Color.Parse("#10B981")) : new SolidColorBrush(Color.Parse("#EF4444"));
+                    var sparkBrush = new Pen(sparkStroke, 2.0, lineCap: PenLineCap.Round, lineJoin: PenLineJoin.Round);
 
                     // Build points
                     var pts = new List<Point>();
@@ -148,7 +148,7 @@ namespace ProCharts.Uno.Controls
                     }
 
                     // Render Sparkline
-                    var geometry = new SKPath();
+                    var geometry = new StreamGeometry();
                     using (var ctx = geometry.Open())
                     {
                         geometry.MoveTo(pts[0], false);
@@ -157,10 +157,10 @@ namespace ProCharts.Uno.Controls
                             geometry.LineTo(pts[i]);
                         }
                     }
-                    context.DrawGeometry(null, sparkSKPaint, geometry);
+                    context.DrawGeometry(null, sparkBrush, geometry);
 
                     // Render semitransparent gradient area below sparkline
-                    var areaGeom = new SKPath();
+                    var areaGeom = new StreamGeometry();
                     using (var ctx = areaGeom.Open())
                     {
                         areaGeom.MoveTo(new Point(pts[0].X, area.Bottom), true);
@@ -171,17 +171,20 @@ namespace ProCharts.Uno.Controls
                         areaGeom.LineTo(new Point(pts.Last().X, area.Bottom));
                     }
 
-                    SKColor sparkSKColor = isPositive ? SKColor.Parse("#10B981") : SKColor.Parse("#EF4444");
-                    var fillGradient = new LinearGradientSKPaint
+                    Color sparkColor = isPositive ? Color.Parse("#10B981") : Color.Parse("#EF4444");
+                    var fillGradient = new LinearGradientBrush();
+                    fillGradient.StartPoint = new Windows.Foundation.Point(0, 0);
+                    fillGradient.EndPoint = new Windows.Foundation.Point(0, 1);
+                    fillGradient.GradientStops.Add(new GradientStop
                     {
-                        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                        EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-                        GradientStops =
-                        {
-                            new GradientStop(new SKColor((byte)(sparkSKColor.Red), (byte)(sparkSKColor.Green), (byte)(sparkSKColor.Blue), (byte)(40)), 0.0),
-                            new GradientStop(new SKColor((byte)(sparkSKColor.Red), (byte)(sparkSKColor.Green), (byte)(sparkSKColor.Blue), (byte)(0)), 1.0)
-                        }
-                    };
+                        Color = new Color(sparkColor.Red, sparkColor.Green, sparkColor.Blue, 40),
+                        Offset = 0.0
+                    });
+                    fillGradient.GradientStops.Add(new GradientStop
+                    {
+                        Color = new Color(sparkColor.Red, sparkColor.Green, sparkColor.Blue, 0),
+                        Offset = 1.0
+                    });
                     context.DrawGeometry(fillGradient, null, areaGeom);
                 }
             }

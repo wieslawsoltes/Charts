@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Controls;
@@ -52,9 +52,9 @@ namespace ProCharts.Uno.Series
             int barSeriesIndex = barSeriesList.IndexOf(this);
             if (barSeriesIndex < 0) barSeriesIndex = 0;
 
-            var barFill = Fill ?? context.DefaultSKPaint;
+            var barFill = Fill ?? context.DefaultBrush;
             var barStroke = Stroke ?? barFill;
-            var barSKPaint = new Pen(barStroke, StrokeThickness);
+            var barBrush = new Pen(barStroke, StrokeThickness);
 
             double progress = context.AnimationProgress;
 
@@ -90,11 +90,11 @@ namespace ProCharts.Uno.Series
 
                     if (CornerRadius > 0)
                     {
-                        context.Canvas.DrawRectangle(barFill, barSKPaint, new RoundedRect(barRect, new CornerRadius(CornerRadius)));
+                        context.Canvas.DrawRectangle(barFill, barBrush, new RoundedRect(barRect, new CornerRadius(CornerRadius)));
                     }
                     else
                     {
-                        context.Canvas.DrawRectangle(barFill, barSKPaint, barRect);
+                        context.Canvas.DrawRectangle(barFill, barBrush, barRect);
                     }
                 }
             }
@@ -133,11 +133,11 @@ namespace ProCharts.Uno.Series
 
                     if (CornerRadius > 0)
                     {
-                        context.Canvas.DrawRectangle(barFill, barSKPaint, new RoundedRect(barRect, new CornerRadius(CornerRadius)));
+                        context.Canvas.DrawRectangle(barFill, barBrush, new RoundedRect(barRect, new CornerRadius(CornerRadius)));
                     }
                     else
                     {
-                        context.Canvas.DrawRectangle(barFill, barSKPaint, barRect);
+                        context.Canvas.DrawRectangle(barFill, barBrush, barRect);
                     }
                 }
             }

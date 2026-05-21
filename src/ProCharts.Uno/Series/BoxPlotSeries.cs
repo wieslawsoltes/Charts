@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -180,10 +180,10 @@ namespace ProCharts.Uno.Series
             var metricsList = GetMetricsList();
             if (metricsList.Count == 0) return;
 
-            var boxFill = Fill ?? new SolidSKColorSKPaint(SKColor.Parse("#4006B6D4")); // Transparent cyan
-            var boxStroke = Stroke ?? context.DefaultSKPaint;
+            var boxFill = Fill ?? new SolidColorBrush(Color.Parse("#4006B6D4")); // Transparent cyan
+            var boxStroke = Stroke ?? context.DefaultBrush;
             double strokeThickness = StrokeThickness > 0 ? StrokeThickness : 1.5;
-            var boxSKPaint = new Pen(boxStroke, strokeThickness);
+            var boxBrush = new Pen(boxStroke, strokeThickness);
 
             double slotWidth = context.PlotArea.Width / Math.Max(1, metricsList.Count);
             double boxWidth = Math.Clamp(slotWidth * BoxWidthPercent, 4.0, 60.0);
@@ -209,13 +209,13 @@ namespace ProCharts.Uno.Series
                 var ptMax = context.Transform.ToScreen(m.X, max);
 
                 // Draw Whiskers (vertical lines)
-                context.Canvas.DrawLine((float)ptMin.X, (float)ptMin.Y, (float)ptQ1.X, (float)ptQ1.Y, boxSKPaint);
-                context.Canvas.DrawLine((float)ptQ3.X, (float)ptQ3.Y, (float)ptMax.X, (float)ptMax.Y, boxSKPaint);
+                context.Canvas.DrawLine((float)ptMin.X, (float)ptMin.Y, (float)ptQ1.X, (float)ptQ1.Y, boxBrush);
+                context.Canvas.DrawLine((float)ptQ3.X, (float)ptQ3.Y, (float)ptMax.X, (float)ptMax.Y, boxBrush);
 
                 // Whisker horizontal end-ticks
                 double tickW = boxWidth * 0.4;
-                context.Canvas.DrawLine(boxSKPaint, new Point(ptMin.X - tickW, ptMin.Y), new Point(ptMin.X + tickW, ptMin.Y));
-                context.Canvas.DrawLine(boxSKPaint, new Point(ptMax.X - tickW, ptMax.Y), new Point(ptMax.X + tickW, ptMax.Y));
+                context.Canvas.DrawLine(boxBrush, new Point(ptMin.X - tickW, ptMin.Y), new Point(ptMin.X + tickW, ptMin.Y));
+                context.Canvas.DrawLine(boxBrush, new Point(ptMax.X - tickW, ptMax.Y), new Point(ptMax.X + tickW, ptMax.Y));
 
                 // Draw Box (Q1 to Q3)
                 double topY = Math.Min(ptQ1.Y, ptQ3.Y);
@@ -223,18 +223,18 @@ namespace ProCharts.Uno.Series
                 double h = Math.Max(1.0, bottomY - topY);
 
                 var boxRect = new Rect(ptMedian.X - boxWidth / 2.0, topY, boxWidth, h);
-                context.Canvas.DrawRectangle(boxFill, boxSKPaint, boxRect);
+                context.Canvas.DrawRectangle(boxFill, boxBrush, boxRect);
 
                 // Draw Median Line (horizontal line inside the box)
-                context.Canvas.DrawLine(boxSKPaint, new Point(ptMedian.X - boxWidth / 2.0, ptMedian.Y), new Point(ptMedian.X + boxWidth / 2.0, ptMedian.Y));
+                context.Canvas.DrawLine(boxBrush, new Point(ptMedian.X - boxWidth / 2.0, ptMedian.Y), new Point(ptMedian.X + boxWidth / 2.0, ptMedian.Y));
 
                 // Draw Outliers
                 foreach (var outl in m.Outliers)
                 {
                     double outlAnim = median + (outl - median) * progress;
                     var ptOutl = context.Transform.ToScreen(m.X, outlAnim);
-                    var outlierSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#EF4444")); // Red outlier dots
-                    context.Canvas.DrawEllipse(outlierSKPaint, null, ptOutl, 3.0, 3.0);
+                    var outlierBrush = new SolidColorBrush(Color.Parse("#EF4444")); // Red outlier dots
+                    context.Canvas.DrawEllipse(outlierBrush, null, ptOutl, 3.0, 3.0);
                 }
             }
         }

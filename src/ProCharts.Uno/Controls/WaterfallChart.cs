@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -12,7 +12,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class WaterfallChart : ChartBase
+    public partial class WaterfallChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(WaterfallChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));
@@ -26,14 +26,14 @@ namespace ProCharts.Uno.Controls
         public static readonly DependencyProperty IsTotalPathProperty =
             DependencyProperty.Register(nameof(IsTotalPath), typeof(string), typeof(WaterfallChart), new PropertyMetadata(default(string?), OnPropertyChanged));
 
-        public static readonly DependencyProperty PositiveSKPaintProperty =
-            DependencyProperty.Register(nameof(PositiveSKPaint), typeof(SKPaint), typeof(WaterfallChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty PositiveBrushProperty =
+            DependencyProperty.Register(nameof(PositiveBrush), typeof(Brush), typeof(WaterfallChart), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
-        public static readonly DependencyProperty NegativeSKPaintProperty =
-            DependencyProperty.Register(nameof(NegativeSKPaint), typeof(SKPaint), typeof(WaterfallChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty NegativeBrushProperty =
+            DependencyProperty.Register(nameof(NegativeBrush), typeof(Brush), typeof(WaterfallChart), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
-        public static readonly DependencyProperty TotalSKPaintProperty =
-            DependencyProperty.Register(nameof(TotalSKPaint), typeof(SKPaint), typeof(WaterfallChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty TotalBrushProperty =
+            DependencyProperty.Register(nameof(TotalBrush), typeof(Brush), typeof(WaterfallChart), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
         public IEnumerable? ItemsSource
         {
@@ -53,16 +53,16 @@ namespace ProCharts.Uno.Controls
             set => SetValue(IsTotalPathProperty, value);
         }
 
-        public SKPaint? PositiveSKPaint { get => (SKPaint?)GetValue(PositiveSKPaintProperty);
-            set => SetValue(PositiveSKPaintProperty, value);
+        public Brush? PositiveBrush { get => (Brush?)GetValue(PositiveBrushProperty);
+            set => SetValue(PositiveBrushProperty, value);
         }
 
-        public SKPaint? NegativeSKPaint { get => (SKPaint?)GetValue(NegativeSKPaintProperty);
-            set => SetValue(NegativeSKPaintProperty, value);
+        public Brush? NegativeBrush { get => (Brush?)GetValue(NegativeBrushProperty);
+            set => SetValue(NegativeBrushProperty, value);
         }
 
-        public SKPaint? TotalSKPaint { get => (SKPaint?)GetValue(TotalSKPaintProperty);
-            set => SetValue(TotalSKPaintProperty, value);
+        public Brush? TotalBrush { get => (Brush?)GetValue(TotalBrushProperty);
+            set => SetValue(TotalBrushProperty, value);
         }
 
         public WaterfallChart()
@@ -93,7 +93,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(left, top, w, h);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             if (ItemsSource == null) return;
 
@@ -163,12 +163,12 @@ namespace ProCharts.Uno.Controls
             double barWidth = slotWidth * 0.70;
             double leftOffset = slotWidth * 0.15;
 
-            var posFill = PositiveSKPaint ?? new SolidSKColorSKPaint(SKColor.Parse("#10B981")); // Emerald
-            var negFill = NegativeSKPaint ?? new SolidSKColorSKPaint(SKColor.Parse("#EF4444")); // Rose
-            var totFill = TotalSKPaint ?? new SolidSKColorSKPaint(SKColor.Parse("#3B82F6")); // Blue
+            var posFill = PositiveBrush ?? new SolidColorBrush(Color.Parse("#10B981")); // Emerald
+            var negFill = NegativeBrush ?? new SolidColorBrush(Color.Parse("#EF4444")); // Rose
+            var totFill = TotalBrush ?? new SolidColorBrush(Color.Parse("#3B82F6")); // Blue
 
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(new SKColor((byte)(255), (byte)(255), (byte)(255), (byte)(80))), 1.0);
-            var connectorSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#64748B")), 1.0, DashStyle.Dash);
+            var borderBrush = new Pen(new SolidColorBrush(new Color((byte)(255), (byte)(255), (byte)(255), (byte)(80))), 1.0);
+            var connectorBrush = new Pen(new SolidColorBrush(Color.Parse("#64748B")), 1.0, DashStyle.Dash);
 
             double progress = AnimationProgress;
 
@@ -176,7 +176,7 @@ namespace ProCharts.Uno.Controls
             double zeroY = plot.Top + plot.Height * (1.0 - (0.0 - minVal) / valRange);
             if (zeroY >= plot.Top && zeroY <= plot.Bottom)
             {
-                context.DrawLine(new Pen(new SolidSKColorSKPaint(SKColor.Parse("#475569")), 1.0), new Point(plot.Left, zeroY), new Point(plot.Right, zeroY));
+                context.DrawLine(new Pen(new SolidColorBrush(Color.Parse("#475569")), 1.0), new Point(plot.Left, zeroY), new Point(plot.Right, zeroY));
             }
 
             Point? lastBarCorner = null;
@@ -198,33 +198,33 @@ namespace ProCharts.Uno.Controls
 
                 var barRect = new Rect(x, rectY, barWidth, rectHeight);
 
-                SKPaint fillSKPaint = totFill;
+                Brush fillBrush = totFill;
                 if (!item.IsTotal)
                 {
-                    fillSKPaint = item.Value >= 0 ? posFill : negFill;
+                    fillBrush = item.Value >= 0 ? posFill : negFill;
                 }
 
                 // Draw column
-                context.DrawRectangle(fillSKPaint, borderSKPaint, barRect);
+                context.DrawRectangle(fillBrush, borderBrush, barRect);
 
                 // Draw connector line from previous column
                 if (lastBarCorner.HasValue)
                 {
-                    context.DrawLine(connectorSKPaint, lastBarCorner.Value, new Point(x, yStart));
+                    context.DrawLine(connectorBrush, lastBarCorner.Value, new Point(x, yStart));
                 }
 
                 // Update corner for next connector
                 lastBarCorner = new Point(x + barWidth, yEnd);
 
                 // Draw Category Label
-                var textSKPaint = SystemSKPaint;
+                var textBrush = SystemBrush;
                 var ft = new FormattedText(
                     item.Category,
                     System.Globalization.CultureInfo.CurrentCulture,
                     FlowDirection.LeftToRight,
                     new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal),
                     10,
-                    textSKPaint);
+                    textBrush);
                 
                 double tx = x + (barWidth - ft.Width) / 2.0;
                 double ty = plot.Bottom + 8;
@@ -237,7 +237,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                     10,
-                    textSKPaint);
+                    textBrush);
 
                 double vx = x + (barWidth - valFt.Width) / 2.0;
                 double vy = rectY - 14;

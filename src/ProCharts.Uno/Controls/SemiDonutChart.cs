@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Series;
@@ -10,7 +10,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class SemiDonutChart : PieChart
+    public partial class SemiDonutChart : PieChart
     {
         public static readonly DependencyProperty CenterTextProperty =
             DependencyProperty.Register(nameof(CenterText), typeof(string), typeof(SemiDonutChart), new PropertyMetadata(default(string?), OnPropertyChanged));
@@ -54,7 +54,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(cx, cy, radius * 2, radius * 2);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             base.RenderChart(context);
 
@@ -67,14 +67,14 @@ namespace ProCharts.Uno.Controls
             double totalValue = Series.Where(s => s.IsVisible).Sum(s => s.Value);
             string mainText = CenterText ?? totalValue.ToString("N0");
 
-            var textSKPaint = SystemSKPaint;
+            var textBrush = SystemBrush;
             var ftMain = new FormattedText(
                 mainText,
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                 Math.Clamp(area.Width * 0.10, 14, 32),
-                textSKPaint);
+                textBrush);
 
             // Draw center text right above the baseline center
             double mx = center.X - ftMain.Width / 2.0;

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -11,7 +11,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class TernaryChart : ChartBase
+    public partial class TernaryChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(TernaryChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));
@@ -25,8 +25,8 @@ namespace ProCharts.Uno.Controls
         public static readonly DependencyProperty CPathProperty =
             DependencyProperty.Register(nameof(CPath), typeof(string), typeof(TernaryChart), new PropertyMetadata(default(string?), OnPropertyChanged));
 
-        public static readonly DependencyProperty MarkerSKPaintProperty =
-            DependencyProperty.Register(nameof(MarkerSKPaint), typeof(SKPaint), typeof(TernaryChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty MarkerBrushProperty =
+            DependencyProperty.Register(nameof(MarkerBrush), typeof(Brush), typeof(TernaryChart), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
         public IEnumerable? ItemsSource
         {
@@ -46,8 +46,8 @@ namespace ProCharts.Uno.Controls
             set => SetValue(CPathProperty, value);
         }
 
-        public SKPaint? MarkerSKPaint { get => (SKPaint?)GetValue(MarkerSKPaintProperty);
-            set => SetValue(MarkerSKPaintProperty, value);
+        public Brush? MarkerBrush { get => (Brush?)GetValue(MarkerBrushProperty);
+            set => SetValue(MarkerBrushProperty, value);
         }
 
         public TernaryChart()
@@ -76,7 +76,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(cx, cy, side, side);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             var area = EffectivePlotArea;
 
@@ -89,9 +89,9 @@ namespace ProCharts.Uno.Controls
             var vRight = new Point(area.Right, area.Bottom - yOffset);
             var vTop = new Point(area.Left + area.Width / 2.0, area.Bottom - yOffset - hTriangle);
 
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#475569")), 1.5); // slate-600
-            var gridSKPaint = new Pen(new SolidSKColorSKPaint(new SKColor((byte)(148), (byte)(163), (byte)(184), (byte)(40))), 1.0); // thin gray-400
-            var textSKPaint = SystemSKPaint;
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#475569")), 1.5); // slate-600
+            var gridBrush = new Pen(new SolidColorBrush(new Color((byte)(148), (byte)(163), (byte)(184), (byte)(40))), 1.0); // thin gray-400
+            var textBrush = SystemBrush;
 
             // 1. Draw Equilateral Grid Lines (10%, 20%, ..., 90%)
             for (int pct = 10; pct < 100; pct += 20)
@@ -101,34 +101,34 @@ namespace ProCharts.Uno.Controls
                 // Line parallel to bottom (constant C)
                 var pBaseLeft = Interpolate(vLeft, vTop, f);
                 var pBaseRight = Interpolate(vRight, vTop, f);
-                context.DrawLine(gridSKPaint, pBaseLeft, pBaseRight);
+                context.DrawLine(gridBrush, pBaseLeft, pBaseRight);
 
                 // Line parallel to left side (constant B)
                 var pBLeft = Interpolate(vLeft, vRight, f);
                 var pBRight = Interpolate(vTop, vRight, f);
-                context.DrawLine(gridSKPaint, pBLeft, pBRight);
+                context.DrawLine(gridBrush, pBLeft, pBRight);
 
                 // Line parallel to right side (constant A)
                 var pALeft = Interpolate(vRight, vLeft, f);
                 var pARight = Interpolate(vTop, vLeft, f);
-                context.DrawLine(gridSKPaint, pALeft, pARight);
+                context.DrawLine(gridBrush, pALeft, pARight);
             }
 
             // 2. Draw Equilateral Triangle Outline
-            context.DrawLine(borderSKPaint, vLeft, vRight);
-            context.DrawLine(borderSKPaint, vRight, vTop);
-            context.DrawLine(borderSKPaint, vTop, vLeft);
+            context.DrawLine(borderBrush, vLeft, vRight);
+            context.DrawLine(borderBrush, vRight, vTop);
+            context.DrawLine(borderBrush, vTop, vLeft);
 
             // 3. Draw Corner Labels (A, B, C)
             var font = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
             
-            var ftA = new FormattedText("A (Left)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 11, textSKPaint);
+            var ftA = new FormattedText("A (Left)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 11, textBrush);
             context.DrawText(ftA, new Point(vLeft.X - ftA.Width - 6, vLeft.Y - ftA.Height / 2.0));
 
-            var ftB = new FormattedText("B (Right)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 11, textSKPaint);
+            var ftB = new FormattedText("B (Right)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 11, textBrush);
             context.DrawText(ftB, new Point(vRight.X + 6, vRight.Y - ftB.Height / 2.0));
 
-            var ftC = new FormattedText("C (Top)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 11, textSKPaint);
+            var ftC = new FormattedText("C (Top)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 11, textBrush);
             context.DrawText(ftC, new Point(vTop.X - ftC.Width / 2.0, vTop.Y - ftC.Height - 6));
 
             // 4. Plot Points
@@ -169,8 +169,8 @@ namespace ProCharts.Uno.Controls
                 idx++;
             }
 
-            var ptSKPaint = MarkerSKPaint ?? Palette?.GetSKPaint(0) ?? new SolidSKColorSKPaint(SKColor.Parse("#06B6D4"));
-            var strokeSKPaint = new Pen(SKPaintes.White, 1.0);
+            var ptBrush = MarkerBrush ?? Palette?.GetBrush(0) ?? new SolidColorBrush(Color.Parse("#06B6D4"));
+            var strokeBrush = new Pen(Brushes.White, 1.0);
             double progress = AnimationProgress;
 
             foreach (var pt in items)
@@ -187,7 +187,7 @@ namespace ProCharts.Uno.Controls
                 double animX = centerX + (px - centerX) * progress;
                 double animY = centerY + (py - centerY) * progress;
 
-                context.DrawEllipse(ptSKPaint, strokeSKPaint, new Point(animX, animY), 5.0, 5.0);
+                context.DrawEllipse(ptBrush, strokeBrush, new Point(animX, animY), 5.0, 5.0);
             }
         }
 

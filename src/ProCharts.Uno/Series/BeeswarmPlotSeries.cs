@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -28,8 +28,8 @@ namespace ProCharts.Uno.Series
             var rawPoints = GetDataPoints();
             if (rawPoints.Count == 0) return;
 
-            var activeSKPaint = Stroke ?? Fill ?? context.DefaultSKPaint;
-            var circleSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#40FFFFFF")), 0.5);
+            var activeBrush = Stroke ?? Fill ?? context.DefaultBrush;
+            var circleBrush = new Pen(new SolidColorBrush(Color.Parse("#40FFFFFF")), 0.5);
 
             double r = CircleRadius;
             double diameter = r * 2.0;
@@ -79,7 +79,7 @@ namespace ProCharts.Uno.Series
                     placedPoints.Add(swarmPt);
 
                     // Draw the swarm point circle
-                    context.Canvas.DrawEllipse(activeSKPaint, circleSKPaint, swarmPt, r, r);
+                    context.Canvas.DrawEllipse(activeBrush, circleBrush, swarmPt, r, r);
                 }
             }
         }
