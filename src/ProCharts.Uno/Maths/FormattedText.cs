@@ -42,7 +42,7 @@ namespace ProCharts.Uno.Maths
         public Brush Paint { get; }
         public double Width { get; }
         public double Height { get; }
-        public Typeface Typeface { get; }
+        public Typeface? Typeface { get; }
         public double FontSize { get; }
         public FlowDirection FlowDirection { get; }
 
@@ -50,13 +50,13 @@ namespace ProCharts.Uno.Maths
             string text,
             CultureInfo culture,
             FlowDirection flowDirection,
-            Typeface typeface,
+            Typeface? typeface,
             double fontSize,
             Brush paint)
         {
             Text = text ?? string.Empty;
             Paint = paint;
-            Typeface = typeface;
+            this.Typeface = typeface;
             FontSize = fontSize;
             FlowDirection = flowDirection;
 
