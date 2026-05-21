@@ -5,46 +5,79 @@ description: Render high-fidelity charts across desktop, mobile, and web targets
 
 # Uno Platform Guide
 
-`ProCharts.Uno` maps the same core charting models into the Uno Platform, allowing you to run cross-platform charts on Android, iOS, Windows, macOS, and WebAssembly with uniform looks.
+`ProCharts.Uno` provides a symmetric, high-performance implementation of our vector charting engine for the Uno Platform. It bridges the gap between different target operating systems by mapping high-fidelity vector calculations into a single, unified WinUI/Skia API stack. This allows developers to construct charts that render identically across Windows, macOS, Linux, iOS, Android, and WebAssembly.
 
-## 1. Single Project Integration
+---
 
-The package is fully compatible with modern `UnoSingleProject` configurations utilizing the `Uno.Sdk`.
+## 1. Multi-Target Project Integration
 
-Make sure to install `ProCharts.Uno` in your library or multi-head project:
-
-```xml
-<ItemGroup>
-  <PackageReference Include="ProCharts.Uno" />
-</ItemGroup>
-```
-
-## 2. Using WinUI XAML Markup
-
-Because Uno Platform follows WinUI XAML namespaces, import `ProCharts.Uno` like so:
+`ProCharts.Uno` is built to integrate with modern single-project structures supported by the `Uno.Sdk`. To include the charting engine, add the package reference inside your primary class library or shared project:
 
 ```xml
-<UserControl x:Class="ProCharts.Uno.Gallery.MainPage"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:pc="using:ProCharts.Uno.Controls"
-             xmlns:ps="using:ProCharts.Uno.Series">
-  <Grid>
-    <pc:CartesianChart Title="Cross-Platform Insights">
-      <pc:CartesianChart.Series>
-        <ps:LineSeries Title="Global User Growth" Stroke="#8b5cf6">
-          <ps:LineSeries.Points>
-            <ps:ChartPoint X="0" Y="50" />
-            <ps:ChartPoint X="1" Y="120" />
-            <ps:ChartPoint X="2" Y="350" />
-          </ps:LineSeries.Points>
-        </ps:LineSeries>
-      </pc:CartesianChart.Series>
-    </pc:CartesianChart>
-  </Grid>
-</UserControl>
+<Project Sdk="Uno.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net10.0-windows10.0.19041;net10.0-browserwasm;net10.0-ios;net10.0-android</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Core charting adapter for Uno Platform -->
+    <PackageReference Include="ProCharts.Uno" />
+  </ItemGroup>
+</Project>
 ```
 
-## 3. WebAssembly Performance
+---
 
-When compiling to WebAssembly (`net10.0-browserwasm`), ProCharts.Uno utilizes Skia-based rendering for ultra-fast, smooth drawing speeds directly inside the HTML canvas. No extra setup is required!
+## 2. Platform Adaptations and the Skia Graphics Engine
+
+To maintain high performance and cross-platform consistency, ProCharts bypasses platform-specific XAML UI elements (which would inflate separate rendering components on iOS, Android, and Windows). Instead, it adapts to the host platform using the Skia rendering engine:
+
+- **Desktop (macOS, Linux, Windows)**: Renders directly using hardware-accelerated Skia surfaces.
+- **Mobile (iOS & Android)**: Leverages Skia-backed hardware canvas controls to write directly to native OpenGL/Metal framebuffers.
+- **Web (WebAssembly)**: Hooks directly into the HTML5 `<canvas>` rendering pipeline via Skia Wasm.
+
+This strategy ensures that coordinate computations, rounded corners, splines, and gradients render pixel-perfect across all operating systems without depending on standard platform controls.
+
+---
+
+## 3. High-Performance WebAssembly (Wasm) Details
+
+Running interactive charts in web browsers requires careful attention to performance to avoid user interface lag. `ProCharts.Uno` utilizes several WebAssembly-specific optimizations:
+
+### Low-Level Canvas Blitting
+On WebAssembly, the charting controls render to an HTML5 `<canvas>` element. Rather than invoking JavaScript APIs for vector strokes, the charting engine compiles down to WebAssembly bytecode that directly draws into the shared Skia graphics buffer. This approach reduces the overhead of JS-to-WebAssembly boundary crossings.
+
+### Assembly Configuration
+For production deployments, compile the application using Ahead-Of-Time (AOT) compilation. This step compiles C# code directly into WebAssembly machine instructions, improving coordinate transformation speeds by up to 10x compared to standard interpretation.
+
+To enable full AOT compilation, configure your project properties:
+```xml
+<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-browserwasm'">
+  <WasmShellMonoRuntimeExecutionMode>InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
+  <RunAOTCompilation>true</RunAOTCompilation>
+</PropertyGroup>
+```
+
+---
+
+## 4. High-DPI Scaling and Retina Displays
+
+One of the challenges of cross-platform development is maintaining visual quality across displays with varying pixel densities.
+
+To prevent charts from looking blurry or pixelated on high-density viewports (such as Apple Retina screens or 4K Windows displays), `ProCharts.Uno` monitors layout coordinates and synchronizes them with system scale adjustments.
+
+It queries the system scale parameters dynamically during layout updates:
+
+```csharp
+// Retrieve the system scale factor dynamically
+double rasterScale = this.XamlRoot?.RasterizationScale ?? 1.0;
+
+// Apply the scale factor to adapt vector stroke paths and text rendering
+double scaledStrokeThickness = StrokeThickness * rasterScale;
+double scaledFontSize = FontSize * rasterScale;
+```
+
+This rasterization scaling step ensures that:
+- Line outlines are drawn with precise sub-pixel coordinates.
+- Text labels maintain clear, sharp boundaries without depending on browser scaling heuristics.
+- Anti-aliasing filters run at double density on high-DPI screens.
