@@ -109,10 +109,10 @@ namespace ProCharts.Uno.Controls
                 using (context.PushGeometryClip(circleGeom))
                 {
                     // Draw Wave 1 (Back Wave, slightly offset)
-                    DrawWavePath(context, area, targetY, _waveOffset, WaveAmplitude, waveColor1);
+                    DrawWavePath(context, area, center, radius, targetY, _waveOffset, WaveAmplitude, waveColor1);
 
                     // Draw Wave 2 (Front Wave, primary offset)
-                    DrawWavePath(context, area, targetY, _waveOffset + Math.PI, WaveAmplitude, waveColor2);
+                    DrawWavePath(context, area, center, radius, targetY, _waveOffset + Math.PI, WaveAmplitude, waveColor2);
                 }
             }
 
@@ -131,25 +131,45 @@ namespace ProCharts.Uno.Controls
             context.DrawText(ftPct, new Point(tx, ty));
         }
 
-        private void DrawWavePath(DrawingContext context, Rect area, double targetY, double phase, double amp, Brush brush)
+        private void DrawWavePath(DrawingContext context, Rect area, Point center, double radius, double targetY, double phase, double amp, Brush brush)
         {
             var geometry = new StreamGeometry();
             using (var ctx = geometry.Open())
             {
-                geometry.MoveTo(new Point(area.Left, area.Bottom), true);
-                
-                // Draw wave along the top boundary
-                double step = 4.0;
-                for (double x = area.Left; x <= area.Right; x += step)
+                double cx = center.X;
+                double cy = center.Y;
+                double r = radius;
+
+                // 1. Move to the starting point at the far-left edge of the circle (x = cx - r)
+                // At x = cx - r, topY = bottomY = cy
+                geometry.MoveTo(new Point(cx - r, cy), true);
+
+                double step = 2.0; // Fine resolution for smooth curve tracing
+
+                // 2. Trace the top surface of the wave from left to right, clamped to the circular boundary
+                for (double x = cx - r; x <= cx + r; x += step)
                 {
-                    // Sine-wave calculation
+                    double dx = x - cx;
+                    double dy = Math.Sqrt(Math.Max(0.0, r * r - dx * dx));
+                    double topY = cy - dy;
+                    double bottomY = cy + dy;
+
                     double wavelength = area.Width / 1.5;
-                    double y = targetY + amp * Math.Sin((x / wavelength) * 2.0 * Math.PI + phase);
+                    double waveY = targetY + amp * Math.Sin((x / wavelength) * 2.0 * Math.PI + phase);
+
+                    // Clamp wave Y to be within the circular slice bounds at this X
+                    double y = Math.Max(topY, Math.Min(bottomY, waveY));
                     geometry.LineTo(new Point(x, y));
                 }
 
-                // Close the shape at the bottom
-                geometry.LineTo(new Point(area.Right, area.Bottom));
+                // 3. Trace the bottom half of the circle in reverse (from right to left) to close the wave path perfectly inside the circle
+                for (double x = cx + r; x >= cx - r; x -= step)
+                {
+                    double dx = x - cx;
+                    double dy = Math.Sqrt(Math.Max(0.0, r * r - dx * dx));
+                    double bottomY = cy + dy;
+                    geometry.LineTo(new Point(x, bottomY));
+                }
             }
 
             context.DrawGeometry(brush, null, geometry);

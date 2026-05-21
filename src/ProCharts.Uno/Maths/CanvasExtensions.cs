@@ -258,23 +258,18 @@ namespace ProCharts.Uno.Maths
             if (g1 == null) return g2 ?? new Microsoft.UI.Xaml.Media.GeometryGroup();
             if (g2 == null) return g1;
 
-            if (CombineMode == GeometryCombineMode.Exclude)
+            var group = new Microsoft.UI.Xaml.Media.GeometryGroup();
+            if (CombineMode == GeometryCombineMode.Exclude || CombineMode == GeometryCombineMode.Xor)
             {
-                var group = new Microsoft.UI.Xaml.Media.GeometryGroup
-                {
-                    FillRule = Microsoft.UI.Xaml.Media.FillRule.EvenOdd
-                };
-                group.Children.Add(g1);
-                group.Children.Add(g2);
-                return group;
+                group.FillRule = Microsoft.UI.Xaml.Media.FillRule.EvenOdd;
             }
             else
             {
-                var group = new Microsoft.UI.Xaml.Media.GeometryGroup();
-                group.Children.Add(g1);
-                group.Children.Add(g2);
-                return group;
+                group.FillRule = Microsoft.UI.Xaml.Media.FillRule.Nonzero;
             }
+            group.Children.Add(g1);
+            group.Children.Add(g2);
+            return group;
         }
     }
 
