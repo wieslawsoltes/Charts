@@ -1,7 +1,7 @@
 using System;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using Microsoft.UI.Dispatching;
@@ -9,13 +9,13 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class LiquidFillGauge : ChartBase
+    public partial class LiquidFillGauge : ChartBase
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(double), typeof(LiquidFillGauge), new PropertyMetadata(0.0, OnPropertyChanged)); // 0.0 to 100.0
 
-        public static readonly DependencyProperty LiquidSKColorProperty =
-            DependencyProperty.Register(nameof(LiquidSKColor), typeof(SKPaint), typeof(LiquidFillGauge), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty LiquidColorProperty =
+            DependencyProperty.Register(nameof(LiquidColor), typeof(Brush), typeof(LiquidFillGauge), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
         public static readonly DependencyProperty WaveAmplitudeProperty =
             DependencyProperty.Register(nameof(WaveAmplitude), typeof(double), typeof(LiquidFillGauge), new PropertyMetadata(8.0, OnPropertyChanged));
@@ -24,8 +24,8 @@ namespace ProCharts.Uno.Controls
             set => SetValue(ValueProperty, value);
         }
 
-        public SKPaint? LiquidSKColor { get => (SKPaint?)GetValue(LiquidSKColorProperty);
-            set => SetValue(LiquidSKColorProperty, value);
+        public Brush? LiquidColor { get => (Brush?)GetValue(LiquidColorProperty);
+            set => SetValue(LiquidColorProperty, value);
         }
 
         public double WaveAmplitude { get => (double)GetValue(WaveAmplitudeProperty);
@@ -77,7 +77,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(cx, cy, side, side);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             var area = EffectivePlotArea;
             var center = area.Center;
@@ -87,9 +87,9 @@ namespace ProCharts.Uno.Controls
             double pct = Math.Clamp(Value * progress / 100.0, 0.0, 1.0);
 
             // 1. Draw Outer Glass Ring
-            var ringSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#40FFFFFF")), 4.0);
-            var fillBg = new SolidSKColorSKPaint(SKColor.Parse("#10FFFFFF")); // Dark slate transparent core
-            context.DrawEllipse(fillBg, ringSKPaint, center, radius, radius);
+            var ringBrush = new Pen(new SolidColorBrush(Color.Parse("#40FFFFFF")), 4.0);
+            var fillBg = new SolidColorBrush(Color.Parse("#10FFFFFF")); // Dark slate transparent core
+            context.DrawEllipse(fillBg, ringBrush, center, radius, radius);
 
             // 2. Wave Level Coordinate
             // pct = 0 means bottom of circle (center.Y + radius), pct = 1 means top (center.Y - radius)
@@ -98,42 +98,42 @@ namespace ProCharts.Uno.Controls
             if (pct > 0.001)
             {
                 // Create overlapping waves using mathematical path clipping or boundary intersection
-                // To keep drawing fast and robust, we build a SKPath that fills the bottom of the circle
+                // To keep drawing fast and robust, we build a StreamGeometry that fills the bottom of the circle
                 // up to targetY with a sine-wave peak profile, and clip it within the circle bounds.
                 
-                var waveSKColor1 = LiquidSKColor ?? new SolidSKColorSKPaint(SKColor.Parse("#8006B6D4")); // Transparent Cyan
-                var waveSKColor2 = LiquidSKColor ?? new SolidSKColorSKPaint(SKColor.Parse("#B00891B2")); // Solid Cyan
+                var waveColor1 = LiquidColor ?? new SolidColorBrush(Color.Parse("#8006B6D4")); // Transparent Cyan
+                var waveColor2 = LiquidColor ?? new SolidColorBrush(Color.Parse("#B00891B2")); // Solid Cyan
 
                 // Create a circular clipping state to keep waves clean inside the circle
                 var circleGeom = new EllipseGeometry(new Rect(area.Left, area.Top, area.Width, area.Height));
                 using (context.PushGeometryClip(circleGeom))
                 {
                     // Draw Wave 1 (Back Wave, slightly offset)
-                    DrawWavePath(context, area, targetY, _waveOffset, WaveAmplitude, waveSKColor1);
+                    DrawWavePath(context, area, targetY, _waveOffset, WaveAmplitude, waveColor1);
 
                     // Draw Wave 2 (Front Wave, primary offset)
-                    DrawWavePath(context, area, targetY, _waveOffset + Math.PI, WaveAmplitude, waveSKColor2);
+                    DrawWavePath(context, area, targetY, _waveOffset + Math.PI, WaveAmplitude, waveColor2);
                 }
             }
 
             // 3. Draw Digital Percentage Overlay in Center
-            var textSKPaint = SystemSKPaint;
+            var textBrush = SystemBrush;
             var ftPct = new FormattedText(
                 $"{pct * 100.0:F0}%",
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                 radius * 0.4,
-                textSKPaint);
+                textBrush);
 
             double tx = center.X - ftPct.Width / 2.0;
             double ty = center.Y - ftPct.Height / 2.0;
             context.DrawText(ftPct, new Point(tx, ty));
         }
 
-        private void DrawWavePath(SKCanvas context, Rect area, double targetY, double phase, double amp, SKPaint brush)
+        private void DrawWavePath(DrawingContext context, Rect area, double targetY, double phase, double amp, Brush brush)
         {
-            var geometry = new SKPath();
+            var geometry = new StreamGeometry();
             using (var ctx = geometry.Open())
             {
                 geometry.MoveTo(new Point(area.Left, area.Bottom), true);

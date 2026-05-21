@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -11,7 +11,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class DivergingBarChart : ChartBase
+    public partial class DivergingBarChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(DivergingBarChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));
@@ -25,11 +25,11 @@ namespace ProCharts.Uno.Controls
         public static readonly DependencyProperty RightValuePathProperty =
             DependencyProperty.Register(nameof(RightValuePath), typeof(string), typeof(DivergingBarChart), new PropertyMetadata(default(string?), OnPropertyChanged));
 
-        public static readonly DependencyProperty LeftSKPaintProperty =
-            DependencyProperty.Register(nameof(LeftSKPaint), typeof(SKPaint), typeof(DivergingBarChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty LeftBrushProperty =
+            DependencyProperty.Register(nameof(LeftBrush), typeof(Brush), typeof(DivergingBarChart), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
-        public static readonly DependencyProperty RightSKPaintProperty =
-            DependencyProperty.Register(nameof(RightSKPaint), typeof(SKPaint), typeof(DivergingBarChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty RightBrushProperty =
+            DependencyProperty.Register(nameof(RightBrush), typeof(Brush), typeof(DivergingBarChart), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
         public IEnumerable? ItemsSource
         {
@@ -49,12 +49,12 @@ namespace ProCharts.Uno.Controls
             set => SetValue(RightValuePathProperty, value);
         }
 
-        public SKPaint? LeftSKPaint { get => (SKPaint?)GetValue(LeftSKPaintProperty);
-            set => SetValue(LeftSKPaintProperty, value);
+        public Brush? LeftBrush { get => (Brush?)GetValue(LeftBrushProperty);
+            set => SetValue(LeftBrushProperty, value);
         }
 
-        public SKPaint? RightSKPaint { get => (SKPaint?)GetValue(RightSKPaintProperty);
-            set => SetValue(RightSKPaintProperty, value);
+        public Brush? RightBrush { get => (Brush?)GetValue(RightBrushProperty);
+            set => SetValue(RightBrushProperty, value);
         }
 
         public DivergingBarChart()
@@ -83,7 +83,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(left, top, w, h);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             if (ItemsSource == null) return;
 
@@ -127,16 +127,16 @@ namespace ProCharts.Uno.Controls
 
             double centerX = plot.Left + plot.Width / 2.0;
 
-            var leftBarFill = LeftSKPaint ?? new SolidSKColorSKPaint(SKColor.Parse("#A855F7")); // Purple
-            var rightBarFill = RightSKPaint ?? new SolidSKColorSKPaint(SKColor.Parse("#06B6D4")); // Cyan
+            var leftBarFill = LeftBrush ?? new SolidColorBrush(Color.Parse("#A855F7")); // Purple
+            var rightBarFill = RightBrush ?? new SolidColorBrush(Color.Parse("#06B6D4")); // Cyan
 
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(new SKColor((byte)(255), (byte)(255), (byte)(255), (byte)(50))), 1.0);
-            var centerLineSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#94A3B8")), 1.5); // Slate gray
+            var borderBrush = new Pen(new SolidColorBrush(new Color((byte)(255), (byte)(255), (byte)(255), (byte)(50))), 1.0);
+            var centerLineBrush = new Pen(new SolidColorBrush(Color.Parse("#94A3B8")), 1.5); // Slate gray
 
             double progress = AnimationProgress;
 
             // Draw center baseline
-            context.DrawLine(centerLineSKPaint, new Point(centerX, plot.Top), new Point(centerX, plot.Bottom));
+            context.DrawLine(centerLineBrush, new Point(centerX, plot.Top), new Point(centerX, plot.Bottom));
 
             for (int i = 0; i < items.Count; i++)
             {
@@ -153,18 +153,18 @@ namespace ProCharts.Uno.Controls
                 var rightRect = new Rect(centerX, y, rightW, barHeight);
 
                 // Draw bars
-                context.DrawRectangle(leftBarFill, borderSKPaint, leftRect);
-                context.DrawRectangle(rightBarFill, borderSKPaint, rightRect);
+                context.DrawRectangle(leftBarFill, borderBrush, leftRect);
+                context.DrawRectangle(rightBarFill, borderBrush, rightRect);
 
                 // Draw category label on the left margin
-                var textSKPaint = SystemSKPaint;
+                var textBrush = SystemBrush;
                 var ftLabel = new FormattedText(
                     item.Category,
                     System.Globalization.CultureInfo.CurrentCulture,
                     FlowDirection.LeftToRight,
                     new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                     11,
-                    textSKPaint);
+                    textBrush);
                 
                 double tx = plot.Left - ftLabel.Width - 10;
                 double ty = y + (barHeight - ftLabel.Height) / 2.0;
@@ -179,7 +179,7 @@ namespace ProCharts.Uno.Controls
                         FlowDirection.LeftToRight,
                         new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                         9,
-                        SKPaintes.White);
+                        Brushes.White);
                     context.DrawText(ftVal, new Point(centerX - leftW + 6, ty));
                 }
 
@@ -191,7 +191,7 @@ namespace ProCharts.Uno.Controls
                         FlowDirection.LeftToRight,
                         new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                         9,
-                        SKPaintes.White);
+                        Brushes.White);
                     context.DrawText(ftVal, new Point(centerX + rightW - ftVal.Width - 6, ty));
                 }
             }

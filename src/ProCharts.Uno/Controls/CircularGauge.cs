@@ -1,14 +1,14 @@
 using System;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class CircularGauge : ChartBase
+    public partial class CircularGauge : ChartBase
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(double), typeof(CircularGauge), new PropertyMetadata(0.0, OnPropertyChanged));
@@ -65,7 +65,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(cx, cy, side, side);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             var center = EffectivePlotArea.Center;
             double radius = (EffectivePlotArea.Width - GaugeThickness) / 2.0;
@@ -87,8 +87,8 @@ namespace ProCharts.Uno.Controls
             double fullEndAngleRad = (135.0 + sweepAngleTotal) * Math.PI / 180.0;
 
             // 1. Draw Background Track (Glassmorphic look)
-            var bgSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#20FFFFFF")), GaugeThickness, lineCap: SKStrokeCap.Round);
-            var bgGeom = new SKPath();
+            var bgBrush = new Pen(new SolidColorBrush(Color.Parse("#20FFFFFF")), GaugeThickness, lineCap: PenLineCap.Round);
+            var bgGeom = new StreamGeometry();
             using (var ctx = bgGeom.Open())
             {
                 var ptStart = center + new Point(Math.Cos(startAngleRad), Math.Sin(startAngleRad)) * radius;
@@ -104,24 +104,24 @@ namespace ProCharts.Uno.Controls
                 var ptEnd = center + new Point(Math.Cos(fullEndAngleRad), Math.Sin(fullEndAngleRad)) * radius;
                 bgGeom.LineTo(ptEnd);
             }
-            context.DrawGeometry(null, bgSKPaint, bgGeom);
+            context.DrawGeometry(null, bgBrush, bgGeom);
 
-            // 2. Draw SKColored Progress Arc (High-quality cyan-to-purple gradient or solid)
-            var progressSKPaint = Palette?.GetSKPaint(0) ?? new LinearGradientSKPaint
+            // 2. Draw Colored Progress Arc (High-quality cyan-to-purple gradient or solid)
+            var progressBrush = Palette?.GetBrush(0);
+            if (progressBrush == null)
             {
-                StartPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(1, 0, RelativeUnit.Relative),
-                GradientStops =
-                {
-                    new GradientStop(SKColor.Parse("#06B6D4"), 0.0), // Cyan
-                    new GradientStop(SKColor.Parse("#A855F7"), 1.0)  // Purple
-                }
-            };
+                var lgb = new LinearGradientBrush();
+                lgb.StartPoint = new Windows.Foundation.Point(0, 1);
+                lgb.EndPoint = new Windows.Foundation.Point(1, 0);
+                lgb.GradientStops.Add(new GradientStop { Color = Color.Parse("#06B6D4"), Offset = 0.0 });
+                lgb.GradientStops.Add(new GradientStop { Color = Color.Parse("#A855F7"), Offset = 1.0 });
+                progressBrush = lgb;
+            }
 
-            var progressPen = new Pen(progressSKPaint, GaugeThickness, lineCap: SKStrokeCap.Round);
+            var progressPen = new Pen(progressBrush, GaugeThickness, lineCap: PenLineCap.Round);
             if (pct > 0.001)
             {
-                var pgGeom = new SKPath();
+                var pgGeom = new StreamGeometry();
                 using (var ctx = pgGeom.Open())
                 {
                     var ptStart = center + new Point(Math.Cos(startAngleRad), Math.Sin(startAngleRad)) * radius;
@@ -141,23 +141,23 @@ namespace ProCharts.Uno.Controls
             // 3. Draw Needle / Needle Pin (Modern sleek pointer)
             double needleAngleRad = endAngleRad;
             var needlePt = center + new Point(Math.Cos(needleAngleRad), Math.Sin(needleAngleRad)) * (radius - 12.0);
-            var needleSKPaint = new Pen(SKPaintes.White, 3.0, lineCap: SKStrokeCap.Round);
+            var needleBrush = new Pen(Brushes.White, 3.0, lineCap: PenLineCap.Round);
             
             // Central pin
-            var pinFill = new SolidSKColorSKPaint(SKColor.Parse("#0F172A"));
-            var pinStroke = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#A855F7")), 2.0);
+            var pinFill = new SolidColorBrush(Color.Parse("#0F172A"));
+            var pinStroke = new Pen(new SolidColorBrush(Color.Parse("#A855F7")), 2.0);
             context.DrawEllipse(pinFill, pinStroke, center, 8.0, 8.0);
-            context.DrawLine(needleSKPaint, center + new Point(Math.Cos(needleAngleRad), Math.Sin(needleAngleRad)) * 8.0, needlePt);
+            context.DrawLine(needleBrush, center + new Point(Math.Cos(needleAngleRad), Math.Sin(needleAngleRad)) * 8.0, needlePt);
 
             // 4. Draw Digital Readouts in Center (Value & Unit)
-            var valSKPaint = SystemSKPaint;
+            var valBrush = SystemBrush;
             var ftVal = new FormattedText(
                 $"{targetVal:F1}",
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                 radius * 0.45,
-                valSKPaint);
+                valBrush);
 
             double tx = center.X - ftVal.Width / 2.0;
             double ty = center.Y - ftVal.Height / 2.0 - (string.IsNullOrEmpty(Unit) ? 0.0 : 6.0);
@@ -171,7 +171,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Medium),
                     radius * 0.2,
-                    new SolidSKColorSKPaint(SKColor.Parse("#94A3B8"))); // slate-400
+                    new SolidColorBrush(Color.Parse("#94A3B8"))); // slate-400
 
                 double ux = center.X - ftUnit.Width / 2.0;
                 double uy = ty + ftVal.Height;

@@ -1,14 +1,14 @@
 using System;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class BulletChart : ChartBase
+    public partial class BulletChart : ChartBase
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(double), typeof(BulletChart), new PropertyMetadata(0.0, OnPropertyChanged));
@@ -71,7 +71,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(left, top, w, h);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             var area = EffectivePlotArea;
 
@@ -92,52 +92,52 @@ namespace ProCharts.Uno.Controls
             // 1. Draw Qualitative Range Bands (Background Layers)
             // Bad Range (Darkest)
             double badPct = Math.Clamp((BadRange - min) / (max - min), 0.0, 1.0);
-            var badSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#1A202C")); // slate-900 / dark
+            var badBrush = new SolidColorBrush(Color.Parse("#1A202C")); // slate-900 / dark
             var badRect = new Rect(area.Left, by, area.Width * badPct, barHeight);
-            context.DrawRectangle(badSKPaint, null, badRect);
+            context.DrawRectangle(badBrush, null, badRect);
 
             // Satisfactory Range (Medium Dark)
             double satPct = Math.Clamp((SatisfactoryRange - min) / (max - min), 0.0, 1.0);
-            var satSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#2D3748")); // slate-700
+            var satBrush = new SolidColorBrush(Color.Parse("#2D3748")); // slate-700
             double satW = Math.Max(0, area.Width * (satPct - badPct));
             var satRect = new Rect(area.Left + area.Width * badPct, by, satW, barHeight);
-            context.DrawRectangle(satSKPaint, null, satRect);
+            context.DrawRectangle(satBrush, null, satRect);
 
             // Good Range (Lightest Background)
-            var goodSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#4A5568")); // slate-600
+            var goodBrush = new SolidColorBrush(Color.Parse("#4A5568")); // slate-600
             double goodW = Math.Max(0, area.Width * (1.0 - satPct));
             var goodRect = new Rect(area.Left + area.Width * satPct, by, goodW, barHeight);
-            context.DrawRectangle(goodSKPaint, null, goodRect);
+            context.DrawRectangle(goodBrush, null, goodRect);
 
             // 2. Draw Actual Value Bar (Thick central bar inside bands)
             double actualHeight = barHeight * 0.35;
             double ay = by + (barHeight - actualHeight) / 2.0;
-            var actualSKPaint = Palette?.GetSKPaint(0) ?? new SolidSKColorSKPaint(SKColor.Parse("#06B6D4")); // Cyan actual
+            var actualBrush = Palette?.GetBrush(0) ?? new SolidColorBrush(Color.Parse("#06B6D4")); // Cyan actual
 
             if (pctValue > 0.001)
             {
                 var valRect = new Rect(area.Left, ay, area.Width * pctValue, actualHeight);
-                context.DrawRectangle(actualSKPaint, null, valRect);
+                context.DrawRectangle(actualBrush, null, valRect);
             }
 
             // 3. Draw Target Marker (Distinct vertical line crossing bands)
             if (pctTarget >= 0.0 && pctTarget <= 1.0)
             {
                 double tx = area.Left + area.Width * pctTarget;
-                var targetSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#E2E8F0")), 3.0); // Thick Slate White Line
+                var targetBrush = new Pen(new SolidColorBrush(Color.Parse("#E2E8F0")), 3.0); // Thick Slate White Line
                 double markerMargin = 3.0;
-                context.DrawLine(targetSKPaint, new Point(tx, by - markerMargin), new Point(tx, by + barHeight + markerMargin));
+                context.DrawLine(targetBrush, new Point(tx, by - markerMargin), new Point(tx, by + barHeight + markerMargin));
             }
 
             // 4. Draw Digital Readouts
-            var textSKPaint = SystemSKPaint;
+            var textBrush = SystemBrush;
             var ft = new FormattedText(
                 $"Actual: {targetVal:F1}  |  Target: {Target:F1}",
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                 11,
-                textSKPaint);
+                textBrush);
 
             double vx = area.Left + (area.Width - ft.Width) / 2.0;
             double vy = by + barHeight + 6.0;

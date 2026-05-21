@@ -1,14 +1,14 @@
 using System;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class ProgressDonut : ChartBase
+    public partial class ProgressDonut : ChartBase
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(double), typeof(ProgressDonut), new PropertyMetadata(0.0, OnPropertyChanged));
@@ -22,11 +22,11 @@ namespace ProCharts.Uno.Controls
         public static readonly DependencyProperty RingThicknessProperty =
             DependencyProperty.Register(nameof(RingThickness), typeof(double), typeof(ProgressDonut), new PropertyMetadata(16.0, OnPropertyChanged));
 
-        public static readonly DependencyProperty ProgressSKPaintProperty =
-            DependencyProperty.Register(nameof(ProgressSKPaint), typeof(SKPaint), typeof(ProgressDonut), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty ProgressBrushProperty =
+            DependencyProperty.Register(nameof(ProgressBrush), typeof(Brush), typeof(ProgressDonut), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
-        public static readonly DependencyProperty TrackSKPaintProperty =
-            DependencyProperty.Register(nameof(TrackSKPaint), typeof(SKPaint), typeof(ProgressDonut), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty TrackBrushProperty =
+            DependencyProperty.Register(nameof(TrackBrush), typeof(Brush), typeof(ProgressDonut), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
         public static readonly DependencyProperty CenterTextProperty =
             DependencyProperty.Register(nameof(CenterText), typeof(string), typeof(ProgressDonut), new PropertyMetadata(default(string?), OnPropertyChanged));
@@ -50,12 +50,12 @@ namespace ProCharts.Uno.Controls
             set => SetValue(RingThicknessProperty, value);
         }
 
-        public SKPaint? ProgressSKPaint { get => (SKPaint?)GetValue(ProgressSKPaintProperty);
-            set => SetValue(ProgressSKPaintProperty, value);
+        public Brush? ProgressBrush { get => (Brush?)GetValue(ProgressBrushProperty);
+            set => SetValue(ProgressBrushProperty, value);
         }
 
-        public SKPaint? TrackSKPaint { get => (SKPaint?)GetValue(TrackSKPaintProperty);
-            set => SetValue(TrackSKPaintProperty, value);
+        public Brush? TrackBrush { get => (Brush?)GetValue(TrackBrushProperty);
+            set => SetValue(TrackBrushProperty, value);
         }
 
         public string? CenterText { get => (string?)GetValue(CenterTextProperty);
@@ -85,7 +85,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(cx, cy, side, side);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             var area = EffectivePlotArea;
             var center = area.Center;
@@ -106,24 +106,24 @@ namespace ProCharts.Uno.Controls
             double sweepAngleDeg = pct * 360.0;
 
             // 2. Draw Track (Background Ring)
-            var bgSKPaint = TrackSKPaint ?? new SolidSKColorSKPaint(SKColor.Parse("#1E293B"), 0.5); // 50% opacity slate-800
-            var trackSKPaint = new Pen(bgSKPaint, thickness);
-            context.DrawEllipse(null, trackSKPaint, center, radius, radius);
+            var bgBrush = TrackBrush ?? new SolidColorBrush(Color.Parse("#1E293B")) { Opacity = 0.5 }; // 50% opacity slate-800
+            var trackBrush = new Pen(bgBrush, thickness);
+            context.DrawEllipse(null, trackBrush, center, radius, radius);
 
             // 3. Draw Sweeping Progress Arc with Rounded Line Caps
             if (sweepAngleDeg > 0.01)
             {
-                var fgSKPaint = ProgressSKPaint ?? Palette?.GetSKPaint(0) ?? new SolidSKColorSKPaint(SKColor.Parse("#38BDF8")); // Sky blue default
-                var progressSKPaint = new Pen(fgSKPaint, thickness, lineCap: SKStrokeCap.Round);
+                var fgBrush = ProgressBrush ?? Palette?.GetBrush(0) ?? new SolidColorBrush(Color.Parse("#38BDF8")); // Sky blue default
+                var progressBrush = new Pen(fgBrush, thickness, lineCap: PenLineCap.Round);
 
                 if (sweepAngleDeg >= 359.9)
                 {
                     // Full circle needs drawing without collapsing
-                    context.DrawEllipse(null, progressSKPaint, center, radius, radius);
+                    context.DrawEllipse(null, progressBrush, center, radius, radius);
                 }
                 else
                 {
-                    var geometry = new SKPath();
+                    var geometry = new StreamGeometry();
                     using (var ctx = geometry.Open())
                     {
                         double radStart = startAngleDeg * Math.PI / 180.0;
@@ -135,12 +135,12 @@ namespace ProCharts.Uno.Controls
                         geometry.MoveTo(startPt, false);
                         ctx.ArcTo(endPt, new Size(radius, radius), 0.0, sweepAngleDeg > 180.0, SweepDirection.Clockwise);
                     }
-                    context.DrawGeometry(null, progressSKPaint, geometry);
+                    context.DrawGeometry(null, progressBrush, geometry);
                 }
             }
 
             // 4. Render Center Metrics (Text)
-            var textSKPaint = SystemSKPaint;
+            var textBrush = SystemBrush;
             string mainText = CenterText ?? $"{pct * 100.0 / progressVal:F0}%";
             string subText = CenterSubText ?? "COMPLETE";
 
@@ -150,7 +150,7 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                 Math.Clamp(radius * 0.45, 14, 48),
-                textSKPaint);
+                textBrush);
 
             double mx = center.X - ftMain.Width / 2.0;
             double my = center.Y - ftMain.Height / 2.0;
@@ -169,7 +169,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal),
                     Math.Clamp(radius * 0.16, 9, 14),
-                    new SolidSKColorSKPaint(SKColor.Parse("#94A3B8"))); // slate-400
+                    new SolidColorBrush(Color.Parse("#94A3B8"))); // slate-400
 
                 double sx = center.X - ftSub.Width / 2.0;
                 double sy = my + ftMain.Height + 2;

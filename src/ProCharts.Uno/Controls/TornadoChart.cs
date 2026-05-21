@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -12,7 +12,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class TornadoChart : ChartBase
+    public partial class TornadoChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(TornadoChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));
@@ -29,11 +29,11 @@ namespace ProCharts.Uno.Controls
         public static readonly DependencyProperty BaseValueProperty =
             DependencyProperty.Register(nameof(BaseValue), typeof(double), typeof(TornadoChart), new PropertyMetadata(0.0, OnPropertyChanged));
 
-        public static readonly DependencyProperty LowSKPaintProperty =
-            DependencyProperty.Register(nameof(LowSKPaint), typeof(SKPaint), typeof(TornadoChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty LowBrushProperty =
+            DependencyProperty.Register(nameof(LowBrush), typeof(Brush), typeof(TornadoChart), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
-        public static readonly DependencyProperty HighSKPaintProperty =
-            DependencyProperty.Register(nameof(HighSKPaint), typeof(SKPaint), typeof(TornadoChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty HighBrushProperty =
+            DependencyProperty.Register(nameof(HighBrush), typeof(Brush), typeof(TornadoChart), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
         public IEnumerable? ItemsSource
         {
@@ -57,12 +57,12 @@ namespace ProCharts.Uno.Controls
             set => SetValue(BaseValueProperty, value);
         }
 
-        public SKPaint? LowSKPaint { get => (SKPaint?)GetValue(LowSKPaintProperty);
-            set => SetValue(LowSKPaintProperty, value);
+        public Brush? LowBrush { get => (Brush?)GetValue(LowBrushProperty);
+            set => SetValue(LowBrushProperty, value);
         }
 
-        public SKPaint? HighSKPaint { get => (SKPaint?)GetValue(HighSKPaintProperty);
-            set => SetValue(HighSKPaintProperty, value);
+        public Brush? HighBrush { get => (Brush?)GetValue(HighBrushProperty);
+            set => SetValue(HighBrushProperty, value);
         }
 
         public TornadoChart()
@@ -92,7 +92,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(left, top, w, h);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             if (ItemsSource == null) return;
 
@@ -139,11 +139,11 @@ namespace ProCharts.Uno.Controls
             double barHeight = slotHeight * 0.70;
             double topOffset = slotHeight * 0.15;
 
-            var lowBarFill = LowSKPaint ?? new SolidSKColorSKPaint(SKColor.Parse("#F43F5E")); // Rose Red
-            var highBarFill = HighSKPaint ?? new SolidSKColorSKPaint(SKColor.Parse("#10B981")); // Emerald Green
+            var lowBarFill = LowBrush ?? new SolidColorBrush(Color.Parse("#F43F5E")); // Rose Red
+            var highBarFill = HighBrush ?? new SolidColorBrush(Color.Parse("#10B981")); // Emerald Green
 
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(new SKColor((byte)(255), (byte)(255), (byte)(255), (byte)(40))), 1.0);
-            var baseLineSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#E2E8F0")), 1.5); // Slate gray
+            var borderBrush = new Pen(new SolidColorBrush(new Color((byte)(255), (byte)(255), (byte)(255), (byte)(40))), 1.0);
+            var baseLineBrush = new Pen(new SolidColorBrush(Color.Parse("#E2E8F0")), 1.5); // Slate gray
 
             double progress = AnimationProgress;
 
@@ -152,7 +152,7 @@ namespace ProCharts.Uno.Controls
             double baseScreenX = plot.Left + basePctX * plot.Width;
 
             // Draw center base case line
-            context.DrawLine(baseLineSKPaint, new Point(baseScreenX, plot.Top), new Point(baseScreenX, plot.Bottom));
+            context.DrawLine(baseLineBrush, new Point(baseScreenX, plot.Top), new Point(baseScreenX, plot.Bottom));
 
             for (int i = 0; i < items.Count; i++)
             {
@@ -182,18 +182,18 @@ namespace ProCharts.Uno.Controls
                 var highRect = new Rect(highLeft, y, highWidth, barHeight);
 
                 // Draw bars
-                context.DrawRectangle(lowBarFill, borderSKPaint, lowRect);
-                context.DrawRectangle(highBarFill, borderSKPaint, highRect);
+                context.DrawRectangle(lowBarFill, borderBrush, lowRect);
+                context.DrawRectangle(highBarFill, borderBrush, highRect);
 
                 // Draw category sensitivity label
-                var textSKPaint = SystemSKPaint;
+                var textBrush = SystemBrush;
                 var ftLabel = new FormattedText(
                     item.Category,
                     System.Globalization.CultureInfo.CurrentCulture,
                     FlowDirection.LeftToRight,
                     new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                     10,
-                    textSKPaint);
+                    textBrush);
                 
                 double tx = plot.Left - ftLabel.Width - 10;
                 double ty = y + (barHeight - ftLabel.Height) / 2.0;
@@ -206,7 +206,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                     9,
-                    textSKPaint);
+                    textBrush);
                 context.DrawText(ftLow, new Point(Math.Min(animLowX, animHighX) - ftLow.Width - 6, ty));
 
                 var ftHigh = new FormattedText(
@@ -215,7 +215,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                     9,
-                    textSKPaint);
+                    textBrush);
                 context.DrawText(ftHigh, new Point(Math.Max(animLowX, animHighX) + 6, ty));
             }
         }

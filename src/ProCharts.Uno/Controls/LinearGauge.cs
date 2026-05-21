@@ -1,7 +1,7 @@
 using System;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
@@ -9,7 +9,7 @@ using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class LinearGauge : ChartBase
+    public partial class LinearGauge : ChartBase
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(double), typeof(LinearGauge), new PropertyMetadata(0.0, OnPropertyChanged));
@@ -86,7 +86,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(left, top, w, h);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             var area = EffectivePlotArea;
 
@@ -106,8 +106,8 @@ namespace ProCharts.Uno.Controls
             double barThickness = GaugeThickness;
             
             // Draw background track (semi-transparent glassmorphic)
-            var bgSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#20FFFFFF"));
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
+            var bgBrush = new SolidColorBrush(Color.Parse("#20FFFFFF"));
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
             var trackCornerRadius = new CornerRadius(barThickness / 2.0);
 
             Rect trackRect;
@@ -122,31 +122,35 @@ namespace ProCharts.Uno.Controls
                 trackRect = new Rect(tx, area.Top, barThickness, area.Height);
             }
 
-            context.DrawRectangle(bgSKPaint, borderSKPaint, new RoundedRect(trackRect, trackCornerRadius));
+            context.DrawRectangle(bgBrush, borderBrush, new RoundedRect(trackRect, trackCornerRadius));
 
             // Select active bar color based on thresholds
-            SKPaint fillSKPaint;
+            Brush fillBrush;
             if (targetVal >= ErrorThreshold)
             {
-                fillSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#EF4444")); // Rose/Red
+                fillBrush = new SolidColorBrush(Color.Parse("#EF4444")); // Rose/Red
             }
             else if (targetVal >= WarningThreshold)
             {
-                fillSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#F59E0B")); // Amber/Yellow
+                fillBrush = new SolidColorBrush(Color.Parse("#F59E0B")); // Amber/Yellow
             }
             else
             {
                 // Optimal gradient: sleek emerald to cyan
-                fillSKPaint = Palette?.GetSKPaint(0) ?? new LinearGradientSKPaint
+                var brush = Palette?.GetBrush(0);
+                if (brush == null)
                 {
-                    StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                    EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-                    GradientStops =
-                    {
-                        new GradientStop(SKColor.Parse("#10B981"), 0.0),
-                        new GradientStop(SKColor.Parse("#06B6D4"), 1.0)
-                    }
-                };
+                    var lgb = new LinearGradientBrush();
+                    lgb.StartPoint = new Windows.Foundation.Point(0, 0);
+                    lgb.EndPoint = new Windows.Foundation.Point(1, 1);
+                    lgb.GradientStops.Add(new GradientStop { Color = Color.Parse("#10B981"), Offset = 0.0 });
+                    lgb.GradientStops.Add(new GradientStop { Color = Color.Parse("#06B6D4"), Offset = 1.0 });
+                    fillBrush = lgb;
+                }
+                else
+                {
+                    fillBrush = brush;
+                }
             }
 
             // Draw active value fill
@@ -164,25 +168,25 @@ namespace ProCharts.Uno.Controls
 
             if (pct > 0.001)
             {
-                context.DrawRectangle(fillSKPaint, null, new RoundedRect(fillRect, trackCornerRadius));
+                context.DrawRectangle(fillBrush, null, new RoundedRect(fillRect, trackCornerRadius));
             }
 
             // Draw Warning & Error threshold lines inside or on the track
-            var thresholdSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#60FFFFFF")), 1.5, new DashStyle(new[] { 3.0, 3.0 }, 0.0));
+            var thresholdBrush = new Pen(new SolidColorBrush(Color.Parse("#60FFFFFF")), 1.5, new DashStyle(new[] { 3.0, 3.0 }, 0.0));
             double warningPct = (WarningThreshold - min) / (max - min);
             double errorPct = (ErrorThreshold - min) / (max - min);
 
             if (warningPct > 0 && warningPct < 1)
             {
-                DrawThresholdLine(context, trackRect, warningPct, isHorizontal, thresholdSKPaint);
+                DrawThresholdLine(context, trackRect, warningPct, isHorizontal, thresholdBrush);
             }
             if (errorPct > 0 && errorPct < 1)
             {
-                DrawThresholdLine(context, trackRect, errorPct, isHorizontal, thresholdSKPaint);
+                DrawThresholdLine(context, trackRect, errorPct, isHorizontal, thresholdBrush);
             }
 
             // Add text value on top
-            var valSKPaint = SystemSKPaint;
+            var valBrush = SystemBrush;
             string unitText = string.IsNullOrEmpty(Unit) ? "" : $" {Unit}";
             var ftVal = new FormattedText(
                 $"{targetVal:F1}{unitText} / {max:F0}{unitText}",
@@ -190,14 +194,14 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold),
                 12,
-                valSKPaint);
+                valBrush);
 
             double vx = area.Left + (area.Width - ftVal.Width) / 2.0;
             double vy = isHorizontal ? trackRect.Bottom + 6.0 : area.Top - 18.0;
             context.DrawText(ftVal, new Point(vx, vy));
         }
 
-        private void DrawThresholdLine(SKCanvas context, Rect trackRect, double pct, bool isHorizontal, SKPaint pen)
+        private void DrawThresholdLine(DrawingContext context, Rect trackRect, double pct, bool isHorizontal, Pen pen)
         {
             if (isHorizontal)
             {

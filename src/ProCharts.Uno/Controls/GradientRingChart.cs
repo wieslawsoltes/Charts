@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class GradientRingChart : ChartBase
+    public partial class GradientRingChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(GradientRingChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));
@@ -22,8 +22,8 @@ namespace ProCharts.Uno.Controls
         public static readonly DependencyProperty TitlePathProperty =
             DependencyProperty.Register(nameof(TitlePath), typeof(string), typeof(GradientRingChart), new PropertyMetadata(default(string?), OnPropertyChanged));
 
-        public static readonly DependencyProperty SKColorPathProperty =
-            DependencyProperty.Register(nameof(SKColorPath), typeof(string), typeof(GradientRingChart), new PropertyMetadata(default(string?), OnPropertyChanged));
+        public static readonly DependencyProperty ColorPathProperty =
+            DependencyProperty.Register(nameof(ColorPath), typeof(string), typeof(GradientRingChart), new PropertyMetadata(default(string?), OnPropertyChanged));
 
         public static readonly DependencyProperty RingThicknessProperty =
             DependencyProperty.Register(nameof(RingThickness), typeof(double), typeof(GradientRingChart), new PropertyMetadata(12.0, OnPropertyChanged));
@@ -48,8 +48,8 @@ namespace ProCharts.Uno.Controls
             set => SetValue(TitlePathProperty, value);
         }
 
-        public string? SKColorPath { get => (string?)GetValue(SKColorPathProperty);
-            set => SetValue(SKColorPathProperty, value);
+        public string? ColorPath { get => (string?)GetValue(ColorPathProperty);
+            set => SetValue(ColorPathProperty, value);
         }
 
         public double RingThickness { get => (double)GetValue(RingThicknessProperty);
@@ -68,7 +68,7 @@ namespace ProCharts.Uno.Controls
         {
             public string Title { get; set; } = string.Empty;
             public double Value { get; set; }
-            public SKPaint? CustomSKPaint { get; set; }
+            public Brush? CustomBrush { get; set; }
             public double OuterRadius { get; set; }
             public double InnerRadius { get; set; }
         }
@@ -95,7 +95,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(cx, cy, side, side);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             _processedItems.Clear();
             if (ItemsSource == null) return;
@@ -111,17 +111,17 @@ namespace ProCharts.Uno.Controls
 
                 var valObj = ResolvePropertyValue(rawItem, ValuePath);
                 var titleObj = ResolvePropertyValue(rawItem, TitlePath);
-                var colorObj = ResolvePropertyValue(rawItem, SKColorPath);
+                var colorObj = ResolvePropertyValue(rawItem, ColorPath);
 
                 double val = ConvertToDouble(valObj);
                 string title = titleObj?.ToString() ?? $"Ring {idx + 1}";
-                SKPaint? customSKPaint = null;
+                Brush? customBrush = null;
 
-                if (colorObj is SKPaint brush) customSKPaint = brush;
-                else if (colorObj is SKColor color) customSKPaint = new SolidSKColorSKPaint(color);
+                if (colorObj is Brush brush) customBrush = brush;
+                else if (colorObj is Color color) customBrush = new SolidColorBrush(color);
                 else if (colorObj is string colStr)
                 {
-                    try { customSKPaint = new SolidSKColorSKPaint(SKColor.Parse(colStr)); } catch { }
+                    try { customBrush = new SolidColorBrush(Color.Parse(colStr)); } catch { }
                 }
 
                 if (double.IsNaN(val)) val = 0;
@@ -130,7 +130,7 @@ namespace ProCharts.Uno.Controls
                 {
                     Title = title,
                     Value = val,
-                    CustomSKPaint = customSKPaint ?? activePalette.GetSKPaint(idx)
+                    CustomBrush = customBrush ?? activePalette.GetBrush(idx)
                 });
                 idx++;
             }
@@ -162,30 +162,30 @@ namespace ProCharts.Uno.Controls
                 double pct = Math.Clamp(item.Value / maxVal, 0.0, 1.0) * progress;
 
                 // 2a. Draw Track
-                var trackSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#1E293B"), 0.4), thickness);
-                context.DrawEllipse(null, trackSKPaint, center, currentR, currentR);
+                var trackBrush = new Pen(new SolidColorBrush(Color.Parse("#1E293B")) { Opacity = 0.4 }, thickness);
+                context.DrawEllipse(null, trackBrush, center, currentR, currentR);
 
                 // 2b. Draw Sweeping Progress Arc
                 double sweepAngleDeg = pct * 360.0;
                 if (sweepAngleDeg > 0.01)
                 {
-                    var ringSKPaint = item.CustomSKPaint ?? activePalette.GetSKPaint(i);
+                    var ringBrush = item.CustomBrush ?? activePalette.GetBrush(i);
                     if (i == _hoveredItemIndex)
                     {
                         // Add glow/highlight effect for hovered ring
-                        var highlightSKColor = new SKColor((byte)(255), (byte)(255), (byte)(255), (byte)(220));
-                        ringSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#FFFFFF"));
+                        var highlightColor = new Color((byte)(255), (byte)(255), (byte)(255), (byte)(220));
+                        ringBrush = new SolidColorBrush(Color.Parse("#FFFFFF"));
                     }
 
-                    var penSKPaint = new Pen(ringSKPaint, thickness, lineCap: SKStrokeCap.Round);
+                    var penBrush = new Pen(ringBrush, thickness, lineCap: PenLineCap.Round);
 
                     if (sweepAngleDeg >= 359.9)
                     {
-                        context.DrawEllipse(null, penSKPaint, center, currentR, currentR);
+                        context.DrawEllipse(null, penBrush, center, currentR, currentR);
                     }
                     else
                     {
-                        var geometry = new SKPath();
+                        var geometry = new StreamGeometry();
                         using (var ctx = geometry.Open())
                         {
                             double startAngleDeg = -90.0;
@@ -198,7 +198,7 @@ namespace ProCharts.Uno.Controls
                             geometry.MoveTo(startPt, false);
                             ctx.ArcTo(endPt, new Size(currentR, currentR), 0.0, sweepAngleDeg > 180.0, SweepDirection.Clockwise);
                         }
-                        context.DrawGeometry(null, penSKPaint, geometry);
+                        context.DrawGeometry(null, penBrush, geometry);
                     }
                 }
 
@@ -232,7 +232,7 @@ namespace ProCharts.Uno.Controls
             _hoveredItemIndex = hoverIdx;
         }
 
-        protected override void DrawTooltip(SKCanvas context, Point mousePoint)
+        protected override void DrawTooltip(DrawingContext context, Point mousePoint)
         {
             if (_hoveredItemIndex == -1) return;
 
@@ -247,10 +247,10 @@ namespace ProCharts.Uno.Controls
 
             var fontTitle = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
             var fontText = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal);
-            var textSKPaint = SKPaintes.White;
+            var textBrush = Brushes.White;
 
-            var ftTitle = new FormattedText(hovered.Title, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textSKPaint);
-            var ftVal = new FormattedText($"Value: {hovered.Value:N1} ({pct:F0}%)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textSKPaint);
+            var ftTitle = new FormattedText(hovered.Title, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textBrush);
+            var ftVal = new FormattedText($"Value: {hovered.Value:N1} ({pct:F0}%)", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textBrush);
 
             tooltipWidth = Math.Max(tooltipWidth, Math.Max(ftTitle.Width, ftVal.Width) + padding * 2 + 10);
 
@@ -264,12 +264,12 @@ namespace ProCharts.Uno.Controls
             ty = Math.Max(0, ty);
 
             var tooltipRect = new Rect(tx, ty, tooltipWidth, tooltipHeight);
-            var bgSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#EC1E293B")); // glassmorphic dark slate
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
+            var bgBrush = new SolidColorBrush(Color.Parse("#EC1E293B")); // glassmorphic dark slate
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
 
-            context.DrawRectangle(bgSKPaint, borderSKPaint, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
+            context.DrawRectangle(bgBrush, borderBrush, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
 
-            context.DrawEllipse(hovered.CustomSKPaint, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
+            context.DrawEllipse(hovered.CustomBrush, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
             context.DrawText(ftTitle, new Point(tx + padding + 12, ty + padding));
             context.DrawText(ftVal, new Point(tx + padding + 12, ty + padding + textHeight));
         }

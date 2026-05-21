@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class TreemapChart : ChartBase
+    public partial class TreemapChart : ChartBase
     {
         public class TreemapItem
         {
             public string Label { get; set; } = string.Empty;
             public double Value { get; set; }
-            public SKPaint? SKColor { get; set; }
+            public Brush? Color { get; set; }
         }
 
         public static readonly DependencyProperty ItemsProperty =
@@ -41,7 +41,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(padding, padding, w, h);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             if (Items == null || Items.Count == 0)
             {
@@ -63,7 +63,7 @@ namespace ProCharts.Uno.Controls
             Partition(context, EffectivePlotArea, sortedItems, activePalette, progress);
         }
 
-        private void Partition(SKCanvas context, Rect rect, List<TreemapItem> items, Palette palette, double progress)
+        private void Partition(DrawingContext context, Rect rect, List<TreemapItem> items, Palette palette, double progress)
         {
             if (items.Count == 0) return;
 
@@ -117,7 +117,7 @@ namespace ProCharts.Uno.Controls
             }
         }
 
-        private void DrawItemBlock(SKCanvas context, Rect rect, TreemapItem item, Palette palette, double progress)
+        private void DrawItemBlock(DrawingContext context, Rect rect, TreemapItem item, Palette palette, double progress)
         {
             // Shrink rect slightly for spacing / padding gap
             double gap = 1.5;
@@ -132,10 +132,10 @@ namespace ProCharts.Uno.Controls
 
             // Palette brush mapping
             int idx = Items!.IndexOf(item);
-            var itemSKPaint = item.SKColor ?? palette.GetSKPaint(idx >= 0 ? idx : 0);
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#40FFFFFF")), 1.0);
+            var itemBrush = item.Color ?? palette.GetBrush(idx >= 0 ? idx : 0);
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#40FFFFFF")), 1.0);
 
-            context.DrawRectangle(itemSKPaint, borderSKPaint, new RoundedRect(animatedRect, new CornerRadius(4.0)));
+            context.DrawRectangle(itemBrush, borderBrush, new RoundedRect(animatedRect, new CornerRadius(4.0)));
 
             // Draw category label centered inside rect (only if there's enough space)
             if (animatedRect.Width > 45 && animatedRect.Height > 25)
@@ -147,7 +147,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     labelFont,
                     11,
-                    SKPaintes.White);
+                    Brushes.White);
 
                 var ftVal = new FormattedText(
                     $"{item.Value:G3}",
@@ -155,7 +155,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal),
                     9,
-                    new SolidSKColorSKPaint(SKColor.Parse("#CCFFFFFF")));
+                    new SolidColorBrush(Color.Parse("#CCFFFFFF")));
 
                 if (ftLabel.Width < animatedRect.Width - 6)
                 {
@@ -172,7 +172,7 @@ namespace ProCharts.Uno.Controls
             }
         }
 
-        private void RenderEmptyState(SKCanvas context)
+        private void RenderEmptyState(DrawingContext context)
         {
             var ft = new FormattedText(
                 "Configure Treemap Items",
@@ -180,7 +180,7 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Italic, FontWeight.SemiBold),
                 13,
-                SystemSKPaint);
+                SystemBrush);
 
             double tx = EffectivePlotArea.Left + (EffectivePlotArea.Width - ft.Width) / 2.0;
             double ty = EffectivePlotArea.Top + (EffectivePlotArea.Height - ft.Height) / 2.0;

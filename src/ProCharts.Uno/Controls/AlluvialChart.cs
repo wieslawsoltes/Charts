@@ -3,21 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class AlluvialChart : ChartBase
+    public partial class AlluvialChart : ChartBase
     {
         public class AlluvialNode
         {
             public string Name { get; set; } = string.Empty;
             public int Stage { get; set; } // 0-indexed column index
             public double Value { get; set; }
-            public SKPaint? SKColor { get; set; }
+            public Brush? Color { get; set; }
             // Layout helpers
             internal Rect Bounds { get; set; }
             internal double CurrentSourceOffset { get; set; }
@@ -29,7 +29,7 @@ namespace ProCharts.Uno.Controls
             public string Source { get; set; } = string.Empty; // Node name in stage S
             public string Target { get; set; } = string.Empty; // Node name in stage S+1
             public double Flow { get; set; }
-            public SKPaint? SKColor { get; set; }
+            public Brush? Color { get; set; }
         }
 
         public static readonly DependencyProperty NodesProperty =
@@ -82,7 +82,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(left, top, w, h);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             _renderedNodes.Clear();
             if (Nodes == null || Nodes.Count == 0 || Links == null || Links.Count == 0)
@@ -160,18 +160,18 @@ namespace ProCharts.Uno.Controls
                     currentY += h + gap;
 
                     // Draw node block
-                    var brush = node.SKColor ?? activePalette.GetSKPaint(_renderedNodes.Count - 1);
+                    var brush = node.Color ?? activePalette.GetBrush(_renderedNodes.Count - 1);
                     if (_renderedNodes.Count - 1 == _hoveredNodeIndex)
                     {
-                        brush = new SolidSKColorSKPaint(SKColor.Parse("#FFFFFF"));
+                        brush = new SolidColorBrush(Color.Parse("#FFFFFF"));
                     }
 
-                    var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#40FFFFFF")), 1.0);
-                    context.DrawRectangle(brush, borderSKPaint, new RoundedRect(node.Bounds, new CornerRadius(3.0)));
+                    var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#40FFFFFF")), 1.0);
+                    context.DrawRectangle(brush, borderBrush, new RoundedRect(node.Bounds, new CornerRadius(3.0)));
 
                     // Label drawing
                     var font = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
-                    var ft = new FormattedText(node.Name, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 10, SystemSKPaint);
+                    var ft = new FormattedText(node.Name, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, font, 10, SystemBrush);
 
                     double tx = node.Bounds.Left - ft.Width - 6;
                     if (s == 0)
@@ -237,7 +237,7 @@ namespace ProCharts.Uno.Controls
                     var ptTgtBottom = new Point(tgtNode.Bounds.Left, tgtTop + flowTgtH);
 
                     // Draw cubic Bezier link ribbon
-                    var geometry = new SKPath();
+                    var geometry = new StreamGeometry();
                     using (var ctx = geometry.Open())
                     {
                         geometry.MoveTo(ptSrcTop, true);
@@ -257,16 +257,16 @@ namespace ProCharts.Uno.Controls
                     }
 
                     // Translucent flowing link color based on source node color
-                    SKColor cSKColor = SKColors.SkyBlue;
-                    if (srcNode.SKColor != null) cSKColor = srcNode.SKColor.Color;
+                    Color cColor = Colors.SkyBlue;
+                    if (srcNode.Color != null) cColor = srcNode.Color.GetColor();
                     else if (Palette != null)
                     {
-                        var b = activePalette.GetSKPaint(Nodes.IndexOf(srcNode));
-                        if (b != null) cSKColor = b.Color;
+                        var b = activePalette.GetBrush(Nodes.IndexOf(srcNode));
+                        if (b != null) cColor = b.GetColor();
                     }
 
-                    var ribbonSKPaint = link.SKColor ?? new SolidSKColorSKPaint(new SKColor((byte)(cSKColor.Red), (byte)(cSKColor.Green), (byte)(cSKColor.Blue), (byte)(45)));
-                    context.DrawGeometry(ribbonSKPaint, null, geometry);
+                    var ribbonBrush = link.Color ?? new SolidColorBrush(new Color(cColor.Red, cColor.Green, cColor.Blue, 45));
+                    context.DrawGeometry(ribbonBrush, null, geometry);
                 }
             }
 
@@ -293,7 +293,7 @@ namespace ProCharts.Uno.Controls
             _hoveredNodeIndex = hoveredIdx;
         }
 
-        protected override void DrawTooltip(SKCanvas context, Point mousePoint)
+        protected override void DrawTooltip(DrawingContext context, Point mousePoint)
         {
             if (_hoveredNodeIndex == -1 || _hoveredNodeIndex >= _renderedNodes.Count) return;
 
@@ -306,10 +306,10 @@ namespace ProCharts.Uno.Controls
 
             var fontTitle = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
             var fontText = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal);
-            var textSKPaint = SKPaintes.White;
+            var textBrush = Brushes.White;
 
-            var ftTitle = new FormattedText(hovered.Name, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textSKPaint);
-            var ftVal = new FormattedText($"Total: {hovered.Value:N1} (Stage {hovered.Stage + 1})", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textSKPaint);
+            var ftTitle = new FormattedText(hovered.Name, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textBrush);
+            var ftVal = new FormattedText($"Total: {hovered.Value:N1} (Stage {hovered.Stage + 1})", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textBrush);
 
             tooltipWidth = Math.Max(tooltipWidth, Math.Max(ftTitle.Width, ftVal.Width) + padding * 2 + 10);
 
@@ -323,17 +323,17 @@ namespace ProCharts.Uno.Controls
             ty = Math.Max(0, ty);
 
             var tooltipRect = new Rect(tx, ty, tooltipWidth, tooltipHeight);
-            var bgSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#EC1F242E"));
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
+            var bgBrush = new SolidColorBrush(Color.Parse("#EC1F242E"));
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
 
-            context.DrawRectangle(bgSKPaint, borderSKPaint, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
+            context.DrawRectangle(bgBrush, borderBrush, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
 
-            context.DrawEllipse(hovered.SKColor, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
+            context.DrawEllipse(hovered.Color, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
             context.DrawText(ftTitle, new Point(tx + padding + 12, ty + padding));
             context.DrawText(ftVal, new Point(tx + padding + 12, ty + padding + textHeight));
         }
 
-        private void RenderEmptyState(SKCanvas context)
+        private void RenderEmptyState(DrawingContext context)
         {
             var ft = new FormattedText(
                 "Configure Alluvial Nodes & Multi-Stage Links",
@@ -341,7 +341,7 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Italic, FontWeight.SemiBold),
                 13,
-                SystemSKPaint);
+                SystemBrush);
 
             double tx = EffectivePlotArea.Left + (EffectivePlotArea.Width - ft.Width) / 2.0;
             double ty = EffectivePlotArea.Top + (EffectivePlotArea.Height - ft.Height) / 2.0;

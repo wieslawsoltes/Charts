@@ -4,7 +4,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Avalonia.Collections;
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
@@ -26,11 +26,11 @@ namespace ProCharts.Uno.Controls
         public static readonly DependencyProperty YAxisProperty =
             DependencyProperty.Register(nameof(YAxis), typeof(Axis), typeof(CartesianChart), new PropertyMetadata(default(Axis), OnPropertyChanged));
 
-        public static readonly DependencyProperty AxisSKPaintProperty =
-            DependencyProperty.Register(nameof(AxisSKPaint), typeof(SKPaint), typeof(CartesianChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty AxisBrushProperty =
+            DependencyProperty.Register(nameof(AxisBrush), typeof(Brush), typeof(CartesianChart), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
-        public static readonly DependencyProperty GridLineSKPaintProperty =
-            DependencyProperty.Register(nameof(GridLineSKPaint), typeof(SKPaint), typeof(CartesianChart), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+        public static readonly DependencyProperty GridLineBrushProperty =
+            DependencyProperty.Register(nameof(GridLineBrush), typeof(Brush), typeof(CartesianChart), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
         // --- PROPERTIES ---
 
@@ -42,12 +42,12 @@ namespace ProCharts.Uno.Controls
             set => SetValue(YAxisProperty, value);
         }
 
-        public SKPaint? AxisSKPaint { get => (SKPaint?)GetValue(AxisSKPaintProperty);
-            set => SetValue(AxisSKPaintProperty, value);
+        public Brush? AxisBrush { get => (Brush?)GetValue(AxisBrushProperty);
+            set => SetValue(AxisBrushProperty, value);
         }
 
-        public SKPaint? GridLineSKPaint { get => (SKPaint?)GetValue(GridLineSKPaintProperty);
-            set => SetValue(GridLineSKPaintProperty, value);
+        public Brush? GridLineBrush { get => (Brush?)GetValue(GridLineBrushProperty);
+            set => SetValue(GridLineBrushProperty, value);
         }
 
         public AvaloniaList<CartesianSeries> Series { get; } = new AvaloniaList<CartesianSeries>();
@@ -243,7 +243,7 @@ namespace ProCharts.Uno.Controls
             InvalidateVisual();
         }
 
-        protected override void DrawTooltip(SKCanvas context, Point mousePoint)
+        protected override void DrawTooltip(DrawingContext context, Point mousePoint)
         {
             var activeSeriesList = Series.Where(s => s.IsVisible).ToList();
             if (activeSeriesList.Count == 0) return;
@@ -274,11 +274,11 @@ namespace ProCharts.Uno.Controls
             double targetX = allPoints.OrderBy(p => Math.Abs(p.X - dataX)).First().X;
 
             var screenTargetPt = transform.ToScreen(targetX, currentYMin);
-            var crossSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#40FFFFFF")), 1.0, new DashStyle(new[] { 4.0, 4.0 }, 0.0));
-            context.DrawLine(crossSKPaint, new Point(screenTargetPt.X, EffectivePlotArea.Top), new Point(screenTargetPt.X, EffectivePlotArea.Bottom));
+            var crossBrush = new Pen(new SolidColorBrush(Color.Parse("#40FFFFFF")), 1.0, new DashStyle(new[] { 4.0, 4.0 }, 0.0));
+            context.DrawLine(crossBrush, new Point(screenTargetPt.X, EffectivePlotArea.Top), new Point(screenTargetPt.X, EffectivePlotArea.Bottom));
 
             var activePalette = Palette ?? Palette.Default;
-            var tooltipItems = new List<(string Name, double Value, SKPaint SKColor)>();
+            var tooltipItems = new List<(string Name, double Value, Brush Color)>();
 
             for (int i = 0; i < Series.Count; i++)
             {
@@ -298,17 +298,17 @@ namespace ProCharts.Uno.Controls
                 if (ptIndex != -1 && !double.IsNaN(points[ptIndex].Y))
                 {
                     var pt = points[ptIndex];
-                    var seriesSKPaint = series.Fill ?? activePalette.GetSKPaint(i);
-                    tooltipItems.Add((string.IsNullOrEmpty(series.Title) ? $"Series {i + 1}" : series.Title!, pt.Y, seriesSKPaint));
+                    var seriesBrush = series.Fill ?? activePalette.GetBrush(i);
+                    tooltipItems.Add((string.IsNullOrEmpty(series.Title) ? $"Series {i + 1}" : series.Title!, pt.Y, seriesBrush));
 
                     var screenPt = transform.ToScreen(pt.X, pt.Y);
-                    var pulseSKPaint = new Pen(seriesSKPaint, 1.5);
-                    SKColor brushSKColor = SKColors.Purple;
-                    if (seriesSKPaint != null) brushSKColor = seriesSKPaint.Color;
-                    var pulseFill = new SolidSKColorSKPaint(new SKColor((byte)(brushSKColor.Red), (byte)(brushSKColor.Green), (byte)(brushSKColor.Blue), (byte)(40)));
+                    var pulseBrush = new Pen(seriesBrush, 1.5);
+                    Color brushColor = Colors.Purple;
+                    if (seriesBrush != null) brushColor = seriesBrush.GetColor();
+                    var pulseFill = new SolidColorBrush(new Color((byte)(brushColor.Red), (byte)(brushColor.Green), (byte)(brushColor.Blue), (byte)(40)));
                     
-                    context.DrawEllipse(seriesSKPaint, null, screenPt, 4.0, 4.0);
-                    context.DrawEllipse(pulseFill, pulseSKPaint, screenPt, 8.0, 8.0);
+                    context.DrawEllipse(seriesBrush, null, screenPt, 4.0, 4.0);
+                    context.DrawEllipse(pulseFill, pulseBrush, screenPt, 8.0, 8.0);
                 }
             }
 
@@ -322,7 +322,7 @@ namespace ProCharts.Uno.Controls
 
             var titleFont = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
             var textFont = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal);
-            var textSKPaint = SKPaintes.White;
+            var textBrush = Brushes.White;
 
             var ftTitle = new FormattedText(
                 $"X Value: {targetX:G4}",
@@ -330,11 +330,11 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 titleFont,
                 11,
-                textSKPaint);
+                textBrush);
             
             tooltipWidth = Math.Max(tooltipWidth, ftTitle.Width + padding * 2);
 
-            var formattedRows = new List<(FormattedText Text, SKPaint SKColor)>();
+            var formattedRows = new List<(FormattedText Text, Brush Color)>();
             foreach (var item in tooltipItems)
             {
                 var ftRow = new FormattedText(
@@ -343,8 +343,8 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     textFont,
                     11,
-                    textSKPaint);
-                formattedRows.Add((ftRow, item.SKColor));
+                    textBrush);
+                formattedRows.Add((ftRow, item.Color));
                 tooltipWidth = Math.Max(tooltipWidth, ftRow.Width + padding * 2 + 15);
             }
 
@@ -364,10 +364,10 @@ namespace ProCharts.Uno.Controls
             ty = Math.Max(EffectivePlotArea.Top, ty);
 
             var tooltipRect = new Rect(tx, ty, tooltipWidth, tooltipHeight);
-            var bgSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#E81F242E"));
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
+            var bgBrush = new SolidColorBrush(Color.Parse("#E81F242E"));
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
             
-            context.DrawRectangle(bgSKPaint, borderSKPaint, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
+            context.DrawRectangle(bgBrush, borderBrush, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
 
             double curX = tx + padding;
             double curY = ty + padding;
@@ -377,13 +377,13 @@ namespace ProCharts.Uno.Controls
 
             foreach (var row in formattedRows)
             {
-                context.DrawEllipse(row.SKColor, null, new Point(curX + 4, curY + 6), 3.0, 3.0);
+                context.DrawEllipse(row.Color, null, new Point(curX + 4, curY + 6), 3.0, 3.0);
                 context.DrawText(row.Text, new Point(curX + 14, curY));
                 curY += rowHeight;
             }
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             if (Series.Count == 0)
             {
@@ -418,14 +418,14 @@ namespace ProCharts.Uno.Controls
                 var series = Series[i];
                 if (!series.IsVisible) continue;
 
-                var defaultSKPaint = activePalette.GetSKPaint(i);
+                var defaultBrush = activePalette.GetBrush(i);
                 var renderContext = new SeriesRenderContext(
                     this,
                     context,
                     transform,
                     AnimationProgress,
                     EffectivePlotArea,
-                    defaultSKPaint);
+                    defaultBrush);
 
                 series.RenderSeries(renderContext);
             }
@@ -484,16 +484,16 @@ namespace ProCharts.Uno.Controls
             return (xMin, xMax, yMin, yMax);
         }
 
-        private void RenderGridLinesAndAxes(SKCanvas context, CoordinateTransform transform)
+        private void RenderGridLinesAndAxes(DrawingContext context, CoordinateTransform transform)
         {
-            var axisSKPaint = new Pen(AxisSKPaint ?? SystemSKPaint, 1.0);
+            var axisBrush = new Pen(AxisBrush ?? SystemBrush, 1.0);
             
             // Light grey dashed line for grid lines
-            var gridLineSKPaint = GridLineSKPaint ?? new SolidSKColorSKPaint(
-                IsDarkTheme ? SKColor.Parse("#2A2E35") : SKColor.Parse("#E2E8F0"));
-            var gridSKPaint = new Pen(gridLineSKPaint, 1.0, new DashStyle(new[] { 4.0, 4.0 }, 0.0));
+            var gridLineBrush = GridLineBrush ?? new SolidColorBrush(
+                IsDarkTheme ? Color.Parse("#2A2E35") : Color.Parse("#E2E8F0"));
+            var gridBrush = new Pen(gridLineBrush, 1.0, new DashStyle(new[] { 4.0, 4.0 }, 0.0));
 
-            var textSKPaint = LabelForeground ?? SystemSKPaint;
+            var textBrush = LabelForeground ?? SystemBrush;
             var font = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal);
 
             // --- DRAW Y AXIS & GRIDLINES ---
@@ -508,7 +508,7 @@ namespace ProCharts.Uno.Controls
                     double xAxisLineY = XAxis.Position == AxisPosition.Top ? EffectivePlotArea.Top : EffectivePlotArea.Bottom;
                     if (Math.Abs(pt.Y - xAxisLineY) > 1e-3)
                     {
-                        context.DrawLine(gridSKPaint, new Point(EffectivePlotArea.Left, pt.Y), new Point(EffectivePlotArea.Right, pt.Y));
+                        context.DrawLine(gridBrush, new Point(EffectivePlotArea.Left, pt.Y), new Point(EffectivePlotArea.Right, pt.Y));
                     }
 
                     // Tick label
@@ -519,7 +519,7 @@ namespace ProCharts.Uno.Controls
                         FlowDirection.LeftToRight,
                         font,
                         11,
-                        textSKPaint);
+                        textBrush);
 
                     double lx = YAxis.Position == AxisPosition.Right ? EffectivePlotArea.Right + 8 : EffectivePlotArea.Left - ft.Width - 8;
                     double ly = pt.Y - ft.Height / 2.0;
@@ -529,11 +529,11 @@ namespace ProCharts.Uno.Controls
                 // Y-Axis main line
                 if (YAxis.Position == AxisPosition.Right)
                 {
-                    context.DrawLine(axisSKPaint, new Point(EffectivePlotArea.Right, EffectivePlotArea.Top), new Point(EffectivePlotArea.Right, EffectivePlotArea.Bottom));
+                    context.DrawLine(axisBrush, new Point(EffectivePlotArea.Right, EffectivePlotArea.Top), new Point(EffectivePlotArea.Right, EffectivePlotArea.Bottom));
                 }
                 else
                 {
-                    context.DrawLine(axisSKPaint, new Point(EffectivePlotArea.Left, EffectivePlotArea.Top), new Point(EffectivePlotArea.Left, EffectivePlotArea.Bottom));
+                    context.DrawLine(axisBrush, new Point(EffectivePlotArea.Left, EffectivePlotArea.Top), new Point(EffectivePlotArea.Left, EffectivePlotArea.Bottom));
                 }
 
                 // Draw Y-Axis Title
@@ -545,11 +545,11 @@ namespace ProCharts.Uno.Controls
                         FlowDirection.LeftToRight,
                         new Typeface(font.FontFamily, font.FontStyle, FontWeight.Bold),
                         12,
-                        textSKPaint);
+                        textBrush);
 
                     // Draw vertical text rotated by -90 degrees
                     double xTranslate = YAxis.Position == AxisPosition.Right ? Bounds.Width - 16 : 16;
-                    using (context.PushTransform(Matrix.CreateRotation(-Math.PI / 2.0) * Matrix.CreateTranslation(xTranslate, EffectivePlotArea.Center.Y + ftTitle.Width / 2.0)))
+                    using (context.PushTransform(ProCharts.Uno.Maths.Matrix.CreateRotation(-Math.PI / 2.0) * ProCharts.Uno.Maths.Matrix.CreateTranslation(xTranslate, EffectivePlotArea.Center.Y + ftTitle.Width / 2.0)))
                     {
                         context.DrawText(ftTitle, new Point(0, 0));
                     }
@@ -568,7 +568,7 @@ namespace ProCharts.Uno.Controls
                     double yAxisLineX = YAxis.Position == AxisPosition.Right ? EffectivePlotArea.Right : EffectivePlotArea.Left;
                     if (Math.Abs(pt.X - yAxisLineX) > 1e-3)
                     {
-                        context.DrawLine(gridSKPaint, new Point(pt.X, EffectivePlotArea.Top), new Point(pt.X, EffectivePlotArea.Bottom));
+                        context.DrawLine(gridBrush, new Point(pt.X, EffectivePlotArea.Top), new Point(pt.X, EffectivePlotArea.Bottom));
                     }
 
                     // Tick label
@@ -579,7 +579,7 @@ namespace ProCharts.Uno.Controls
                         FlowDirection.LeftToRight,
                         font,
                         11,
-                        textSKPaint);
+                        textBrush);
 
                     double lx = pt.X - ft.Width / 2.0;
                     double ly = XAxis.Position == AxisPosition.Top ? EffectivePlotArea.Top - ft.Height - 6 : EffectivePlotArea.Bottom + 6;
@@ -589,11 +589,11 @@ namespace ProCharts.Uno.Controls
                 // X-Axis main line
                 if (XAxis.Position == AxisPosition.Top)
                 {
-                    context.DrawLine(axisSKPaint, new Point(EffectivePlotArea.Left, EffectivePlotArea.Top), new Point(EffectivePlotArea.Right, EffectivePlotArea.Top));
+                    context.DrawLine(axisBrush, new Point(EffectivePlotArea.Left, EffectivePlotArea.Top), new Point(EffectivePlotArea.Right, EffectivePlotArea.Top));
                 }
                 else
                 {
-                    context.DrawLine(axisSKPaint, new Point(EffectivePlotArea.Left, EffectivePlotArea.Bottom), new Point(EffectivePlotArea.Right, EffectivePlotArea.Bottom));
+                    context.DrawLine(axisBrush, new Point(EffectivePlotArea.Left, EffectivePlotArea.Bottom), new Point(EffectivePlotArea.Right, EffectivePlotArea.Bottom));
                 }
 
                 // Draw X-Axis Title
@@ -605,7 +605,7 @@ namespace ProCharts.Uno.Controls
                         FlowDirection.LeftToRight,
                         new Typeface(font.FontFamily, font.FontStyle, FontWeight.Bold),
                         12,
-                        textSKPaint);
+                        textBrush);
 
                     double lx = EffectivePlotArea.Left + (EffectivePlotArea.Width - ftTitle.Width) / 2.0;
                     double ly = XAxis.Position == AxisPosition.Top ? EffectivePlotArea.Top - ftTitle.Height - 24 : EffectivePlotArea.Bottom + 24;
@@ -614,16 +614,16 @@ namespace ProCharts.Uno.Controls
             }
         }
 
-        private void RenderEmptyState(SKCanvas context)
+        private void RenderEmptyState(DrawingContext context)
         {
-            var textSKPaint = LabelForeground ?? SystemSKPaint;
+            var textBrush = LabelForeground ?? SystemBrush;
             var ft = new FormattedText(
                 "No Data Available",
                 System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Italic, FontWeight.SemiBold),
                 14,
-                textSKPaint);
+                textBrush);
 
             double tx = EffectivePlotArea.Left + (EffectivePlotArea.Width - ft.Width) / 2.0;
             double ty = EffectivePlotArea.Top + (EffectivePlotArea.Height - ft.Height) / 2.0;

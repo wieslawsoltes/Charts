@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class HeatmapChart : ChartBase
+    public partial class HeatmapChart : ChartBase
     {
         public class HeatmapCell
         {
@@ -59,7 +59,7 @@ namespace ProCharts.Uno.Controls
             return new Rect(left, top, w, h);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             if (Cells == null || Cells.Count == 0 || XLabels == null || XLabels.Count == 0 || YLabels == null || YLabels.Count == 0)
             {
@@ -81,11 +81,11 @@ namespace ProCharts.Uno.Controls
             double progress = AnimationProgress;
 
             // Sleek color scale: dark slate (0.0) -> cyan (0.5) -> purple (1.0)
-            SKColor colLow = SKColor.Parse("#1E293B");
-            SKColor colMid = SKColor.Parse("#06B6D4");
-            SKColor colHigh = SKColor.Parse("#A855F7");
+            Color colLow = Color.Parse("#1E293B");
+            Color colMid = Color.Parse("#06B6D4");
+            Color colHigh = Color.Parse("#A855F7");
 
-            var cellBorderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#20FFFFFF")), 1.0);
+            var cellBorderBrush = new Pen(new SolidColorBrush(Color.Parse("#20FFFFFF")), 1.0);
 
             // Draw Cells
             foreach (var cell in Cells)
@@ -96,31 +96,31 @@ namespace ProCharts.Uno.Controls
                 norm = Math.Clamp(norm * progress, 0.0, 1.0);
 
                 // Interpolate color along our gradient scale
-                SKColor cellCol;
+                Color cellCol;
                 if (norm < 0.5)
                 {
                     double t = norm * 2.0;
-                    cellCol = new SKColor((byte)((byte)(colLow.Red + (colMid.Red - colLow.Red) * t)), (byte)((byte)(colLow.Green + (colMid.Green - colLow.Green) * t)), (byte)((byte)(colLow.Blue + (colMid.Blue - colLow.Blue) * t)), (byte)((byte)(colLow.Alpha + (colMid.Alpha - colLow.Alpha) * t)));
+                    cellCol = new Color((byte)((byte)(colLow.Red + (colMid.Red - colLow.Red) * t)), (byte)((byte)(colLow.Green + (colMid.Green - colLow.Green) * t)), (byte)((byte)(colLow.Blue + (colMid.Blue - colLow.Blue) * t)), (byte)((byte)(colLow.Alpha + (colMid.Alpha - colLow.Alpha) * t)));
                 }
                 else
                 {
                     double t = (norm - 0.5) * 2.0;
-                    cellCol = new SKColor((byte)((byte)(colMid.Red + (colHigh.Red - colMid.Red) * t)), (byte)((byte)(colMid.Green + (colHigh.Green - colMid.Green) * t)), (byte)((byte)(colMid.Blue + (colHigh.Blue - colMid.Blue) * t)), (byte)((byte)(colMid.Alpha + (colHigh.Alpha - colMid.Alpha) * t)));
+                    cellCol = new Color((byte)((byte)(colMid.Red + (colHigh.Red - colMid.Red) * t)), (byte)((byte)(colMid.Green + (colHigh.Green - colMid.Green) * t)), (byte)((byte)(colMid.Blue + (colHigh.Blue - colMid.Blue) * t)), (byte)((byte)(colMid.Alpha + (colHigh.Alpha - colMid.Alpha) * t)));
                 }
 
-                var cellSKPaint = new SolidSKColorSKPaint(cellCol);
+                var cellBrush = new SolidColorBrush(cellCol);
 
                 // Screen coordinates: invert Y index so index 0 is at bottom (standard Cartesian)
                 double cx = area.Left + cell.X * cellW;
                 double cy = area.Bottom - (cell.Y + 1) * cellH;
 
                 var cellRect = new Rect(cx, cy, cellW, cellH);
-                context.DrawRectangle(cellSKPaint, cellBorderSKPaint, cellRect);
+                context.DrawRectangle(cellBrush, cellBorderBrush, cellRect);
             }
 
             // Draw Grid Labels
             var labelFont = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.SemiBold);
-            var labelSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#94A3B8"));
+            var labelBrush = new SolidColorBrush(Color.Parse("#94A3B8"));
 
             // X Axis Labels
             for (int i = 0; i < numX; i++)
@@ -131,7 +131,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     labelFont,
                     9,
-                    labelSKPaint);
+                    labelBrush);
                 double lx = area.Left + i * cellW + (cellW - ft.Width) / 2.0;
                 double ly = area.Bottom + 6.0;
                 context.DrawText(ft, new Point(lx, ly));
@@ -146,14 +146,14 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     labelFont,
                     9,
-                    labelSKPaint);
+                    labelBrush);
                 double lx = area.Left - ft.Width - 6.0;
                 double ly = area.Bottom - (i + 1) * cellH + (cellH - ft.Height) / 2.0;
                 context.DrawText(ft, new Point(lx, ly));
             }
         }
 
-        private void RenderEmptyState(SKCanvas context)
+        private void RenderEmptyState(DrawingContext context)
         {
             var ft = new FormattedText(
                 "Configure Heatmap Cells and Labels",
@@ -161,7 +161,7 @@ namespace ProCharts.Uno.Controls
                 FlowDirection.LeftToRight,
                 new Typeface("Inter, Roboto, Segoe UI", FontStyle.Italic, FontWeight.SemiBold),
                 13,
-                SystemSKPaint);
+                SystemBrush);
 
             double tx = EffectivePlotArea.Left + (EffectivePlotArea.Width - ft.Width) / 2.0;
             double ty = EffectivePlotArea.Top + (EffectivePlotArea.Height - ft.Height) / 2.0;

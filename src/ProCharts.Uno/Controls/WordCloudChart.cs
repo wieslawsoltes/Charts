@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Styles;
@@ -12,7 +12,7 @@ using ProCharts.Uno.Maths;
 
 namespace ProCharts.Uno.Controls
 {
-    public class WordCloudChart : ChartBase
+    public partial class WordCloudChart : ChartBase
     {
         public static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register(nameof(ItemsSource), typeof(IEnumerable), typeof(WordCloudChart), new PropertyMetadata(default(IEnumerable?), OnPropertyChanged));
@@ -55,7 +55,7 @@ namespace ProCharts.Uno.Controls
         {
             public string Text { get; set; } = string.Empty;
             public double Weight { get; set; }
-            public SKPaint? SKPaint { get; set; }
+            public Brush? Brush { get; set; }
             public double FontSize { get; set; }
             public Rect BoundingBox { get; set; }
             public FormattedText? Formatted { get; set; }
@@ -81,13 +81,13 @@ namespace ProCharts.Uno.Controls
             return new Rect(padding, cy, w, h - padding);
         }
 
-        protected override void RenderChart(SKCanvas context)
+        protected override void RenderChart(DrawingContext context)
         {
             _placedWords.Clear();
             if (ItemsSource == null) return;
 
             // 1. Parse raw inputs
-            var rawItems = new List<(string Text, double Weight, SKPaint? SKPaint)>();
+            var rawItems = new List<(string Text, double Weight, Brush? Brush)>();
             int idx = 0;
             var activePalette = Palette ?? Palette.Default;
 
@@ -103,7 +103,7 @@ namespace ProCharts.Uno.Controls
 
                 if (!string.IsNullOrEmpty(text) && !double.IsNaN(weight) && weight > 0)
                 {
-                    rawItems.Add((text, weight, activePalette.GetSKPaint(idx++)));
+                    rawItems.Add((text, weight, activePalette.GetBrush(idx++)));
                 }
             }
 
@@ -138,7 +138,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     font,
                     fontSize,
-                    item.SKPaint ?? SKPaintes.White);
+                    item.Brush ?? Brushes.White);
 
                 double wWidth = ft.Width;
                 double wHeight = ft.Height;
@@ -194,7 +194,7 @@ namespace ProCharts.Uno.Controls
                     {
                         Text = item.Text,
                         Weight = item.Weight,
-                        SKPaint = item.SKPaint,
+                        Brush = item.Brush,
                         FontSize = fontSize,
                         BoundingBox = bestRect,
                         Formatted = ft
@@ -219,10 +219,10 @@ namespace ProCharts.Uno.Controls
                 double currentFontSize = word.FontSize * progress;
                 if (currentFontSize < 1.0) continue;
 
-                var textSKPaint = word.SKPaint ?? SKPaintes.White;
+                var textBrush = word.Brush ?? Brushes.White;
                 if (i == _hoveredWordIndex)
                 {
-                    textSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#FFFFFF")); // Highlight hovered word in pure white
+                    textBrush = new SolidColorBrush(Color.Parse("#FFFFFF")); // Highlight hovered word in pure white
                 }
 
                 var ftAnim = new FormattedText(
@@ -231,7 +231,7 @@ namespace ProCharts.Uno.Controls
                     FlowDirection.LeftToRight,
                     font,
                     currentFontSize,
-                    textSKPaint);
+                    textBrush);
 
                 double tx = centerPt.X - ftAnim.Width / 2.0;
                 double ty = centerPt.Y - ftAnim.Height / 2.0;
@@ -262,7 +262,7 @@ namespace ProCharts.Uno.Controls
             _hoveredWordIndex = hoveredIdx;
         }
 
-        protected override void DrawTooltip(SKCanvas context, Point mousePoint)
+        protected override void DrawTooltip(DrawingContext context, Point mousePoint)
         {
             if (_hoveredWordIndex == -1 || _hoveredWordIndex >= _placedWords.Count) return;
 
@@ -275,10 +275,10 @@ namespace ProCharts.Uno.Controls
 
             var fontTitle = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Bold);
             var fontText = new Typeface("Inter, Roboto, Segoe UI", FontStyle.Normal, FontWeight.Normal);
-            var textSKPaint = SKPaintes.White;
+            var textBrush = Brushes.White;
 
-            var ftTitle = new FormattedText($"\"{hovered.Text}\"", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textSKPaint);
-            var ftVal = new FormattedText($"Weight: {hovered.Weight:N0}", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textSKPaint);
+            var ftTitle = new FormattedText($"\"{hovered.Text}\"", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontTitle, 11, textBrush);
+            var ftVal = new FormattedText($"Weight: {hovered.Weight:N0}", System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, fontText, 11, textBrush);
 
             tooltipWidth = Math.Max(tooltipWidth, Math.Max(ftTitle.Width, ftVal.Width) + padding * 2 + 10);
 
@@ -292,12 +292,12 @@ namespace ProCharts.Uno.Controls
             ty = Math.Max(0, ty);
 
             var tooltipRect = new Rect(tx, ty, tooltipWidth, tooltipHeight);
-            var bgSKPaint = new SolidSKColorSKPaint(SKColor.Parse("#EC1F242E"));
-            var borderSKPaint = new Pen(new SolidSKColorSKPaint(SKColor.Parse("#30FFFFFF")), 1.0);
+            var bgBrush = new SolidColorBrush(Color.Parse("#EC1F242E"));
+            var borderBrush = new Pen(new SolidColorBrush(Color.Parse("#30FFFFFF")), 1.0);
 
-            context.DrawRectangle(bgSKPaint, borderSKPaint, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
+            context.DrawRectangle(bgBrush, borderBrush, new RoundedRect(tooltipRect, new CornerRadius(6.0)));
 
-            context.DrawEllipse(hovered.SKPaint, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
+            context.DrawEllipse(hovered.Brush, null, new Point(tx + padding + 4, ty + padding + 6), 3.5, 3.5);
             context.DrawText(ftTitle, new Point(tx + padding + 12, ty + padding));
             context.DrawText(ftVal, new Point(tx + padding + 12, ty + padding + textHeight));
         }
