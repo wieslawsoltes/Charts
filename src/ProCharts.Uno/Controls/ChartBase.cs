@@ -6,8 +6,6 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
 using Microsoft.UI.Dispatching;
-using SkiaSharp;
-using SkiaSharp.Views.Windows;
 
 using ProCharts.Uno.Maths;
 using ProCharts.Uno.Styles;
@@ -18,7 +16,7 @@ namespace ProCharts.Uno.Controls
     public abstract partial class ChartBase : Grid
     {
         // --- CANVAS ---
-        protected readonly SKXamlCanvas _canvas;
+        protected readonly Microsoft.UI.Xaml.Controls.Canvas _canvas;
 
         // --- DEPENDENCY PROPERTIES ---
 
@@ -29,10 +27,10 @@ namespace ProCharts.Uno.Controls
             DependencyProperty.Register(nameof(Palette), typeof(Palette), typeof(ChartBase), new PropertyMetadata(default(Palette), OnPropertyChanged));
 
         public static readonly DependencyProperty LabelForegroundProperty =
-            DependencyProperty.Register(nameof(LabelForeground), typeof(SKPaint), typeof(ChartBase), new PropertyMetadata(default(SKPaint), OnPropertyChanged));
+            DependencyProperty.Register(nameof(LabelForeground), typeof(Brush), typeof(ChartBase), new PropertyMetadata(default(Brush), OnPropertyChanged));
 
         public static readonly DependencyProperty PlotAreaBackgroundProperty =
-            DependencyProperty.Register(nameof(PlotAreaBackground), typeof(SKPaint), typeof(ChartBase), new PropertyMetadata(default(SKPaint), OnPropertyChanged));
+            DependencyProperty.Register(nameof(PlotAreaBackground), typeof(Brush), typeof(ChartBase), new PropertyMetadata(default(Brush), OnPropertyChanged));
 
         public static readonly DependencyProperty PlotAreaContentProperty =
             DependencyProperty.Register(nameof(PlotAreaContent), typeof(Control), typeof(ChartBase), new PropertyMetadata(default(Control), OnPropertyChanged));
@@ -63,15 +61,15 @@ namespace ProCharts.Uno.Controls
             set => SetValue(PaletteProperty, value);
         }
 
-        public SKPaint? LabelForeground
+        public Brush? LabelForeground
         {
-            get => (SKPaint?)GetValue(LabelForegroundProperty);
+            get => (Brush?)GetValue(LabelForegroundProperty);
             set => SetValue(LabelForegroundProperty, value);
         }
 
-        public SKPaint? PlotAreaBackground
+        public Brush? PlotAreaBackground
         {
-            get => (SKPaint?)GetValue(PlotAreaBackgroundProperty);
+            get => (Brush?)GetValue(PlotAreaBackgroundProperty);
             set => SetValue(PlotAreaBackgroundProperty, value);
         }
 
@@ -124,13 +122,12 @@ namespace ProCharts.Uno.Controls
 
         protected ChartBase()
         {
-            _canvas = new SKXamlCanvas
+            _canvas = new Microsoft.UI.Xaml.Controls.Canvas
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
             this.Children.Add(_canvas);
-            _canvas.PaintSurface += OnPaintSurface;
 
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
@@ -170,7 +167,39 @@ namespace ProCharts.Uno.Controls
 
         public void InvalidateVisual()
         {
-            _canvas?.Invalidate();
+            if (_canvas == null) return;
+            _canvas.Children.Clear();
+
+            double w = Bounds.Width > 0 ? Bounds.Width : ActualWidth;
+            double h = Bounds.Height > 0 ? Bounds.Height : ActualHeight;
+            if (w <= 0 || h <= 0) return;
+
+            Bounds = new Rect(0, 0, w, h);
+            var bounds = new Size(w, h);
+
+            // 1. Calculate boundaries
+            EffectivePlotArea = CalculatePlotArea(bounds);
+
+            var context = new DrawingContext(_canvas);
+
+            // 2. Draw Title
+            DrawTitle(context, bounds);
+
+            // 3. Draw Plot Area Background
+            var bg = PlotAreaBackground;
+            if (bg != null)
+            {
+                context.DrawRectangle(bg, null, EffectivePlotArea);
+            }
+
+            // 4. Custom derived rendering (Gridlines, Axes, Series)
+            RenderChart(context);
+
+            // 5. Draw dynamic interactive Tooltip on top
+            if (_mousePoint.HasValue)
+            {
+                DrawTooltip(context, _mousePoint.Value);
+            }
         }
 
         protected virtual void UpdateHoverState(Point? mousePoint)
@@ -283,60 +312,11 @@ namespace ProCharts.Uno.Controls
             return new Rect(left, top, w, h);
         }
 
-        private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
-        {
-            var canvas = e.Surface.Canvas;
-            canvas.Clear(SKColors.Transparent);
-
-            double dpiScale = XamlRoot?.RasterizationScale ?? 1.0;
-            if (dpiScale <= 0) dpiScale = 1.0;
-
-            double logicalWidth = e.Info.Width / dpiScale;
-            double logicalHeight = e.Info.Height / dpiScale;
-
-            if (logicalWidth <= 0 || logicalHeight <= 0) return;
-
-            Bounds = new Rect(0, 0, logicalWidth, logicalHeight);
-            var bounds = new Size(logicalWidth, logicalHeight);
-
-            canvas.Save();
-            canvas.Scale((float)dpiScale, (float)dpiScale);
-
-            try
-            {
-                // 1. Calculate boundaries
-                EffectivePlotArea = CalculatePlotArea(bounds);
-
-                // 2. Draw Title
-                DrawTitle(canvas, bounds);
-
-                // 3. Draw Plot Area Background
-                var bg = PlotAreaBackground;
-                if (bg != null)
-                {
-                    canvas.DrawRectangle(bg, null, EffectivePlotArea);
-                }
-
-                // 4. Custom derived rendering (Gridlines, Axes, Series)
-                RenderChart(canvas);
-
-                // 5. Draw dynamic interactive Tooltip on top
-                if (_mousePoint.HasValue)
-                {
-                    DrawTooltip(canvas, _mousePoint.Value);
-                }
-            }
-            finally
-            {
-                canvas.Restore();
-            }
-        }
-
-        protected virtual void DrawTitle(SKCanvas context, Size bounds)
+        protected virtual void DrawTitle(DrawingContext context, Size bounds)
         {
             if (string.IsNullOrEmpty(Title)) return;
 
-            var foreground = LabelForeground ?? SystemSKPaint;
+            var foreground = LabelForeground ?? SystemBrush;
             var formattedText = new FormattedText(
                 Title,
                 System.Globalization.CultureInfo.CurrentCulture,
@@ -349,9 +329,9 @@ namespace ProCharts.Uno.Controls
             context.DrawText(formattedText, new Point(tx, 12));
         }
 
-        protected abstract void RenderChart(SKCanvas context);
+        protected abstract void RenderChart(DrawingContext context);
 
-        protected virtual void DrawTooltip(SKCanvas context, Point mousePoint)
+        protected virtual void DrawTooltip(DrawingContext context, Point mousePoint)
         {
         }
 
@@ -360,10 +340,13 @@ namespace ProCharts.Uno.Controls
         /// </summary>
         public virtual System.Collections.Generic.IEnumerable<ChartSeries> GetSeries() => Array.Empty<ChartSeries>();
 
-        protected SKPaint SystemSKPaint => LabelForeground ?? new SKPaint 
-        { 
-            Color = IsDarkTheme ? SKColors.White : SKColors.Black,
-            IsAntialias = true
-        };
+        protected Brush SystemBrush
+        {
+            get
+            {
+                if (LabelForeground != null) return LabelForeground;
+                return new SolidColorBrush(IsDarkTheme ? Colors.White : Colors.Black);
+            }
+        }
     }
 }

@@ -6,14 +6,13 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using Windows.UI;
-using SkiaSharp;
 
 using ProCharts.Uno.Series;
 using ProCharts.Uno.Styles;
 
 namespace ProCharts.Uno.Controls
 {
-    public class Legend : StackPanel
+    public partial class Legend : StackPanel
     {
         public static readonly DependencyProperty ChartProperty =
             DependencyProperty.Register(nameof(Chart), typeof(ChartBase), typeof(Legend), new PropertyMetadata(default(ChartBase), OnPropertyChanged));
@@ -69,14 +68,10 @@ namespace ProCharts.Uno.Controls
             for (int i = 0; i < seriesList.Count; i++)
             {
                 var series = seriesList[i];
-                var seriesSKPaint = series.Fill ?? activePalette.GetSKPaint(i);
+                Brush seriesBrush = series.Fill ?? activePalette.GetBrush(i);
                 
-                // Convert SkiaSharp SKPaint/SKColor to WinUI SolidColorBrush
-                var indicatorBrush = new SolidColorBrush(Color.FromArgb(
-                    seriesSKPaint.Color.Alpha,
-                    seriesSKPaint.Color.Red,
-                    seriesSKPaint.Color.Green,
-                    seriesSKPaint.Color.Blue));
+                // Convert Brush/Color to WinUI SolidColorBrush
+                var indicatorBrush = new SolidColorBrush(seriesBrush.GetColor());
 
                 var checkBox = new CheckBox
                 {
