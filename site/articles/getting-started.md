@@ -157,8 +157,7 @@ Bind your telemetry series collections directly to the chart. Enable glassmorphi
 
 ```xml
 <pc:CartesianChart Title="Network Performance (Telemetry Feed)"
-                   Glassmorphic="True"
-                   GlassOpacity="0.12"
+                   PlotAreaBackground="#00FFFFFF"
                    BorderBrush="#334155"
                    BorderThickness="1"
                    Padding="16"

@@ -58,26 +58,35 @@ By working directly with Avalonia's `DrawingContext`, ProCharts bypasses the log
 
 ---
 
-## 3. Glassmorphic Templates and Performance
+## 3. Glassmorphic Styling and Performance
 
-To render stunning frosted-glass styles, ProCharts provides a built-in `Glassmorphic` flag on all charting controls. When enabled, the template utilizes Avalonia's low-level layout mechanisms to composite semi-transparent layers.
+To render stunning frosted-glass styles, wrap your charting controls inside standard layout borders featuring semi-transparent backgrounds and border highlights. Setting `PlotAreaBackground="#00FFFFFF"` (transparent) allows the underlying panel styles to show through the chart viewport.
 
 ```xml
-<pc:CartesianChart Glassmorphic="True"
-                   GlassOpacity="0.15"
-                   BorderThickness="1"
-                   BorderBrush="#475569">
-  <pc:CartesianChart.Series>
-    <ps:AreaSeries Fill="#0284C7" Stroke="#38BDF8" StrokeThickness="3" />
-  </pc:CartesianChart.Series>
-</pc:CartesianChart>
+<Border Background="#201E293B" 
+        BorderBrush="#33FFFFFF" 
+        BorderThickness="1" 
+        CornerRadius="12" 
+        Padding="16">
+  <pc:CartesianChart Title="System Resource Monitoring"
+                     PlotAreaBackground="#00FFFFFF">
+    <pc:CartesianChart.Series>
+      <ps:AreaSeries ItemsSource="{Binding SystemLoad}" 
+                    CategoryPath="Timestamp" 
+                    ValuePath="Usage" 
+                    Fill="#4D0284C7" 
+                    Stroke="#38BDF8" 
+                    StrokeThickness="3" />
+    </pc:CartesianChart.Series>
+  </pc:CartesianChart>
+</Border>
 ```
 
 ### Implementing Glassmorphic Overlays
-In Avalonia, the glass effect is achieved through three layered techniques:
-1. **Backdrop Blending**: The control background leverages an `ExperimentalAcrylicBorder` or semi-transparent solid color brush with an opacity parameter (`GlassOpacity`).
-2. **Noise Texturing**: A subtle pixel shader texture is overlaid to mimic frosted grain.
-3. **Contrast Highlights**: A thin, high-contrast, semi-transparent border brush (e.g., `#33FFFFFF`) highlights the outer edge, making the control stand out from dark background elements.
+In Avalonia UI, the frosted-glass effect is achieved through three layered techniques:
+1. **Backdrop Blending**: The container panel leverages an `ExperimentalAcrylicBorder` or semi-transparent solid color brush with a custom alpha color channel.
+2. **Noise Texturing**: A subtle layout texture is overlaid to mimic frosted grain.
+3. **Contrast Highlights**: A thin, high-contrast, semi-transparent border brush (e.g., `#33FFFFFF` or `#20FFFFFF`) highlights the outer edge, distinguishing the control from dark background elements.
 
 ---
 
