@@ -175,15 +175,6 @@ Bind your telemetry series collections directly to the chart. Enable glassmorphi
                   IsSmooth="True" />
   </pc:CartesianChart.Series>
 
-  <!-- Interactive Controls Configuration -->
-  <pc:CartesianChart.TooltipConfiguration>
-    <pc:TooltipSettings ShowTrackball="True" 
-                        ShowTooltipBox="True"
-                        TooltipBackground="#0F172A"
-                        TooltipBorderBrush="#8B5CF6"
-                        TooltipOpacity="0.9" />
-  </pc:CartesianChart.TooltipConfiguration>
-
 </pc:CartesianChart>
 ```
 
@@ -194,4 +185,4 @@ Bind your telemetry series collections directly to the chart. Enable glassmorphi
 ProCharts relies on high-fidelity visual layers. You can configure:
 - **`IsSmooth`**: Employs mathematical spline interpolation to translate raw coordinates into a continuous Bézier path segment instead of rigid linear strokes.
 - **`AreaSeries`**: Automatically generates a vertical linear gradient from your defined `Fill` color down to the chart's bottom boundary baseline, creating a professional glassmorphic flow.
-- **`TooltipSettings`**: Enables customizable vertical dashed intercept trackballs that snap to the nearest coordinate point under the pointer, computing real-time intersections and rendering data in a floating visual overlay.
+- **Interactive Tooltips & Trackballs**: ProCharts automatically enables hover tooltips and interactive vertical trackballs by default. As the user moves the pointer, the engine snaps to the nearest point on the horizontal axis, draws a dashed alignment intercept line, and renders a floating glassmorphic information card displaying series values.
