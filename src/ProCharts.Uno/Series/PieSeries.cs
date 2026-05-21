@@ -1,7 +1,7 @@
 using System;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 
@@ -42,13 +42,13 @@ namespace ProCharts.Uno.Series
         /// Renders a circular sector slice with dynamic center explosion and donut settings.
         /// </summary>
         public void RenderSlice(
-            SKCanvas context,
+            DrawingContext context,
             Point center,
             double outerRadius,
             double innerRadius,
             double startAngle,
             double sweepAngle,
-            SKPaint defaultSKPaint)
+            Brush defaultBrush)
         {
             if (sweepAngle <= 0.01) return;
 
@@ -62,16 +62,16 @@ namespace ProCharts.Uno.Series
                 center = new Point(center.X + dx, center.Y + dy);
             }
 
-            var fillSKPaint = Fill ?? defaultSKPaint;
-            var baseStroke = Stroke ?? SKPaintes.Transparent;
-            var strokeSKPaint = new Pen(baseStroke, StrokeThickness);
+            var fillBrush = Fill ?? defaultBrush;
+            var baseStroke = Stroke ?? Brushes.Transparent;
+            var strokeBrush = new Pen(baseStroke, StrokeThickness);
 
             // Handle full circles (near 360 degrees) to prevent ArcTo collapse
             if (sweepAngle >= 359.9)
             {
                 if (innerRadius <= 0.0)
                 {
-                    context.DrawEllipse(fillSKPaint, strokeSKPaint, center, outerRadius, outerRadius);
+                    context.DrawEllipse(fillBrush, strokeBrush, center, outerRadius, outerRadius);
                 }
                 else
                 {
@@ -79,13 +79,13 @@ namespace ProCharts.Uno.Series
                     var outerGeom = new EllipseGeometry(new Rect(center.X - outerRadius, center.Y - outerRadius, outerRadius * 2, outerRadius * 2));
                     var innerGeom = new EllipseGeometry(new Rect(center.X - innerRadius, center.Y - innerRadius, innerRadius * 2, innerRadius * 2));
                     var donutGeom = new CombinedGeometry(GeometryCombineMode.Exclude, outerGeom, innerGeom);
-                    context.DrawGeometry(fillSKPaint, strokeSKPaint, donutGeom);
+                    context.DrawGeometry(fillBrush, strokeBrush, donutGeom);
                 }
                 return;
             }
 
-            // 2. Draw Donut or Pie Sector using SKPath
-            var geometry = new SKPath();
+            // 2. Draw Donut or Pie Sector using StreamGeometry
+            var geometry = new StreamGeometry();
             using (var ctx = geometry.Open())
             {
                 double radStart = startAngle * Math.PI / 180.0;
@@ -117,7 +117,7 @@ namespace ProCharts.Uno.Series
                 }
             }
 
-            context.DrawGeometry(fillSKPaint, strokeSKPaint, geometry);
+            context.DrawGeometry(fillBrush, strokeBrush, geometry);
         }
     }
 }

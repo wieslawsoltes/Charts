@@ -1,7 +1,7 @@
 using System;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -41,9 +41,9 @@ namespace ProCharts.Uno.Series
             var rawPoints = GetDataPoints();
             if (rawPoints.Count == 0) return;
 
-            var pointFill = Fill ?? context.DefaultSKPaint;
+            var pointFill = Fill ?? context.DefaultBrush;
             var pointStroke = Stroke ?? pointFill;
-            var pointSKPaint = new Pen(pointStroke, StrokeThickness);
+            var pointBrush = new Pen(pointStroke, StrokeThickness);
 
             double progress = context.AnimationProgress;
             double halfSize = Size / 2.0;
@@ -63,8 +63,8 @@ namespace ProCharts.Uno.Series
                 double animatedY = screenBaselineY + (screenPt.Y - screenBaselineY) * progress;
                 var animatedPt = new Point(screenPt.X, animatedY);
 
-                SKPaint? itemFill = pointFill;
-                if (!string.IsNullOrEmpty(PointSKPaintPath))
+                Brush? itemFill = pointFill;
+                if (!string.IsNullOrEmpty(PointBrushPath))
                 {
                     // Attempt dynamic item brush mapping
                     // Can fallback if not resolvable
@@ -73,16 +73,16 @@ namespace ProCharts.Uno.Series
                 switch (Shape)
                 {
                     case ScatterShape.Circle:
-                        context.Canvas.DrawEllipse(itemFill, pointSKPaint, animatedPt, halfAnim, halfAnim);
+                        context.Canvas.DrawEllipse(itemFill, pointBrush, animatedPt, halfAnim, halfAnim);
                         break;
 
                     case ScatterShape.Square:
                         var rect = new Rect(animatedPt.X - halfAnim, animatedPt.Y - halfAnim, animSize, animSize);
-                        context.Canvas.DrawRectangle(itemFill, pointSKPaint, rect);
+                        context.Canvas.DrawRectangle(itemFill, pointBrush, rect);
                         break;
 
                     case ScatterShape.Diamond:
-                        var geometry = new SKPath();
+                        var geometry = new StreamGeometry();
                         // using (var ctx = geometry.Open())
                         {
                             geometry.MoveTo(new Point(animatedPt.X, animatedPt.Y - halfAnim), true);
@@ -91,13 +91,13 @@ namespace ProCharts.Uno.Series
                             geometry.LineTo(new Point(animatedPt.X - halfAnim, animatedPt.Y));
                             geometry.Close(true);
                         }
-                        context.Canvas.DrawGeometry(itemFill, pointSKPaint, geometry);
+                        context.Canvas.DrawGeometry(itemFill, pointBrush, geometry);
                         break;
 
                     case ScatterShape.Cross:
-                        var crossSKPaint = new Pen(pointStroke, StrokeThickness + 1.0);
-                        context.Canvas.DrawLine(crossSKPaint, new Point(animatedPt.X - halfAnim, animatedPt.Y), new Point(animatedPt.X + halfAnim, animatedPt.Y));
-                        context.Canvas.DrawLine(crossSKPaint, new Point(animatedPt.X, animatedPt.Y - halfAnim), new Point(animatedPt.X, animatedPt.Y + halfAnim));
+                        var crossBrush = new Pen(pointStroke, StrokeThickness + 1.0);
+                        context.Canvas.DrawLine(crossBrush, new Point(animatedPt.X - halfAnim, animatedPt.Y), new Point(animatedPt.X + halfAnim, animatedPt.Y));
+                        context.Canvas.DrawLine(crossBrush, new Point(animatedPt.X, animatedPt.Y - halfAnim), new Point(animatedPt.X, animatedPt.Y + halfAnim));
                         break;
                 }
             }

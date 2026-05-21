@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using ProCharts.Uno.Maths;
 
 namespace ProCharts.Uno.Series

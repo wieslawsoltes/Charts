@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Windows.Foundation;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 using ProCharts.Uno.Maths;
@@ -12,16 +12,16 @@ namespace ProCharts.Uno.Series
     public class HiloSeries : FinancialSeries
     {
         public static readonly DependencyProperty UpStrokeProperty =
-            DependencyProperty.Register(nameof(UpStroke), typeof(SKPaint), typeof(HiloSeries), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+            DependencyProperty.Register(nameof(UpStroke), typeof(Brush), typeof(HiloSeries), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
         public static readonly DependencyProperty DownStrokeProperty =
-            DependencyProperty.Register(nameof(DownStroke), typeof(SKPaint), typeof(HiloSeries), new PropertyMetadata(default(SKPaint?), OnPropertyChanged));
+            DependencyProperty.Register(nameof(DownStroke), typeof(Brush), typeof(HiloSeries), new PropertyMetadata(default(Brush?), OnPropertyChanged));
 
-        public SKPaint? UpStroke { get => (SKPaint?)GetValue(UpStrokeProperty);
+        public Brush? UpStroke { get => (Brush?)GetValue(UpStrokeProperty);
             set => SetValue(UpStrokeProperty, value);
         }
 
-        public SKPaint? DownStroke { get => (SKPaint?)GetValue(DownStrokeProperty);
+        public Brush? DownStroke { get => (Brush?)GetValue(DownStrokeProperty);
             set => SetValue(DownStrokeProperty, value);
         }
 
@@ -34,13 +34,13 @@ namespace ProCharts.Uno.Series
             var points = GetFinancialPoints();
             if (points.Count == 0) return;
 
-            var defaultSKPaint = Stroke ?? context.DefaultSKPaint;
-            var bullStroke = UpStroke ?? defaultSKPaint;
-            var bearStroke = DownStroke ?? defaultSKPaint;
+            var defaultBrush = Stroke ?? context.DefaultBrush;
+            var bullStroke = UpStroke ?? defaultBrush;
+            var bearStroke = DownStroke ?? defaultBrush;
 
             double strokeThickness = StrokeThickness > 0 ? StrokeThickness : 2.0;
-            var bullSKPaint = new Pen(bullStroke, strokeThickness);
-            var bearSKPaint = new Pen(bearStroke, strokeThickness);
+            var bullBrush = new Pen(bullStroke, strokeThickness);
+            var bearBrush = new Pen(bearStroke, strokeThickness);
 
             double progress = context.AnimationProgress;
 
@@ -54,14 +54,14 @@ namespace ProCharts.Uno.Series
                 double low = mid + (fp.Low - mid) * progress;
 
                 bool isBullish = fp.Close >= fp.Open;
-                var candleSKPaint = isBullish ? bullSKPaint : bearSKPaint;
+                var candleBrush = isBullish ? bullBrush : bearBrush;
 
                 // Screen coordinates
                 var ptHigh = context.Transform.ToScreen(fp.X, high);
                 var ptLow = context.Transform.ToScreen(fp.X, low);
 
                 // Draw vertical High-Low line
-                context.Canvas.DrawLine((float)ptHigh.X, (float)ptHigh.Y, (float)ptLow.X, (float)ptLow.Y, candleSKPaint);
+                context.Canvas.DrawLine((float)ptHigh.X, (float)ptHigh.Y, (float)ptLow.X, (float)ptLow.Y, candleBrush);
             }
         }
     }

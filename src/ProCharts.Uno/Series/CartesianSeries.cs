@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.UI.Xaml;
-using SkiaSharp;
+
 using Windows.Foundation;
 using ProCharts.Uno.Maths;
 
