@@ -374,10 +374,45 @@ namespace ProCharts.Uno.Maths
         private readonly Microsoft.UI.Xaml.Controls.Canvas _canvas;
         private readonly Stack<TransformGroup> _transformStack = new();
         private readonly Stack<Geometry> _clipStack = new();
+        private int _childIndex = 0;
 
         public DrawingContext(Microsoft.UI.Xaml.Controls.Canvas canvas)
         {
             _canvas = canvas;
+        }
+
+        private T GetOrCreateChild<T>() where T : UIElement, new()
+        {
+            if (_childIndex < _canvas.Children.Count)
+            {
+                var existing = _canvas.Children[_childIndex];
+                if (existing is T element)
+                {
+                    if (element.Visibility != Visibility.Visible)
+                    {
+                        element.Visibility = Visibility.Visible;
+                    }
+                    _childIndex++;
+                    return element;
+                }
+                else
+                {
+                    _canvas.Children.RemoveAt(_childIndex);
+                }
+            }
+
+            var newElement = new T();
+            _canvas.Children.Insert(_childIndex, newElement);
+            _childIndex++;
+            return newElement;
+        }
+
+        public void CleanupRemainingElements()
+        {
+            while (_canvas.Children.Count > _childIndex)
+            {
+                _canvas.Children.RemoveAt(_canvas.Children.Count - 1);
+            }
         }
 
         private TransformGroup CurrentTransform
@@ -460,19 +495,24 @@ namespace ProCharts.Uno.Maths
             {
                 element.RenderTransform = CurrentTransform;
             }
+            else
+            {
+                element.RenderTransform = null;
+            }
             var clip = CurrentClip;
             if (clip != null)
             {
                 element.Clip = clip;
             }
+            else
+            {
+                element.Clip = null;
+            }
         }
 
         private void ApplyStrokeAndFill(Microsoft.UI.Xaml.Shapes.Shape shape, Brush? fill, Pen? stroke)
         {
-            if (fill != null)
-            {
-                shape.Fill = fill;
-            }
+            shape.Fill = fill;
             if (stroke != null)
             {
                 shape.Stroke = stroke.Brush;
@@ -488,26 +528,35 @@ namespace ProCharts.Uno.Maths
                     shape.StrokeDashArray = dashCollection;
                     shape.StrokeDashOffset = stroke.Dash.Offset;
                 }
+                else
+                {
+                    shape.StrokeDashArray = null;
+                    shape.StrokeDashOffset = 0;
+                }
 
                 shape.StrokeStartLineCap = stroke.LineCap;
                 shape.StrokeEndLineCap = stroke.LineCap;
                 shape.StrokeLineJoin = stroke.LineJoin;
+            }
+            else
+            {
+                shape.Stroke = null;
+                shape.StrokeThickness = 0;
+                shape.StrokeDashArray = null;
+                shape.StrokeDashOffset = 0;
             }
         }
 
         public void DrawLine(Pen? pen, Point p1, Point p2)
         {
             if (pen == null) return;
-            var line = new Microsoft.UI.Xaml.Shapes.Line
-            {
-                X1 = p1.X,
-                Y1 = p1.Y,
-                X2 = p2.X,
-                Y2 = p2.Y
-            };
+            var line = GetOrCreateChild<Microsoft.UI.Xaml.Shapes.Line>();
+            line.X1 = p1.X;
+            line.Y1 = p1.Y;
+            line.X2 = p2.X;
+            line.Y2 = p2.Y;
             ApplyStrokeAndFill(line, null, pen);
             ApplyTransformAndClip(line);
-            _canvas.Children.Add(line);
         }
 
         public void DrawLine(double x1, double y1, double x2, double y2, Pen? pen)
@@ -524,13 +573,11 @@ namespace ProCharts.Uno.Maths
         {
             if (ft == null || string.IsNullOrEmpty(ft.Text)) return;
 
-            var tb = new TextBlock
-            {
-                Text = ft.Text,
-                FontSize = ft.FontSize,
-                FlowDirection = ft.FlowDirection,
-                Foreground = ft.Paint ?? new SolidColorBrush(Microsoft.UI.Colors.Black)
-            };
+            var tb = GetOrCreateChild<TextBlock>();
+            tb.Text = ft.Text;
+            tb.FontSize = ft.FontSize;
+            tb.FlowDirection = ft.FlowDirection;
+            tb.Foreground = ft.Paint ?? new SolidColorBrush(Microsoft.UI.Colors.Black);
 
             if (ft.Typeface != null)
             {
@@ -560,51 +607,43 @@ namespace ProCharts.Uno.Maths
             Canvas.SetLeft(tb, origin.X);
             Canvas.SetTop(tb, origin.Y);
             ApplyTransformAndClip(tb);
-            _canvas.Children.Add(tb);
         }
 
         public void DrawRectangle(Brush? fill, Pen? stroke, Rect rect)
         {
-            var r = new Microsoft.UI.Xaml.Shapes.Rectangle
-            {
-                Width = Math.Max(0, rect.Width),
-                Height = Math.Max(0, rect.Height)
-            };
+            var r = GetOrCreateChild<Microsoft.UI.Xaml.Shapes.Rectangle>();
+            r.Width = Math.Max(0, rect.Width);
+            r.Height = Math.Max(0, rect.Height);
+            r.RadiusX = 0;
+            r.RadiusY = 0;
             ApplyStrokeAndFill(r, fill, stroke);
             Canvas.SetLeft(r, rect.X);
             Canvas.SetTop(r, rect.Y);
             ApplyTransformAndClip(r);
-            _canvas.Children.Add(r);
         }
 
         public void DrawRectangle(Brush? fill, Pen? stroke, RoundedRect roundedRect)
         {
-            var r = new Microsoft.UI.Xaml.Shapes.Rectangle
-            {
-                Width = Math.Max(0, roundedRect.Rect.Width),
-                Height = Math.Max(0, roundedRect.Rect.Height),
-                RadiusX = roundedRect.CornerRadius.TopLeft,
-                RadiusY = roundedRect.CornerRadius.TopLeft
-            };
+            var r = GetOrCreateChild<Microsoft.UI.Xaml.Shapes.Rectangle>();
+            r.Width = Math.Max(0, roundedRect.Rect.Width);
+            r.Height = Math.Max(0, roundedRect.Rect.Height);
+            r.RadiusX = roundedRect.CornerRadius.TopLeft;
+            r.RadiusY = roundedRect.CornerRadius.TopLeft;
             ApplyStrokeAndFill(r, fill, stroke);
             Canvas.SetLeft(r, roundedRect.Rect.X);
             Canvas.SetTop(r, roundedRect.Rect.Y);
             ApplyTransformAndClip(r);
-            _canvas.Children.Add(r);
         }
 
         public void DrawEllipse(Brush? fill, Pen? stroke, Point center, double rx, double ry)
         {
-            var e = new Microsoft.UI.Xaml.Shapes.Ellipse
-            {
-                Width = rx * 2,
-                Height = ry * 2
-            };
+            var e = GetOrCreateChild<Microsoft.UI.Xaml.Shapes.Ellipse>();
+            e.Width = rx * 2;
+            e.Height = ry * 2;
             ApplyStrokeAndFill(e, fill, stroke);
             Canvas.SetLeft(e, center.X - rx);
             Canvas.SetTop(e, center.Y - ry);
             ApplyTransformAndClip(e);
-            _canvas.Children.Add(e);
         }
 
         public void DrawGeometry(Brush? fill, Pen? stroke, Geometry? geometry)
@@ -623,15 +662,12 @@ namespace ProCharts.Uno.Maths
 
         private void DrawGeometryInternal(Brush? fill, Pen? stroke, Microsoft.UI.Xaml.Media.Geometry winGeometry)
         {
-            var p = new Microsoft.UI.Xaml.Shapes.Path
-            {
-                Data = winGeometry
-            };
+            var p = GetOrCreateChild<Microsoft.UI.Xaml.Shapes.Path>();
+            p.Data = winGeometry;
             ApplyStrokeAndFill(p, fill, stroke);
             Canvas.SetLeft(p, 0);
             Canvas.SetTop(p, 0);
             ApplyTransformAndClip(p);
-            _canvas.Children.Add(p);
         }
 
         public IDisposable PushTransform(Matrix matrix)

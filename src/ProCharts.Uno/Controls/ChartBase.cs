@@ -168,7 +168,6 @@ namespace ProCharts.Uno.Controls
         public void InvalidateVisual()
         {
             if (_canvas == null) return;
-            _canvas.Children.Clear();
 
             double w = ActualWidth;
             double h = ActualHeight;
@@ -200,6 +199,9 @@ namespace ProCharts.Uno.Controls
             {
                 DrawTooltip(context, _mousePoint.Value);
             }
+
+            // 6. Cleanup remaining unused visual elements
+            context.CleanupRemainingElements();
         }
 
         protected virtual void UpdateHoverState(Point? mousePoint)
