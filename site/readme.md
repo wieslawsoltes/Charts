@@ -13,7 +13,7 @@ ProCharts is available as completely symmetric packages for both **Avalonia UI**
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 * **Direct Vector Rendering**: Bypasses the UI logical tree to write directly to the screen via highly optimized GPU/Skia drawing context calls.
 * **Rich Aesthetic System**: State-of-the-art dark styling, glassmorphic hover overlays, pulsing concentric rings, and vibrant default palettes.
@@ -28,7 +28,7 @@ ProCharts is available as completely symmetric packages for both **Avalonia UI**
 
 ---
 
-## 🏛️ Architecture Breakdown
+## Architecture Breakdown
 
 The ProCharts system consists of three architectural layers working together:
 
@@ -80,7 +80,7 @@ When telemetry feeds drop connection, databases write `null` or `double.NaN`. Pr
 
 ---
 
-## 📊 Available Series Geometries
+## Available Series Geometries
 
 ### `LineSeries`
 Perfect for continuous numeric timelines. Employs a custom segment builder that separates arrays into non-contiguous slices when NaN bounds are crossed, maintaining pristine gaps.
@@ -100,37 +100,37 @@ Creating a frictionless radial exit physics effect.
 
 ---
 
-## 🔮 Advanced Controls & Visualizations
+## Advanced Controls & Visualizations
 
 In addition to traditional Cartesian plots, ProCharts offers dedicated advanced controls for financial analysis, status monitoring, structural hierarchies, statistical distribution, and executive analytics dashboards:
 
-### 📈 Financial Ecosystem
+### Financial Ecosystem
 * **`CandlestickSeries`**: Custom OHLC visual representing market trades. Renders high-fidelity wick stems and body blocks with custom brush overrides.
 * **`OhlcSeries`**: Elegant tick-bar representation of Open, High, Low, and Close market prices with horizontal tick projections.
 * **`HiloSeries`**: Minimalist range plots showcasing high-to-low bands.
 
-### 🎛️ Status & Monitoring Gauges
+### Status & Monitoring Gauges
 * **`CircularGauge`**: Radial swept gauge featuring warnings, needle trackers, custom swept thickness, and a central digital readout.
 * **`LinearGauge`**: Premium horizontal or vertical glassmorphic slider highlighting qualitative thresholds (Warning/Error).
 * **`LiquidFillGauge`**: Dynamic container containing animated vector sine-wave liquid sweeps rising to represent precise telemetry storage.
 
-### 🕸️ Hierarchy & Process Flows
+### Hierarchy & Process Flows
 * **`SankeyChart`**: Stunning flow maps using Bézier curves to link variable weight ribbons from source to destination nodes.
 * **`TreemapChart`**: Squarified partition rectangles visualizing deep hierarchical structures with adaptive categorical colors.
 
-### 🧪 Statistical Plotting
+### Statistical Plotting
 * **`BoxPlotSeries`**: Full distribution representation highlighting upper/lower bounds, whiskers, median line, interquartile ranges, and floating outlier markers.
 * **`BeeswarmPlotSeries`**: Dynamic point-packing swarm scatter coordinates that resolve overlapping scatter collisions.
 * **`HistogramSeries`**: Automatic value binning and frequency distributions grouped in clean modern bars.
 
-### 📊 Analytics & KPI Dashboards
+### Analytics & KPI Dashboards
 * **`KpiCard`**: Ultra-premium glassmorphic card showcasing critical indicators, inline mini-sparkline vectors, and colored positive/negative trend badges.
 * **`HeatmapChart`**: Cartesian category load matrix cells representing heat density via smooth palette lookup interpolations.
 * **`BulletChart`**: Highly compact linear dashboard control plotting target markers against colored qualitative range intervals.
 
 ---
 
-## 🎨 Professional Themes and Palettes
+## Professional Themes and Palettes
 
 ProCharts includes prebuilt custom palettes to match modern dark desktop trends:
 1. **Modern**: Elegant slate indigoes, teals, and light purples (`Palette.Modern`).
