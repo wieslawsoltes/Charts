@@ -624,15 +624,26 @@ namespace ProCharts.Uno.Maths
 
         public void DrawRectangle(Brush? fill, Pen? stroke, RoundedRect roundedRect)
         {
-            var r = GetOrCreateChild<Microsoft.UI.Xaml.Shapes.Rectangle>();
-            r.Width = Math.Max(0, roundedRect.Rect.Width);
-            r.Height = Math.Max(0, roundedRect.Rect.Height);
-            r.RadiusX = roundedRect.CornerRadius.TopLeft;
-            r.RadiusY = roundedRect.CornerRadius.TopLeft;
-            ApplyStrokeAndFill(r, fill, stroke);
-            Canvas.SetLeft(r, roundedRect.Rect.X);
-            Canvas.SetTop(r, roundedRect.Rect.Y);
-            ApplyTransformAndClip(r);
+            var b = GetOrCreateChild<Border>();
+            b.Width = Math.Max(0, roundedRect.Rect.Width);
+            b.Height = Math.Max(0, roundedRect.Rect.Height);
+            b.CornerRadius = roundedRect.CornerRadius;
+            b.Background = fill;
+
+            if (stroke != null)
+            {
+                b.BorderBrush = stroke.Brush;
+                b.BorderThickness = new Thickness(stroke.Thickness);
+            }
+            else
+            {
+                b.BorderBrush = null;
+                b.BorderThickness = new Thickness(0);
+            }
+
+            Canvas.SetLeft(b, roundedRect.Rect.X);
+            Canvas.SetTop(b, roundedRect.Rect.Y);
+            ApplyTransformAndClip(b);
         }
 
         public void DrawEllipse(Brush? fill, Pen? stroke, Point center, double rx, double ry)

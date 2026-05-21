@@ -76,6 +76,28 @@ namespace ProCharts.Uno.Styles
                 byte b = Convert.ToByte(hex.Substring(4, 2), 16);
                 return new Color(r, g, b, 255);
             }
+            else if (hex.Length == 4)
+            {
+                string aStr = new string(hex[0], 2);
+                string rStr = new string(hex[1], 2);
+                string gStr = new string(hex[2], 2);
+                string bStr = new string(hex[3], 2);
+                byte a = Convert.ToByte(aStr, 16);
+                byte r = Convert.ToByte(rStr, 16);
+                byte g = Convert.ToByte(gStr, 16);
+                byte b = Convert.ToByte(bStr, 16);
+                return new Color(r, g, b, a);
+            }
+            else if (hex.Length == 3)
+            {
+                string rStr = new string(hex[0], 2);
+                string gStr = new string(hex[1], 2);
+                string bStr = new string(hex[2], 2);
+                byte r = Convert.ToByte(rStr, 16);
+                byte g = Convert.ToByte(gStr, 16);
+                byte b = Convert.ToByte(bStr, 16);
+                return new Color(r, g, b, 255);
+            }
             return new Color(0, 0, 0, 255);
         }
     }
