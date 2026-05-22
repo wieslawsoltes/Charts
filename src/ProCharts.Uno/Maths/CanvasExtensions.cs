@@ -760,6 +760,7 @@ namespace ProCharts.Uno.Maths
         public PathOpenContext(StreamGeometry path) => _path = path;
 
         public void MoveTo(Point p, bool isFilled = true) => _path.MoveTo(p, isFilled);
+        public void BeginFigure(Point p, bool isFilled = true) => _path.MoveTo(p, isFilled);
         public void LineTo(Point p) => _path.LineTo(p);
         public void CubicBezierTo(Point p1, Point p2, Point p3) => _path.CubicBezierTo(p1, p2, p3);
         public void QuadBezierTo(Point p1, Point p2) => _path.QuadBezierTo(p1, p2);
@@ -768,6 +769,7 @@ namespace ProCharts.Uno.Maths
             _path.ArcTo(p, size, rotationAngle, isLargeArc, sweepDirection);
 
         public void Close(bool close) => _path.Close(close);
+        public void EndFigure(bool close) => _path.Close(close);
 
         public void Dispose()
         {
