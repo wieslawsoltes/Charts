@@ -136,6 +136,10 @@
                     <ListBoxItem Content="Statistical Plotting" Tag="Statistical" />
                     <ListBoxItem Content="Analytics Dashboards" Tag="Analytics" />
                     <ListBoxItem Content="Advanced Analytics" Tag="AdvancedAnalytics" />
+                    <ListBoxItem Content="Nightingale Rose" Tag="NightingaleRose" />
+                    <ListBoxItem Content="Gantt Timeline" Tag="Gantt" />
+                    <ListBoxItem Content="Carpet Plot" Tag="Carpet" />
+                    <ListBoxItem Content="Bubble Map" Tag="BubbleMap" />
                 </ListBox>
 
                 <!-- Info Box -->
@@ -325,6 +329,34 @@
                                     <pc:TernaryChart x:Name="TernaryCtrl" Title="Chemical Phase Diagram (Ternary)" APath="ComponentA" BPath="ComponentB" CPath="ComponentC" />
                                 </Border>
                             </Grid>
+                        </Grid>
+
+                        <!-- 12. NIGHTINGALE ROSE VIEW -->
+                        <Grid x:Name="NightingaleRoseView" IsVisible="False">
+                            <Border Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:NightingaleRoseChart x:Name="NightingaleRoseChartCtrl" Title="Nightingale Polar Area Rose" IsAnimationEnabled="True" HollowRadius="0.3" StartAngle="0" TotalAngle="360" />
+                            </Border>
+                        </Grid>
+
+                        <!-- 13. GANTT VIEW -->
+                        <Grid x:Name="GanttView" IsVisible="False">
+                            <Border Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:GanttChart x:Name="GanttChartCtrl" Title="Project Schedule Timeline" IsAnimationEnabled="True" />
+                            </Border>
+                        </Grid>
+
+                        <!-- 14. CARPET VIEW -->
+                        <Grid x:Name="CarpetView" IsVisible="False">
+                            <Border Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:CarpetPlotChart x:Name="CarpetPlotChartCtrl" Title="Structural Parameter Carpet Plot" IsAnimationEnabled="True" />
+                            </Border>
+                        </Grid>
+
+                        <!-- 15. BUBBLE MAP VIEW -->
+                        <Grid x:Name="BubbleMapView" IsVisible="False">
+                            <Border Background="#1E293B" CornerRadius="12" Margin="6" Padding="12" BorderBrush="#334155" BorderThickness="1">
+                                <pc:BubbleMapChart x:Name="BubbleMapChartCtrl" Title="Global Seismic Activity Map" IsAnimationEnabled="True" />
+                            </Border>
                         </Grid>
                     </Grid>
                 </Border>
@@ -562,6 +594,39 @@
                             <StackPanel x:Name="AdvancedAnalyticsControls" Spacing="4" IsVisible="False">
                                 <TextBlock Text="ADVANCED PROPERTIES" Classes="header" />
                                 <Button Content="Simulate Pipeline Flows" Classes="primary" Click="OnSimulateAdvancedAnalytics" Margin="0,4,0,8" />
+                            </StackPanel>
+
+                            <!-- NIGHTINGALE ROSE CONTROLS -->
+                            <StackPanel x:Name="NightingaleRoseControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="ROSE PROPERTIES" Classes="header" />
+                                <TextBlock Text="Hollow Center Ratio" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="RoseHollowSlider" Minimum="0.0" Maximum="0.9" Value="0.3" ValueChanged="OnRoseHollowChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #RoseHollowSlider.Value, StringFormat={}{0:0%}}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+                                <TextBlock Text="Start Angle" Classes="label" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Slider Grid.Column="0" x:Name="RoseStartAngleSlider" Minimum="0" Maximum="360" Value="0" ValueChanged="OnRoseStartAngleChanged" />
+                                    <TextBlock Grid.Column="1" Text="{Binding #RoseStartAngleSlider.Value, StringFormat={}{0:0}°}" Foreground="White" FontSize="11" Margin="10,0,0,10" VerticalAlignment="Center" />
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- GANTT CONTROLS -->
+                            <StackPanel x:Name="GanttControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="GANTT PROPERTIES" Classes="header" />
+                                <Button Content="Advance Task Progress" Classes="primary" Click="OnAdvanceGanttProgress" Margin="0,4,0,8" />
+                            </StackPanel>
+
+                            <!-- CARPET CONTROLS -->
+                            <StackPanel x:Name="CarpetControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="CARPET PLOT PROPERTIES" Classes="header" />
+                                <Button Content="Scramble Grid Values" Classes="primary" Click="OnScrambleCarpet" Margin="0,4,0,8" />
+                            </StackPanel>
+
+                            <!-- BUBBLE MAP CONTROLS -->
+                            <StackPanel x:Name="BubbleMapControls" Spacing="4" IsVisible="False">
+                                <TextBlock Text="MAP PROPERTIES" Classes="header" />
+                                <Button Content="Simulate Seismic Activity" Classes="primary" Click="OnSimulateMapBubbles" Margin="0,4,0,8" />
                             </StackPanel>
 
                             <Separator BorderBrush="#2A374E" Margin="0,10" />
