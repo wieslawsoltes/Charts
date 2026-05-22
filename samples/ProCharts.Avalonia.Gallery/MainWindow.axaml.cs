@@ -84,6 +84,9 @@ namespace ProCharts.Avalonia.Gallery
         private readonly AvaloniaList<AlluvialChart.AlluvialLink> _alluvialLinks = new();
         private readonly AvaloniaList<SunburstChart.SunburstNode> _sunburstRoots = new();
 
+        private readonly AvaloniaList<GanttTask> _ganttTasks = new();
+        private readonly AvaloniaList<MapBubbleItem> _mapBubbles = new();
+
         // Active Chart Tracking
         private ChartBase _activeChart = null!;
         private string _activeCategory = "Line";
@@ -464,6 +467,24 @@ namespace ProCharts.Avalonia.Gallery
 
             _sunburstRoots.Add(sunEng);
             _sunburstRoots.Add(sunOps);
+
+            // Gantt Tasks
+            _ganttTasks.Clear();
+            _ganttTasks.Add(new GanttTask { Name = "Requirements Analysis", Start = DateTime.Today.AddDays(-10), End = DateTime.Today.AddDays(-5), Progress = 1.0 });
+            _ganttTasks.Add(new GanttTask { Name = "System Architecture", Start = DateTime.Today.AddDays(-6), End = DateTime.Today.AddDays(-1), Progress = 0.85 });
+            _ganttTasks.Add(new GanttTask { Name = "Component Implementation", Start = DateTime.Today.AddDays(-2), End = DateTime.Today.AddDays(8), Progress = 0.4 });
+            _ganttTasks.Add(new GanttTask { Name = "Unit & Integration Testing", Start = DateTime.Today.AddDays(5), End = DateTime.Today.AddDays(12), Progress = 0.1 });
+            _ganttTasks.Add(new GanttTask { Name = "Deployment & Handover", Start = DateTime.Today.AddDays(10), End = DateTime.Today.AddDays(15), Progress = 0.0 });
+
+            // Geospatial Bubbles
+            _mapBubbles.Clear();
+            _mapBubbles.Add(new MapBubbleItem { Label = "Tokyo", Latitude = 35.6762, Longitude = 139.6503, Value = 15.0 });
+            _mapBubbles.Add(new MapBubbleItem { Label = "London", Latitude = 51.5074, Longitude = -0.1278, Value = 12.0 });
+            _mapBubbles.Add(new MapBubbleItem { Label = "New York", Latitude = 40.7128, Longitude = -74.0060, Value = 14.0 });
+            _mapBubbles.Add(new MapBubbleItem { Label = "Sydney", Latitude = -33.8688, Longitude = 151.2093, Value = 8.0 });
+            _mapBubbles.Add(new MapBubbleItem { Label = "Rio de Janeiro", Latitude = -22.9068, Longitude = -43.1729, Value = 9.0 });
+            _mapBubbles.Add(new MapBubbleItem { Label = "Cape Town", Latitude = -33.9249, Longitude = 18.4241, Value = 7.0 });
+            _mapBubbles.Add(new MapBubbleItem { Label = "San Francisco", Latitude = 37.7749, Longitude = -122.4194, Value = 11.0 });
         }
 
         private void SetupCharts()
@@ -647,6 +668,50 @@ namespace ProCharts.Avalonia.Gallery
             TernaryCtrl.APath = "ComponentA";
             TernaryCtrl.BPath = "ComponentB";
             TernaryCtrl.CPath = "ComponentC";
+
+            // --- NIGHTINGALE ROSE CHART SETUP ---
+            NightingaleRoseChartCtrl.Series.Clear();
+            NightingaleRoseChartCtrl.Series.Add(new RoseSeries { Title = "North", Value = 65.0 });
+            NightingaleRoseChartCtrl.Series.Add(new RoseSeries { Title = "North-East", Value = 40.0 });
+            NightingaleRoseChartCtrl.Series.Add(new RoseSeries { Title = "East", Value = 55.0 });
+            NightingaleRoseChartCtrl.Series.Add(new RoseSeries { Title = "South-East", Value = 70.0 });
+            NightingaleRoseChartCtrl.Series.Add(new RoseSeries { Title = "South", Value = 30.0 });
+            NightingaleRoseChartCtrl.Series.Add(new RoseSeries { Title = "South-West", Value = 45.0 });
+            NightingaleRoseChartCtrl.Series.Add(new RoseSeries { Title = "West", Value = 80.0 });
+            NightingaleRoseChartCtrl.Series.Add(new RoseSeries { Title = "North-West", Value = 50.0 });
+
+            // --- GANTT CHART SETUP ---
+            GanttChartCtrl.Tasks = _ganttTasks;
+
+            // --- CARPET PLOT SETUP ---
+            int carpetRows = 5;
+            int carpetCols = 5;
+            double[] carpetXVals = new double[carpetRows * carpetCols];
+            double[] carpetYVals = new double[carpetRows * carpetCols];
+            for (int r = 0; r < carpetRows; r++)
+            {
+                double u = (double)r / (carpetRows - 1);
+                for (int c = 0; c < carpetCols; c++)
+                {
+                    double v = (double)c / (carpetCols - 1);
+                    int idx = r * carpetCols + c;
+                    carpetXVals[idx] = 10.0 + u * 40.0 + Math.Sin(v * Math.PI) * 5.0;
+                    carpetYVals[idx] = 20.0 + v * 30.0 + Math.Cos(u * Math.PI) * 4.0;
+                }
+            }
+            CarpetPlotChartCtrl.Series.Clear();
+            CarpetPlotChartCtrl.Series.Add(new CarpetSeries
+            {
+                Title = "Parameter Grid Alpha",
+                Rows = carpetRows,
+                Columns = carpetCols,
+                XValues = carpetXVals,
+                YValues = carpetYVals,
+                StrokeThickness = 2.0
+            });
+
+            // --- BUBBLE MAP SETUP ---
+            BubbleMapChartCtrl.Bubbles = _mapBubbles;
         }
 
         // --- NAVIGATION ROUTINES ---
@@ -677,6 +742,10 @@ namespace ProCharts.Avalonia.Gallery
                 StatisticalView.IsVisible = false;
                 AnalyticsView.IsVisible = false;
                 AdvancedAnalyticsView.IsVisible = false;
+                NightingaleRoseView.IsVisible = false;
+                GanttView.IsVisible = false;
+                CarpetView.IsVisible = false;
+                BubbleMapView.IsVisible = false;
 
                 // Hide all config panels
                 LineControls.IsVisible = false;
@@ -690,6 +759,10 @@ namespace ProCharts.Avalonia.Gallery
                 StatisticalControls.IsVisible = false;
                 AnalyticsControls.IsVisible = false;
                 AdvancedAnalyticsControls.IsVisible = false;
+                NightingaleRoseControls.IsVisible = false;
+                GanttControls.IsVisible = false;
+                CarpetControls.IsVisible = false;
+                BubbleMapControls.IsVisible = false;
 
                 switch (tag)
                 {
@@ -770,6 +843,34 @@ namespace ProCharts.Avalonia.Gallery
                         ActiveCategoryTitle.Text = "Advanced Pipeline & WordCloud Analytics";
                         ActiveCategorySubtitle.Text = "Advanced enterprise visualization including segment funnels, word clouds, waffle partitions, and ternary chemical plots.";
                         break;
+                    case "NightingaleRose":
+                        NightingaleRoseView.IsVisible = true;
+                        NightingaleRoseControls.IsVisible = true;
+                        _activeChart = NightingaleRoseChartCtrl;
+                        ActiveCategoryTitle.Text = "Nightingale Polar Area Rose";
+                        ActiveCategorySubtitle.Text = "Displays radial categories with proportional radial lengths and equal sweep angles.";
+                        break;
+                    case "Gantt":
+                        GanttView.IsVisible = true;
+                        GanttControls.IsVisible = true;
+                        _activeChart = GanttChartCtrl;
+                        ActiveCategoryTitle.Text = "Gantt Timeline Schedule";
+                        ActiveCategorySubtitle.Text = "Visualizes project timelines, task sequences, and task completion percentages.";
+                        break;
+                    case "Carpet":
+                        CarpetView.IsVisible = true;
+                        CarpetControls.IsVisible = true;
+                        _activeChart = CarpetPlotChartCtrl;
+                        ActiveCategoryTitle.Text = "Multi-Parameter Carpet Plot";
+                        ActiveCategorySubtitle.Text = "Visualizes overlapping coordinate spaces and parameters on a distorted curvilinear grid.";
+                        break;
+                    case "BubbleMap":
+                        BubbleMapView.IsVisible = true;
+                        BubbleMapControls.IsVisible = true;
+                        _activeChart = BubbleMapChartCtrl;
+                        ActiveCategoryTitle.Text = "Bubble Map Geospatial Projection";
+                        ActiveCategorySubtitle.Text = "Displays geospatial markers styled and scaled according to coordinates and metadata over vector outlines.";
+                        break;
                 }
 
                 // Trigger entry animation on the newly selected chart
@@ -822,6 +923,10 @@ namespace ProCharts.Avalonia.Gallery
                 WaffleCtrl.Palette = palette;
                 WordCloudCtrl.Palette = palette;
                 TernaryCtrl.Palette = palette;
+                NightingaleRoseChartCtrl.Palette = palette;
+                GanttChartCtrl.Palette = palette;
+                CarpetPlotChartCtrl.Palette = palette;
+                BubbleMapChartCtrl.Palette = palette;
 
                 _activeChart.InvalidateVisual();
             }
@@ -1547,6 +1652,26 @@ namespace ProCharts.Avalonia.Gallery
             {
                 OnSimulateAdvancedAnalytics(this, null!);
             }
+            else if (_activeCategory == "NightingaleRose")
+            {
+                foreach (var series in NightingaleRoseChartCtrl.Series)
+                {
+                    series.Value = Math.Clamp(series.Value + (rand.NextDouble() - 0.5) * 20.0, 10.0, 100.0);
+                }
+                NightingaleRoseChartCtrl?.StartEntryAnimation();
+            }
+            else if (_activeCategory == "Gantt")
+            {
+                OnAdvanceGanttProgress(this, null!);
+            }
+            else if (_activeCategory == "Carpet")
+            {
+                OnScrambleCarpet(this, null!);
+            }
+            else if (_activeCategory == "BubbleMap")
+            {
+                OnSimulateMapBubbles(this, null!);
+            }
         }
 
         private void RandomizeSunburst(IEnumerable<SunburstChart.SunburstNode> nodes, Random rand)
@@ -1859,6 +1984,58 @@ namespace ProCharts.Avalonia.Gallery
             WaffleCtrl?.StartEntryAnimation();
             WordCloudCtrl?.StartEntryAnimation();
             TernaryCtrl?.StartEntryAnimation();
+        }
+
+        private void OnRoseHollowChanged(object? sender, RangeBaseValueChangedEventArgs e)
+        {
+            if (RoseHollowSlider == null || NightingaleRoseChartCtrl == null) return;
+            NightingaleRoseChartCtrl.HollowRadius = RoseHollowSlider.Value;
+            NightingaleRoseChartCtrl.InvalidateVisual();
+        }
+
+        private void OnRoseStartAngleChanged(object? sender, RangeBaseValueChangedEventArgs e)
+        {
+            if (RoseStartAngleSlider == null || NightingaleRoseChartCtrl == null) return;
+            NightingaleRoseChartCtrl.StartAngle = RoseStartAngleSlider.Value;
+            NightingaleRoseChartCtrl.InvalidateVisual();
+        }
+
+        private void OnAdvanceGanttProgress(object sender, RoutedEventArgs e)
+        {
+            var rand = Random.Shared;
+            foreach (var task in _ganttTasks)
+            {
+                if (task.Progress < 1.0)
+                {
+                    task.Progress = Math.Min(1.0, task.Progress + rand.NextDouble() * 0.15);
+                }
+            }
+            GanttChartCtrl?.InvalidateVisual();
+        }
+
+        private void OnScrambleCarpet(object sender, RoutedEventArgs e)
+        {
+            var rand = Random.Shared;
+            foreach (var series in CarpetPlotChartCtrl.Series)
+            {
+                for (int i = 0; i < series.YValues.Length; i++)
+                {
+                    series.YValues[i] = series.YValues[i] + (rand.NextDouble() - 0.5) * 5.0;
+                }
+            }
+            CarpetPlotChartCtrl?.InvalidateVisual();
+            CarpetPlotChartCtrl?.StartEntryAnimation();
+        }
+
+        private void OnSimulateMapBubbles(object sender, RoutedEventArgs e)
+        {
+            var rand = Random.Shared;
+            foreach (var bubble in _mapBubbles)
+            {
+                bubble.Value = Math.Clamp(bubble.Value + (rand.NextDouble() - 0.5) * 6.0, 2.0, 30.0);
+            }
+            BubbleMapChartCtrl?.InvalidateVisual();
+            BubbleMapChartCtrl?.StartEntryAnimation();
         }
     }
 }
